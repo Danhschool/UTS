@@ -176,7 +176,7 @@ GameObject:
   - component: {fileID: 4960964140495102217}
   - component: {fileID: 4458397412697781137}
   - component: {fileID: 4652461724744768891}
-  - component: {fileID: 7213963530731352885}
+  - component: {fileID: 6091954916238168398}
   m_Layer: 5
   m_Name: Progress Bar
   m_TagString: Untagged
@@ -242,7 +242,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 10
---- !u!114 &7213963530731352885
+--- !u!114 &6091954916238168398
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -253,6 +253,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9b1c01916c944d8ca54b78d3934e36ff, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.UI.Components.ProgressBar
   padding: {x: 9, y: 8}
   mask: {fileID: 8448819135003246128}

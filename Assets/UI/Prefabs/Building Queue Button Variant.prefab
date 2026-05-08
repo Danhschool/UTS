@@ -98,13 +98,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 8149535868787474560, guid: 059f940466acbb14788d1893d17779c9, type: 3}
-    - {fileID: 1477927659681240495, guid: 059f940466acbb14788d1893d17779c9, type: 3}
+    - {fileID: 275981143067237923, guid: 059f940466acbb14788d1893d17779c9, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 8962091619614495752, guid: 059f940466acbb14788d1893d17779c9, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3608740829382611186}
+      addedObject: {fileID: 4897238750549238136}
   m_SourcePrefab: {fileID: 100100000, guid: 059f940466acbb14788d1893d17779c9, type: 3}
 --- !u!114 &1274590831184633926 stripped
 MonoBehaviour:
@@ -133,7 +133,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 8962091619614495752, guid: 059f940466acbb14788d1893d17779c9, type: 3}
   m_PrefabInstance: {fileID: 1565510915852079171}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &3608740829382611186
+--- !u!114 &4897238750549238136
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -144,5 +144,5 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 16a27aea3ba9b4144b75fdab5d1f6969, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.UI.Components.UIBuildQueueButton
   icon: {fileID: 1274590831184633926}

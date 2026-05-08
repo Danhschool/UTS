@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8142159870844363649}
   - component: {fileID: 6729454612411363606}
   - component: {fileID: 6194907570450213565}
-  - component: {fileID: 3819350984440838601}
+  - component: {fileID: 7162170042679115094}
   m_Layer: 5
   m_Name: Tooltip
   m_TagString: Untagged
@@ -77,7 +77,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 10
---- !u!114 &3819350984440838601
+--- !u!114 &7162170042679115094
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -88,7 +88,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: acee47b0055020a4495beacb73574277, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.UI.Components.Tooltip
   <RectTransform>k__BackingField: {fileID: 8142159870844363649}
   <HoverDelay>k__BackingField: 0.5
   text: {fileID: 753312127254192795}
@@ -195,6 +195,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -315,8 +316,7 @@ GameObject:
   - component: {fileID: 4094483614879798497}
   - component: {fileID: 8185538916585344636}
   - component: {fileID: 3923701401342223825}
-  - component: {fileID: 1477927659681240495}
-  - component: {fileID: 6888688495916115078}
+  - component: {fileID: 517949593002808211}
   m_Layer: 5
   m_Name: Action Button
   m_TagString: Untagged
@@ -427,7 +427,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &1477927659681240495
+--- !u!114 &517949593002808211
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -438,19 +438,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a86399c0f9961de4aac973e1a996a65d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.UI.Components.UIActionButton
   icon: {fileID: 290920304268996613}
-  tooltip: {fileID: 3819350984440838601}
---- !u!114 &6888688495916115078
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8962091619614495752}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Delegates: []
+  tooltip: {fileID: 7162170042679115094}

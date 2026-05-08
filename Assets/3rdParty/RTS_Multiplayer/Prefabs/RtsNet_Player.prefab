@@ -1,0 +1,118 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7246239684106989896
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 443965900681141617}
+  - component: {fileID: 8101205794501902219}
+  - component: {fileID: 5566197638042243137}
+  - component: {fileID: 6866445587077766372}
+  - component: {fileID: 1297430626368265758}
+  - component: {fileID: 6825868070958357335}
+  m_Layer: 0
+  m_Name: RtsNet_Player
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &443965900681141617
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7246239684106989896}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8101205794501902219
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7246239684106989896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 3487296970
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &5566197638042243137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7246239684106989896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bc54f8a72dd12d4e83509622593a79d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ProjectRTS.Netplay::ProjectRTS.Netplay.RtsLobbyPlayer
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+--- !u!114 &6866445587077766372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7246239684106989896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7490368ceebcc104ba99a1a976fcc83d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ProjectRTS.Netplay::ProjectRTS.Netplay.RtsGameCommander
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+--- !u!114 &1297430626368265758
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7246239684106989896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d85a5e202608fcd48baeb0061df54ba8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ProjectRTS.Netplay::ProjectRTS.Netplay.RtsGameInput
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 51
+  gameplayCamera: {fileID: 0}
+--- !u!114 &6825868070958357335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7246239684106989896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ba6feb02cd4261408e213bfa7fe82dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ProjectRTS.Netplay::ProjectRTS.Netplay.RtsPlayerEconomy
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  gameSceneName: RtsNet_Game
+  goldPerSecond: 3
