@@ -1,0 +1,93 @@
+---
+description: 
+alwaysApply: true
+---
+
+## Unity RTS – SOLID, kiến trúc và hiệu suất
+
+- **Ngôn ngữ & phạm vi**  
+  - Áp dụng cho **mọi code C# Unity** trong project RTS này.  
+  - Đặc biệt chú ý với `MonoBehaviour`, `ScriptableObject`, hệ thống RTS (Units, Buildings, Resources, Upgrades, UI, Events…).  
+
+## 1. Quy tắc khi tạo HÀM (method) mới
+
+- **Giải thích bắt buộc**  
+  - Mỗi khi AI tạo *hàm mới*, phải kèm đoạn giải thích ngắn gọn (tối đa 3 câu):  
+    - **Mục tiêu**: Hàm này giải quyết vấn đề gì trong game?  
+    - **Cách hoạt động**: Logic chính bên trong chạy như thế nào?  
+
+## 2. Bắt buộc tuân thủ SOLID cho C# Unity
+
+- **SRP – Single Responsibility Principle**  
+  - Không tạo **God Object/Manager** xử lý nhiều trách nhiệm (ví dụ: class vừa điều khiển input, vừa spawn unit, vừa lưu tài nguyên).  
+  - Tách riêng:  
+    - **Logic game** (unit hành động, combat, gather, build…).  
+    - **UI** (hiển thị tài nguyên, HUD, panel chọn unit…).  
+    - **Physics / movement** (navmesh, collision…).  
+    - **Dữ liệu cấu hình** (stats, cost, upgrade) – ưu tiên `ScriptableObject`.  
+
+- **OCP – Open/Closed Principle**  
+  - Khi cần thêm loại unit/building/upgrade mới, ưu tiên:  
+    - Kế thừa từ base class hoặc implement interface,  
+    - Hoặc mở rộng qua dữ liệu (`ScriptableObject`, config),  
+    - **Không sửa trực tiếp** logic cũ nếu có thể tránh được.  
+
+- **LSP – Liskov Substitution Principle**  
+  - Class kế thừa phải **thay thế được** base class mà không làm sai nghĩa.  
+  - Ví dụ: mọi `Unit` con phải có thể được dùng thông qua API của `Unit` cơ bản (move, attack, die) mà không phá luồng game.  
+
+- **ISP – Interface Segregation Principle**  
+  - Không tạo interface “tạp” kiểu `IUnitActions` với quá nhiều nhiệm vụ không liên quan.  
+  - Thay vào đó tách thành interface nhỏ, đơn nhiệm:  
+    - `IDamageable`, `IHealable`, `ISelectable`, `IInteractable`, `IGatherer`, `IBuildQueueOwner`, …  
+
+- **DIP – Dependency Inversion Principle**  
+  - Module cấp cao (ví dụ: `GameController`, `UIController`, `PlayerFaction`) **không phụ thuộc trực tiếp** vào module cấp thấp cụ thể.  
+  - Cả hai cùng phụ thuộc vào **abstraction** (interface/abstract class).  
+  - Dependencies phải được:  
+    - Truyền qua **constructor** hoặc **SerializeField** được gắn trong Inspector, hoặc  
+    - Lấy qua **Service Locator/DI** (nếu trong project đã có).  
+  - **Cấm** hardcode `new` trực tiếp các dependency “nặng” bên trong logic runtime nếu có thể tránh (thay bằng factory, SO, hoặc injection).  
+
+## 3. Phân rã mã nguồn & kiến trúc
+
+- **Tách class theo trách nhiệm**  
+  - Không nhồi nhiều trách nhiệm vào một `MonoBehaviour`.  
+  - Mỗi script nên giải quyết **một loại trách nhiệm chính**, ví dụ:  
+    - `UnitMover` (di chuyển),  
+    - `UnitCombat` (tấn công, nhận sát thương),  
+    - `ResourceGatherer` (thu thập),  
+    - `BuildingPlacer` (đặt nhà),  
+    - `UpgradeResearcher` (nghiên cứu nâng cấp),  
+    - `ResourcesUI` (hiển thị tài nguyên).  
+
+- **Dữ liệu cấu hình**  
+  - Sử dụng `ScriptableObject` cho: stats unit, infos building, upgrade, loại tài nguyên… để có thể **mở rộng** mà ít sửa code.  
+
+## 4. Hiệu suất & truy cập đối tượng
+
+- **Cấm dùng API tốn kém bừa bãi**  
+  - **Không dùng**: `GameObject.Find`, `FindObjectOfType`, `FindObjectsOfType` trong code AI sinh ra.  
+  - Không gọi `GetComponent<T>()` bên trong `Update()`, `FixedUpdate()`, `LateUpdate()`.  
+
+- **Cache component**  
+  - Luôn cache các component cần dùng nhiều:  
+    - Lấy trong `Awake()` hoặc `Start()` và lưu vào field private.  
+    - Sau đó, sử dụng field cache trong `Update`/runtime loop.  
+
+## 5. Sandbox Scene & kiểm thử
+
+- **Sandbox Scene bắt buộc cho hệ thống phức tạp**  
+  - Khi AI tạo/thiết kế **một hệ thống phức tạp** (ví dụ: tài nguyên, combat, production queue, upgrades, fog of war…), phải đề xuất:  
+    - Cách tạo **Scene thử nghiệm độc lập** (Sandbox) chỉ chứa các thành phần cần test.  
+    - Các bước cụ thể để test: setup GameObject, thêm component, kịch bản test (click, spawn, gather…).  
+
+## 6. Giải thích về SOLID sau khi đưa code
+
+- Sau mỗi lần AI cung cấp code C# Unity mới (class hoặc lượng logic đáng kể), phải:  
+  - Giải thích ngắn gọn **vì sao** đoạn code tuân theo:  
+    - **SRP**: class/hàm đang giữ trách nhiệm gì.  
+    - **OCP**: mở rộng được ở đâu (kế thừa/interface/SO).  
+    - **LSP**: nếu có kế thừa, cách dùng qua base không sai nghĩa.  
+    - **ISP**: interface nhỏ, một nhiệm vụ.  
+    - **DIP**: dependencies đang đi qua abstraction thế nào.
