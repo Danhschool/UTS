@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
@@ -13,7 +12,6 @@ namespace GameDevTV.RTS.Player
         private Camera fogOfWarCamera;
         private Texture2D visionTexture;
         private Rect textureRect;
-        [SerializeField] private Renderer fogPlaneRenderer;
         private HashSet<IHideable> hideables = new(1000);
 
         private void Awake()
@@ -21,8 +19,6 @@ namespace GameDevTV.RTS.Player
             fogOfWarCamera = GetComponent<Camera>();
             visionTexture = new Texture2D(fogOfWarCamera.targetTexture.width, fogOfWarCamera.targetTexture.height);
             textureRect = new Rect(0, 0, visionTexture.width, visionTexture.height);
-            ResolveFogPlaneRenderer();
-            AlignFogPlaneToVisibilityCameraFootprint();
 
             Bus<UnitSpawnEvent>.RegisterForAll(HandleUnitSpawn);
             Bus<UnitDeathEvent>.RegisterForAll(HandleUnitDeath);
@@ -94,45 +90,5 @@ namespace GameDevTV.RTS.Player
         private void HandlePlaceholderDestroy(PlaceholderDestroyEvent evt) => hideables.Remove(evt.Placeholder);
         private void HandlePlaceholderSpawn(PlaceholderSpawnEvent evt) => hideables.Add(evt.Placeholder);
 
-        private void ResolveFogPlaneRenderer()
-        {
-            if (fogPlaneRenderer != null)
-            {
-                return;
-            }
-
-            Transform parent = transform.parent;
-            if (parent == null)
-            {
-                return;
-            }
-
-            Transform fogPlaneTransform = parent.Find("Fog of War Plane");
-            if (fogPlaneTransform != null)
-            {
-                fogPlaneRenderer = fogPlaneTransform.GetComponent<Renderer>();
-            }
-        }
-
-        private void AlignFogPlaneToVisibilityCameraFootprint()
-        {
-            if (fogOfWarCamera == null || fogPlaneRenderer == null)
-            {
-                return;
-            }
-
-            Transform planeTransform = fogPlaneRenderer.transform;
-            float targetWidth = fogOfWarCamera.orthographicSize * 2f * fogOfWarCamera.aspect;
-            float targetHeight = fogOfWarCamera.orthographicSize * 2f;
-            Bounds beforeBounds = fogPlaneRenderer.bounds;
-            float beforeWidth = Mathf.Max(beforeBounds.size.x, 0.001f);
-            float beforeHeight = Mathf.Max(beforeBounds.size.z, 0.001f);
-
-            // Plane has local rotation X=90 in this project, so local X maps world X and local Y maps world Z.
-            Vector3 scale = planeTransform.localScale;
-            scale.x *= targetWidth / beforeWidth;
-            scale.y *= targetHeight / beforeHeight;
-            planeTransform.localScale = scale;
-        }
     }
 }
