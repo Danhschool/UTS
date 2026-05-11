@@ -52,7 +52,7 @@ namespace GameDevTV.RTS.Behavior
                 navMeshAgent.isStopped = false;
                 if (animator != null)
                 {
-                    animator.SetBool(AnimationConstants.ATTACK, false);
+                    animator.SetBool(AnimationConstants.IS_ATTACK, false);
                 }
             }
             else
@@ -67,13 +67,15 @@ namespace GameDevTV.RTS.Behavior
         {
             if (Target.Value == null || targetDamageable.CurrentHealth == 0) return Status.Success;
 
-            if (animator != null)
-            {
-                animator.SetFloat(AnimationConstants.SPEED, navMeshAgent.velocity.magnitude);
-            }
+            
 
             if (!NearbyEnemies.Value.Contains(Target.Value))
             {
+                if (animator != null)
+                {
+                    //animator.SetFloat(AnimationConstants.IS_MOVING, navMeshAgent.velocity.magnitude);
+                    animator.SetBool(AnimationConstants.IS_MOVING, true);
+                }
                 return Status.Running;
             }
 
@@ -82,7 +84,9 @@ namespace GameDevTV.RTS.Behavior
 
             if (animator != null)
             {
-                animator.SetBool(AnimationConstants.ATTACK, true);
+                animator.SetBool(AnimationConstants.IS_MOVING, false);
+                animator.SetBool(AnimationConstants.IS_ATTACK, true);
+
             }
 
             if (Time.time >= lastAttackTime + AttackConfig.Value.AttackDelay)
@@ -147,7 +151,7 @@ namespace GameDevTV.RTS.Behavior
         {
             if (animator != null)
             {
-                animator.SetBool(AnimationConstants.ATTACK, false);
+                animator.SetBool(AnimationConstants.IS_ATTACK, false);
             }
             if (navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh)
             {

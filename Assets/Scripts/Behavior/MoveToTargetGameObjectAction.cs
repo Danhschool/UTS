@@ -57,7 +57,8 @@ namespace GameDevTV.RTS.Behavior
         {
             if (animator != null)
             {
-                animator.SetFloat(AnimationConstants.SPEED, agent.velocity.magnitude);
+                //animator.SetFloat(AnimationConstants.IS_MOVING, agent.velocity.magnitude);
+                animator.SetBool(AnimationConstants.IS_MOVING, true);
             }
 
             if (TargetGameObject.Value == null)
@@ -102,7 +103,7 @@ namespace GameDevTV.RTS.Behavior
         {
             if (animator != null)
             {
-                animator.SetFloat(AnimationConstants.SPEED, 0);
+                animator.SetBool(AnimationConstants.IS_MOVING, false);
             }
         }
 

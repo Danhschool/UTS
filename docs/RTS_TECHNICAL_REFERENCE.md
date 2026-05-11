@@ -112,8 +112,8 @@ flowchart TD
 | File | Vai trò ngắn |
 |------|----------------|
 | `MoveCommand.cs` | Di chuyển; formation vòng; MoveTo unit visible |
-| `StopCommand.cs` | Dừng |
-| `AttackCommand.cs` | Tấn công |
+| `StopCommand.cs` | Dừng unit |
+| `AttackCommand.cs` | Tấn công; với click phải chỉ nhận collider có `IDamageable` và mục tiêu đang visible |
 | `GatherCommand.cs` | Thu thập supply |
 | `BuildBuildingCommand.cs` | Đặt nhà (Worker) |
 | `BuildUnitCommand.cs` | Train từ nhà (`IUnlockableCommand`) |
@@ -170,6 +170,22 @@ flowchart TD
 
 `Stop`, `Move`, `Gather`, `ReturnSupplies`, `BuildBuilding`, `Attack`, `LoadUnits` — **đồng bộ với graph** Behavior trên prefab; thêm giá trị = sửa graph + node.
 
+### 5.9 Animation state data (cập nhật theo code)
+
+- Code hiện tại điều khiển animator qua `Utilities/AnimationConstants.cs` với các hash:
+  - `Speed` (float)
+  - `IsGathering` (bool)
+  - `Attack` (bool)
+- Các action set animation chủ yếu nằm ở:
+  - `Behavior/MoveToTargetLocationAction.cs`
+  - `Behavior/MoveToTargetGameObjectAction.cs`
+  - `Behavior/MoveToGatherableSupplyAction.cs`
+  - `Behavior/TranslatePositionAction.cs`
+  - `Behavior/StopAgentAction.cs`
+  - `Behavior/GatherSuppliesAction.cs`
+  - `Behavior/AttackTargetAction.cs`
+- Riêng Worker build flow trong Unity Behavior graph còn dùng parameter string `IsBuilding` (trong asset graph), không nằm ở `AnimationConstants`.
+
 ### 5.8 Interface nhỏ (`Units/`)
 
 `ISelectable`, `IDamageable`, `IMoveable`, `IAttacker`, `IBuildingBuilder`, `ITransporter`, `ITransportable`, `IHideable` — dùng để tránh phụ thuộc class cụ thể.
@@ -209,7 +225,8 @@ Các file `partial class` kế `Unity.Behavior.Action` / `Condition` / `EventCha
 - **Queue:** tối đa 5 (`MAX_QUEUE_SIZE`), coroutine `DoBuildUnits` (xem tiếp trong file sau dòng đã đọc).
 - **Chi phí:** `SupplyEvent` trừ minerals/gas khi enqueue; cancel hoàn trả.
 - **Spawn unit:** `Instantiate` từ `UnitSO.Prefab` (trong phần còn lại của class).
-- **Progress / placeholder:** tương tác `Placeholder`, material xây — đọc full `BaseBuilding.cs` khi sửa UX xây.
+- **Progress / placeholder:** trạng thái build dùng `BuildingProgress` (`StartTime`, `Completion`, `State`) và tương tác `Placeholder`, material xây.
+- **Lưu ý serialize gần đây:** trường cũ `Progress.Progress` đã đổi sang `Progress.Completion` để tránh lỗi inspector UI Toolkit.
 
 ---
 
@@ -319,7 +336,7 @@ Tạo scene nhỏ: plane + NavMesh, 1–2 unit, `PlayerInput` + camera fog RT + 
 
 ---
 
-## 17. File inventory `Assets/Scripts` (132 script — tra nhanh)
+## 17. File inventory `Assets/Scripts` (tra nhanh)
 
 Toàn bộ `.cs` nằm dưới các thư mục: `Behavior`, `Commands`, `Environment`, `EventBus`, `Events`, `MapTools/Editor`, `Movement`, `Player`, `SpeechRecognition` (Core + Vosk), `TechTree`, `UI` (Components + Containers), `Units`, `Utilities`.
 

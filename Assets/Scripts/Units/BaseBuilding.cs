@@ -124,11 +124,11 @@ namespace GameDevTV.RTS.Units
 
             Progress = new BuildingProgress(
                 BuildingProgress.BuildingState.Building,
-                Time.time - BuildingSO.BuildTime * Progress.Progress,
-                Progress.Progress
+                Time.time - BuildingSO.BuildTime * Progress.Completion,
+                Progress.Completion
             );
 
-            if (Progress.Progress == 0)
+            if (Progress.Completion == 0)
             {
                 Heal(1);
             }

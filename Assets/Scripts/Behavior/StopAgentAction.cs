@@ -20,7 +20,7 @@ namespace GameDevTV.RTS.Behavior
             {
                 if (agent.TryGetComponent(out Animator animator))
                 {
-                    animator.SetFloat(AnimationConstants.SPEED, 0);
+                    animator.SetBool(AnimationConstants.IS_MOVING, false);
                 }
 
                 agent.ResetPath();

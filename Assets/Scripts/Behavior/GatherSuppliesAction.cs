@@ -30,7 +30,7 @@ namespace GameDevTV.RTS.Behavior
 
             if (Unit.Value.TryGetComponent(out animator))
             {
-                animator.SetBool(AnimationConstants.IS_GATHERING, true);
+                animator.SetBool(AnimationConstants.IS_ENGAGING, true);
             }
             GatherableSupplies.Value.BeginGather();
             SupplySO.Value = GatherableSupplies.Value.Supply;
@@ -51,7 +51,7 @@ namespace GameDevTV.RTS.Behavior
         {
             if (animator != null)
             {
-                animator.SetBool(AnimationConstants.IS_GATHERING, false);
+                animator.SetBool(AnimationConstants.IS_ENGAGING, false);
             }
 
             if (GatherableSupplies.Value == null) return;

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace GameDevTV.RTS.Units
 {
@@ -13,14 +14,15 @@ namespace GameDevTV.RTS.Units
             Destroyed
         }
         [field: SerializeField] public float StartTime { get; private set; }
-        [field: SerializeField] public float Progress { get; private set; }
+        [field: SerializeField, FormerlySerializedAs("<Progress>k__BackingField")]
+        public float Completion { get; private set; }
         [field: SerializeField] public BuildingState State { get; private set; }
 
-        public BuildingProgress(BuildingState state, float startTime, float progress)
+        public BuildingProgress(BuildingState state, float startTime, float completion)
         {
             State = state;
             StartTime = startTime;
-            Progress = progress;
+            Completion = completion;
         }
     }
 }

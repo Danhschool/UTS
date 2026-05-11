@@ -213,11 +213,13 @@ public class KeepFrameFeature : ScriptableRendererFeature
         renderer.EnqueuePass(m_DrawOldFrame);
     }
 
+#pragma warning disable CS0672 // Overrides obsolete API in URP sample compatibility path.
     public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
     {
         // This path is not taken when using render graph.
         // The code to reallocate m_OldFrameHandle has been moved to AddRenderPasses in order to avoid duplication.
     }
+#pragma warning restore CS0672
 
     protected override void Dispose(bool disposing)
     {

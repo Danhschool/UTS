@@ -44,7 +44,7 @@ namespace GameDevTV.RTS.Behavior
 
             if (animator != null)
             {
-                animator.SetFloat(AnimationConstants.SPEED, Speed);
+                animator.SetBool(AnimationConstants.IS_MOVING, true);
             }
 
             selfTransform.position += Speed * Time.deltaTime * direction;
@@ -55,7 +55,7 @@ namespace GameDevTV.RTS.Behavior
         {
             if (animator != null)
             {
-                animator.SetFloat(AnimationConstants.SPEED, 0);
+                animator.SetBool(AnimationConstants.IS_MOVING, false);
             }
         }
     }

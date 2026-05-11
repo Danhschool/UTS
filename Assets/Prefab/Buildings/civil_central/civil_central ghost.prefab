@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4774175999237473787}
   m_Layer: 0
-  m_Name: civil_central
+  m_Name: civil_central ghost
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29,38 +29,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3708619674125344204}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &6272614979639931976
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3708619674125344204}
-  m_Layer: 0
-  m_Name: civil_central
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3708619674125344204
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6272614979639931976}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
   - {fileID: 6863432843602020756}
   - {fileID: 1560877675334421093}
   - {fileID: 2732200623014772903}
@@ -69,7 +37,7 @@ Transform:
   - {fileID: 1738830687866080303}
   - {fileID: 3723188631970911574}
   - {fileID: 6950826682211591685}
-  m_Father: {fileID: 4774175999237473787}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1893054458967646862
 PrefabInstance:
@@ -77,7 +45,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 3708619674125344204}
+    m_TransformParent: {fileID: 4774175999237473787}
     m_Modifications:
     - target: {fileID: -4216859302048453862, guid: b2e69d38afe6437493d1b284fe44f5e1, type: 3}
       propertyPath: m_LocalScale.x
@@ -113,11 +81,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: b2e69d38afe6437493d1b284fe44f5e1, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: b2e69d38afe6437493d1b284fe44f5e1, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: b2e69d38afe6437493d1b284fe44f5e1, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -131,6 +99,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: b2e69d38afe6437493d1b284fe44f5e1, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: b2e69d38afe6437493d1b284fe44f5e1, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b1ef2fa16faec654da7102aa095d466e, type: 2}
+    - target: {fileID: -1504981713932161579, guid: b2e69d38afe6437493d1b284fe44f5e1, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ca6cdfc1022419a4184c39491eb2a7ba, type: 2}
     - target: {fileID: -927199367670048503, guid: b2e69d38afe6437493d1b284fe44f5e1, type: 3}
       propertyPath: m_Name
       value: athen_cc_decor
@@ -151,7 +131,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 3708619674125344204}
+    m_TransformParent: {fileID: 4774175999237473787}
     m_Modifications:
     - target: {fileID: -4216859302048453862, guid: e418043cfbb44a98aded5d87a0b23250, type: 3}
       propertyPath: m_LocalScale.x
@@ -187,11 +167,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e418043cfbb44a98aded5d87a0b23250, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e418043cfbb44a98aded5d87a0b23250, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e418043cfbb44a98aded5d87a0b23250, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -205,6 +185,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: e418043cfbb44a98aded5d87a0b23250, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: e418043cfbb44a98aded5d87a0b23250, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b1ef2fa16faec654da7102aa095d466e, type: 2}
+    - target: {fileID: -1504981713932161579, guid: e418043cfbb44a98aded5d87a0b23250, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ca6cdfc1022419a4184c39491eb2a7ba, type: 2}
     - target: {fileID: -927199367670048503, guid: e418043cfbb44a98aded5d87a0b23250, type: 3}
       propertyPath: m_Name
       value: athen_cc_struct
@@ -225,7 +217,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 3708619674125344204}
+    m_TransformParent: {fileID: 4774175999237473787}
     m_Modifications:
     - target: {fileID: -4216859302048453862, guid: e03a4c372eb14dfd940b55c432e148fd, type: 3}
       propertyPath: m_LocalScale.x
@@ -261,11 +253,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e03a4c372eb14dfd940b55c432e148fd, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e03a4c372eb14dfd940b55c432e148fd, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: e03a4c372eb14dfd940b55c432e148fd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -279,6 +271,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: e03a4c372eb14dfd940b55c432e148fd, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: e03a4c372eb14dfd940b55c432e148fd, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b1ef2fa16faec654da7102aa095d466e, type: 2}
+    - target: {fileID: -1504981713932161579, guid: e03a4c372eb14dfd940b55c432e148fd, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ca6cdfc1022419a4184c39491eb2a7ba, type: 2}
     - target: {fileID: -927199367670048503, guid: e03a4c372eb14dfd940b55c432e148fd, type: 3}
       propertyPath: m_Name
       value: athen_cc_shields
@@ -299,7 +303,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 3708619674125344204}
+    m_TransformParent: {fileID: 4774175999237473787}
     m_Modifications:
     - target: {fileID: -4216859302048453862, guid: 0ebc3b2dc55c40a5b7331e6af4a80e65, type: 3}
       propertyPath: m_LocalScale.x
@@ -335,11 +339,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 0ebc3b2dc55c40a5b7331e6af4a80e65, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 0ebc3b2dc55c40a5b7331e6af4a80e65, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 0ebc3b2dc55c40a5b7331e6af4a80e65, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -353,6 +357,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: 0ebc3b2dc55c40a5b7331e6af4a80e65, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: 0ebc3b2dc55c40a5b7331e6af4a80e65, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b1ef2fa16faec654da7102aa095d466e, type: 2}
+    - target: {fileID: -1504981713932161579, guid: 0ebc3b2dc55c40a5b7331e6af4a80e65, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ca6cdfc1022419a4184c39491eb2a7ba, type: 2}
     - target: {fileID: -927199367670048503, guid: 0ebc3b2dc55c40a5b7331e6af4a80e65, type: 3}
       propertyPath: m_Name
       value: athen_cc_nature_transp
@@ -373,7 +389,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 3708619674125344204}
+    m_TransformParent: {fileID: 4774175999237473787}
     m_Modifications:
     - target: {fileID: -4216859302048453862, guid: 5a459cc96b684c9a9f95720fc8a567df, type: 3}
       propertyPath: m_LocalScale.x
@@ -409,11 +425,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 5a459cc96b684c9a9f95720fc8a567df, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 5a459cc96b684c9a9f95720fc8a567df, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 5a459cc96b684c9a9f95720fc8a567df, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -427,6 +443,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: 5a459cc96b684c9a9f95720fc8a567df, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: 5a459cc96b684c9a9f95720fc8a567df, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b1ef2fa16faec654da7102aa095d466e, type: 2}
+    - target: {fileID: -1504981713932161579, guid: 5a459cc96b684c9a9f95720fc8a567df, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ca6cdfc1022419a4184c39491eb2a7ba, type: 2}
     - target: {fileID: -927199367670048503, guid: 5a459cc96b684c9a9f95720fc8a567df, type: 3}
       propertyPath: m_Name
       value: athen_cc_tiles_b
@@ -447,7 +475,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 3708619674125344204}
+    m_TransformParent: {fileID: 4774175999237473787}
     m_Modifications:
     - target: {fileID: -4216859302048453862, guid: 14a1bd4c8e834f9eb99b17820446d7a9, type: 3}
       propertyPath: m_LocalScale.x
@@ -483,11 +511,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 14a1bd4c8e834f9eb99b17820446d7a9, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 14a1bd4c8e834f9eb99b17820446d7a9, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 14a1bd4c8e834f9eb99b17820446d7a9, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -501,6 +529,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: 14a1bd4c8e834f9eb99b17820446d7a9, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: 14a1bd4c8e834f9eb99b17820446d7a9, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b1ef2fa16faec654da7102aa095d466e, type: 2}
+    - target: {fileID: -1504981713932161579, guid: 14a1bd4c8e834f9eb99b17820446d7a9, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ca6cdfc1022419a4184c39491eb2a7ba, type: 2}
     - target: {fileID: -927199367670048503, guid: 14a1bd4c8e834f9eb99b17820446d7a9, type: 3}
       propertyPath: m_Name
       value: athen_cc_propsa
@@ -521,7 +561,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 3708619674125344204}
+    m_TransformParent: {fileID: 4774175999237473787}
     m_Modifications:
     - target: {fileID: -4216859302048453862, guid: 1129f96d6130420aacdec72dc7563b26, type: 3}
       propertyPath: m_LocalScale.x
@@ -557,11 +597,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 1129f96d6130420aacdec72dc7563b26, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 1129f96d6130420aacdec72dc7563b26, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 1129f96d6130420aacdec72dc7563b26, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -575,6 +615,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: 1129f96d6130420aacdec72dc7563b26, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: 1129f96d6130420aacdec72dc7563b26, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b1ef2fa16faec654da7102aa095d466e, type: 2}
+    - target: {fileID: -1504981713932161579, guid: 1129f96d6130420aacdec72dc7563b26, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ca6cdfc1022419a4184c39491eb2a7ba, type: 2}
     - target: {fileID: -927199367670048503, guid: 1129f96d6130420aacdec72dc7563b26, type: 3}
       propertyPath: m_Name
       value: athen_cc_round_roof
@@ -595,7 +647,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 3708619674125344204}
+    m_TransformParent: {fileID: 4774175999237473787}
     m_Modifications:
     - target: {fileID: -4216859302048453862, guid: 6dca250a144b42bb8d9fc7ba54428f6d, type: 3}
       propertyPath: m_LocalScale.x
@@ -631,11 +683,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 6dca250a144b42bb8d9fc7ba54428f6d, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 6dca250a144b42bb8d9fc7ba54428f6d, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: 6dca250a144b42bb8d9fc7ba54428f6d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -649,6 +701,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: 6dca250a144b42bb8d9fc7ba54428f6d, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: 6dca250a144b42bb8d9fc7ba54428f6d, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b1ef2fa16faec654da7102aa095d466e, type: 2}
+    - target: {fileID: -1504981713932161579, guid: 6dca250a144b42bb8d9fc7ba54428f6d, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ca6cdfc1022419a4184c39491eb2a7ba, type: 2}
     - target: {fileID: -927199367670048503, guid: 6dca250a144b42bb8d9fc7ba54428f6d, type: 3}
       propertyPath: m_Name
       value: athen_cc_trees
