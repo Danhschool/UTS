@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd190ac0f21e3534e8e1a0c1e850294e, type: 3}
   m_Name: Standard Unit Sight Config
   m_EditorClassIdentifier: 
-  <SightRadius>k__BackingField: 5
+  <SightRadius>k__BackingField: 30
