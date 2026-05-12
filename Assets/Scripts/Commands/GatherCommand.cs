@@ -11,8 +11,8 @@ namespace GameDevTV.RTS.Commands
 
         public override bool CanHandle(CommandContext context)
         {
-            return context.Commandable is Worker 
-                && context.Hit.collider != null 
+            return context.Commandable is Worker
+                && context.Hit.collider != null
                 && IsGatherableSupplyOrCommandPost(context.Hit.collider);
         }
 
