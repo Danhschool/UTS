@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e47f3d45a528744fb7e2fb3ecb0b47b, type: 3}
   m_Name: Build Knight
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Commands.BuildUnitCommand
-  <Name>k__BackingField: Command
-  <Icon>k__BackingField: {fileID: 0}
-  <Slot>k__BackingField: 0
-  <RequiresClickToActivate>k__BackingField: 1
+  <Name>k__BackingField: Build Knight
+  <Icon>k__BackingField: {fileID: 21300000, guid: e2048006c08148040bd4db3353d89ffd, type: 3}
+  <Slot>k__BackingField: 4
+  <RequiresClickToActivate>k__BackingField: 0
   <IsSingleUnitCommand>k__BackingField: 0
   <GhostPrefab>k__BackingField: {fileID: 0}
   <Restrictions>k__BackingField: []
-  <Unit>k__BackingField: {fileID: 0}
+  <Unit>k__BackingField: {fileID: 11400000, guid: 986a399e9117cff4294eb998021eff5c, type: 2}

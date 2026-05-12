@@ -1,4 +1,5 @@
 using GameDevTV.RTS.Environment;
+using GameDevTV.RTS.Units;
 using System;
 using Unity.Behavior;
 using UnityEngine;
@@ -39,7 +40,16 @@ namespace GameDevTV.RTS.Behavior
 
         protected override Status OnUpdate()
         {
-            if (GatherableSupplies.Value.Supply.BaseGatherTime + enterTime <= Time.time)
+            float baseTime = GatherableSupplies.Value.Supply.BaseGatherTime;
+            float mult = 1f;
+            if (Unit.Value != null
+                && Unit.Value.TryGetComponent(out AbstractCommandable commandable)
+                && commandable.UnitSO is UnitSO unitSo)
+            {
+                mult = Mathf.Max(0.05f, unitSo.GatherTimeMultiplier);
+            }
+
+            if (baseTime * mult + enterTime <= Time.time)
             {
                 return Status.Success;
             }
@@ -58,7 +68,15 @@ namespace GameDevTV.RTS.Behavior
 
             if (CurrentStatus == Status.Success)
             {
-                Amount.Value = GatherableSupplies.Value.EndGather();
+                int bonus = 0;
+                if (Unit.Value != null
+                    && Unit.Value.TryGetComponent(out AbstractCommandable commandable)
+                    && commandable.UnitSO is UnitSO unitSo)
+                {
+                    bonus = unitSo.GatherAmountBonus;
+                }
+
+                Amount.Value = GatherableSupplies.Value.EndGather(bonus);
             }
             else
             {

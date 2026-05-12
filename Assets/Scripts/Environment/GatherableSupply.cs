@@ -49,10 +49,11 @@ namespace GameDevTV.RTS.Environment
             return true;
         }
 
-        public int EndGather()
+        public int EndGather(int bonusPerGather = 0)
         {
             IsBusy = false;
-            int amountGathered = Mathf.Min(Supply.AmountPerGather, Amount);
+            int perTrip = Mathf.Max(0, Supply.AmountPerGather + bonusPerGather);
+            int amountGathered = Mathf.Min(perTrip, Amount);
             Amount -= amountGathered;
 
             if (Amount <= 0)

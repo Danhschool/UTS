@@ -60,6 +60,9 @@ namespace GameDevTV.RTS.Units
                     upgrade.Apply(BuildingSO);
                 }
             }
+
+            SyncRuntimeHealthFromUnitSo(healAddedMaxPortion: true);
+            RefreshVisionFromSightConfig();
         }
 
         public void BuildUnlockable(UnlockableSO unlockable)

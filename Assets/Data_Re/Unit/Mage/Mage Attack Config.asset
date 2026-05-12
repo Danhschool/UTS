@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31030474969b5904c9aac6865b1a9d6d, type: 3}
   m_Name: Mage Attack Config
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Units.AttackConfigSO
-  <AttackRange>k__BackingField: 1.5
+  <AttackRange>k__BackingField: 30
   <AttackDelay>k__BackingField: 1
   <Damage>k__BackingField: 5
-  <HasProjectileAttacks>k__BackingField: 0
-  <IsAreaOfEffect>k__BackingField: 0
+  <HasProjectileAttacks>k__BackingField: 1
+  <IsAreaOfEffect>k__BackingField: 1
   <AreaOfEffectRadius>k__BackingField: 2
   <MaxEnemiesHitPerAttack>k__BackingField: 5
   <DamageableLayers>k__BackingField:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 192

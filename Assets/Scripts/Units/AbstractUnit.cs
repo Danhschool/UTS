@@ -36,8 +36,18 @@ namespace GameDevTV.RTS.Units
         protected override void Start()
         {
             base.Start();
-            CurrentHealth = UnitSO.Health;
+
+            foreach (UpgradeSO upgrade in unitSO.Upgrades)
+            {
+                if (unitSO.TechTree.IsResearched(Owner, upgrade))
+                {
+                    upgrade.Apply(unitSO);
+                }
+            }
+
             MaxHealth = UnitSO.Health;
+            CurrentHealth = MaxHealth;
+
             Bus<UnitSpawnEvent>.Raise(Owner, new UnitSpawnEvent(this));
 
             if (DamageableSensor != null)
@@ -48,12 +58,35 @@ namespace GameDevTV.RTS.Units
                 DamageableSensor.SetupFrom(unitSO.AttackConfig);
             }
 
-            foreach(UpgradeSO upgrade in unitSO.Upgrades)
+            graphAgent.SetVariableValue("AttackConfig", unitSO.AttackConfig);
+            SyncMoveSpeedFromUnitSo();
+            RefreshVisionFromSightConfig();
+        }
+
+        /// <summary>
+        /// Gán tốc độ di chuyển từ UnitSO lên NavMeshAgent (sau upgrade / spawn).
+        /// </summary>
+        private void SyncMoveSpeedFromUnitSo()
+        {
+            if (unitSO != null)
             {
-                if (unitSO.TechTree.IsResearched(Owner, upgrade))
-                {
-                    upgrade.Apply(unitSO);
-                }
+                Agent.speed = unitSO.MoveSpeed;
+            }
+        }
+
+        protected override void OnUpgradeAppliedToRuntime()
+        {
+            if (unitSO == null)
+            {
+                return;
+            }
+
+            graphAgent.SetVariableValue("AttackConfig", unitSO.AttackConfig);
+            SyncMoveSpeedFromUnitSo();
+
+            if (DamageableSensor != null && unitSO.AttackConfig != null)
+            {
+                DamageableSensor.SetupFrom(unitSO.AttackConfig);
             }
         }
 

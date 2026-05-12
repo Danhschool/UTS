@@ -4,6 +4,7 @@ using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Player;
+using GameDevTV.RTS.TechTree;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -41,17 +42,53 @@ namespace GameDevTV.RTS.Units
 
         protected virtual void Start()
         {
+            initialCommands = AvailableCommands;
+
+            Bus<UpgradeResearchedEvent>.OnEvent[Owner] += HandleUpgradeResearched;
+        }
+
+        /// <summary>
+        /// Cập nhật collider / scale vòng nhìn sau khi <see cref="SightConfigSO.SightRadius"/> thay đổi (upgrade).
+        /// </summary>
+        protected void RefreshVisionFromSightConfig()
+        {
             if (UnitSO.SightConfig != null && VisionTransform != null)
             {
                 float size = UnitSO.SightConfig.SightRadius * 2;
                 VisionTransform.localScale = new Vector3(size, size, size);
                 VisionTransform.gameObject.SetActive(Owner == Owner.Player1);
             }
-
-            initialCommands = AvailableCommands;
-
-            Bus<UpgradeResearchedEvent>.OnEvent[Owner] += HandleUpgradeResearched;
         }
+
+        /// <summary>
+        /// Đồng bộ MaxHealth với <see cref="AbstractUnitSO.Health"/>; nếu max tăng thì cộng phần tăng vào CurrentHealth.
+        /// </summary>
+        protected void SyncRuntimeHealthFromUnitSo(bool healAddedMaxPortion)
+        {
+            int newMax = UnitSO.Health;
+            int oldMax = MaxHealth;
+            int oldCur = CurrentHealth;
+            MaxHealth = newMax;
+
+            if (healAddedMaxPortion && newMax > oldMax)
+            {
+                CurrentHealth += newMax - oldMax;
+            }
+            else
+            {
+                CurrentHealth = Mathf.Min(CurrentHealth, MaxHealth);
+            }
+
+            if (oldCur != CurrentHealth || oldMax != MaxHealth)
+            {
+                OnHealthUpdated?.Invoke(this, oldCur, CurrentHealth);
+            }
+        }
+
+        /// <summary>
+        /// Đơn vị kế thừa ghi đè để cập nhật NavMeshAgent, sensor đánh, blackboard sau research.
+        /// </summary>
+        protected virtual void OnUpgradeAppliedToRuntime() { }
 
         protected virtual void OnDestroy()
         {
@@ -171,6 +208,9 @@ namespace GameDevTV.RTS.Units
             if (evt.Owner == Owner && UnitSO.Upgrades.Contains(evt.Upgrade))
             {
                 evt.Upgrade.Apply(UnitSO);
+                SyncRuntimeHealthFromUnitSo(healAddedMaxPortion: true);
+                RefreshVisionFromSightConfig();
+                OnUpgradeAppliedToRuntime();
             }
         }
     }

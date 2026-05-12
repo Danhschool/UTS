@@ -7,7 +7,7 @@ namespace GameDevTV.RTS.Environment
         public bool IsBusy { get; }
 
         public bool BeginGather();
-        public int EndGather();
+        public int EndGather(int bonusPerGather = 0);
         public void AbortGather();
     }
 }

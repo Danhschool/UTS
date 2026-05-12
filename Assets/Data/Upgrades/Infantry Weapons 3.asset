@@ -21,4 +21,4 @@ MonoBehaviour:
   <unlockRequirements>k__BackingField:
   - {fileID: 11400000, guid: b7906a4f1eb2f2e429ac1da9d89dc60c, type: 2}
   <PropertyPath>k__BackingField: AttackConfig/Damage
-  <Amount>k__BackingField: 1
+  <Amount>k__BackingField: 5

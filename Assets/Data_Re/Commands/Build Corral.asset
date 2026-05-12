@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32194d70ac3bc0647b55685549f2c196, type: 3}
   m_Name: Build Corral
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Commands.BuildBuildingCommand
-  <Name>k__BackingField: Command
-  <Icon>k__BackingField: {fileID: 0}
-  <Slot>k__BackingField: 0
+  <Name>k__BackingField: Build Corral
+  <Icon>k__BackingField: {fileID: 21300000, guid: 113d27f765b213a4ca12a56726aff0f2, type: 3}
+  <Slot>k__BackingField: 2
   <RequiresClickToActivate>k__BackingField: 1
-  <IsSingleUnitCommand>k__BackingField: 0
-  <GhostPrefab>k__BackingField: {fileID: 0}
-  <Restrictions>k__BackingField: []
-  <Building>k__BackingField: {fileID: 0}
+  <IsSingleUnitCommand>k__BackingField: 1
+  <GhostPrefab>k__BackingField: {fileID: 4587507429451976044, guid: c5e366d60147977418b03eaf0426657d, type: 3}
+  <Restrictions>k__BackingField:
+  - {fileID: 11400000, guid: b6eeea93eeb39144483d38976939b89c, type: 2}
+  <Building>k__BackingField: {fileID: 11400000, guid: 4c56a299fe5e7fb4ba9a7f3dafe8f689, type: 2}

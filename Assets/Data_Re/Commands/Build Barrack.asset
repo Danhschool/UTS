@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32194d70ac3bc0647b55685549f2c196, type: 3}
   m_Name: Build Barrack
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Commands.BuildBuildingCommand
-  <Name>k__BackingField: Command
-  <Icon>k__BackingField: {fileID: 0}
-  <Slot>k__BackingField: 0
+  <Name>k__BackingField: Build Barrack
+  <Icon>k__BackingField: {fileID: 21300000, guid: 1e808847409567c4ab0d6cc034e5e34b, type: 3}
+  <Slot>k__BackingField: 3
   <RequiresClickToActivate>k__BackingField: 1
-  <IsSingleUnitCommand>k__BackingField: 0
-  <GhostPrefab>k__BackingField: {fileID: 0}
-  <Restrictions>k__BackingField: []
-  <Building>k__BackingField: {fileID: 0}
+  <IsSingleUnitCommand>k__BackingField: 1
+  <GhostPrefab>k__BackingField: {fileID: 1789053669275132042, guid: ce6dfa5c1fa84e64a9d83ddd73b4b0b6, type: 3}
+  <Restrictions>k__BackingField:
+  - {fileID: 11400000, guid: b6eeea93eeb39144483d38976939b89c, type: 2}
+  <Building>k__BackingField: {fileID: 11400000, guid: 975e8b13c2fd2bf49b8dc6d9ea59028b, type: 2}
