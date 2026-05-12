@@ -15584,13 +15584,13 @@ MonoBehaviour:
     <MousePanSpeed>k__BackingField: 50
     <EdgePanSize>k__BackingField: 50
     <KeyboardPanSpeed>k__BackingField: 50
-    <EnablePanLimits>k__BackingField: 0
+    <EnablePanLimits>k__BackingField: 1
     <PanLimitMinXZ>k__BackingField: {x: -250, y: -250}
     <PanLimitMaxXZ>k__BackingField: {x: 250, y: 250}
     <ZoomSpeed>k__BackingField: 1
     <MinZoomScale>k__BackingField: 0.45
-    <MaxZoomScale>k__BackingField: 1.65
-    <ScrollZoomSensitivity>k__BackingField: 0.06
+    <MaxZoomScale>k__BackingField: 1
+    <ScrollZoomSensitivity>k__BackingField: 5
     <MinOrthographicSize>k__BackingField: 8
     <MaxOrthographicSize>k__BackingField: 40
     <RotationSpeed>k__BackingField: 1
