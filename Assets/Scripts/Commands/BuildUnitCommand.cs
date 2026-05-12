@@ -33,7 +33,9 @@ namespace GameDevTV.RTS.Commands
 
         private bool HasEnoughSupplies(CommandContext context)
         {
-            return Unit.Cost.Minerals <= Supplies.Minerals[context.Owner] && Unit.Cost.Gas <= Supplies.Gas[context.Owner];
+            return Unit.Cost.Stone <= Supplies.Stone[context.Owner]
+                && Unit.Cost.Wood <= Supplies.Wood[context.Owner]
+                && Unit.Cost.Food <= Supplies.Food[context.Owner];
         }
     }
 }

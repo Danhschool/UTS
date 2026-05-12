@@ -20,8 +20,9 @@ namespace GameDevTV.RTS.UI.Components
         private RectTransform rectTransform;
         private Button button;
 
-        private static readonly string MINERALS_FORMAT = "{0} <color=#00ACFF>Minerals</color>. ";
-        private static readonly string GAS_FORMAT = "{0} <color=#3BEA60>Gas</color>. ";
+        private static readonly string STONE_FORMAT = "{0} <color=#B0B0B0>Stone</color>. ";
+        private static readonly string WOOD_FORMAT = "{0} <color=#8B5A2B>Wood</color>. ";
+        private static readonly string FOOD_FORMAT = "{0} <color=#E6A817>Food</color>. ";
         private static readonly string DEPENDENCY_FORMAT_NO_COMMA = "<color=#AC0000>{0}</color>.";
         private static readonly string DEPENDENCY_FORMAT_COMMA = "<color=#AC0000>{0}</color>, ";
 
@@ -113,13 +114,19 @@ namespace GameDevTV.RTS.UI.Components
 
             if (supplyCost != null)
             {
-                if (supplyCost.Minerals > 0)
+                if (supplyCost.Stone > 0)
                 {
-                    tooltipText += string.Format(MINERALS_FORMAT, supplyCost.Minerals);
+                    tooltipText += string.Format(STONE_FORMAT, supplyCost.Stone);
                 }
-                if (supplyCost.Gas > 0)
+
+                if (supplyCost.Wood > 0)
                 {
-                    tooltipText += string.Format(GAS_FORMAT, supplyCost.Gas);
+                    tooltipText += string.Format(WOOD_FORMAT, supplyCost.Wood);
+                }
+
+                if (supplyCost.Food > 0)
+                {
+                    tooltipText += string.Format(FOOD_FORMAT, supplyCost.Food);
                 }
             }
 

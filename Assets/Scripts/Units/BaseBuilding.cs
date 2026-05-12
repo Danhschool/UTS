@@ -70,8 +70,9 @@ namespace GameDevTV.RTS.Units
                 return;
             }
 
-            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -unlockable.Cost.Minerals, unlockable.Cost.MineralsSO));
-            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -unlockable.Cost.Gas, unlockable.Cost.GasSO));
+            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -unlockable.Cost.Stone, unlockable.Cost.StoneSO));
+            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -unlockable.Cost.Wood, unlockable.Cost.WoodSO));
+            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -unlockable.Cost.Food, unlockable.Cost.FoodSO));
 
             buildingQueue.Add(unlockable);
             if (buildingQueue.Count == 1)
@@ -93,8 +94,9 @@ namespace GameDevTV.RTS.Units
             }
 
             UnlockableSO unlockableSO = buildingQueue[index];
-            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, unlockableSO.Cost.Minerals, unlockableSO.Cost.MineralsSO));
-            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, unlockableSO.Cost.Gas, unlockableSO.Cost.GasSO));
+            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, unlockableSO.Cost.Stone, unlockableSO.Cost.StoneSO));
+            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, unlockableSO.Cost.Wood, unlockableSO.Cost.WoodSO));
+            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, unlockableSO.Cost.Food, unlockableSO.Cost.FoodSO));
             buildingQueue.RemoveAt(index);
             if (index == 0)
             {

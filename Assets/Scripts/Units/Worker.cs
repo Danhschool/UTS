@@ -74,8 +74,9 @@ namespace GameDevTV.RTS.Units
             graphAgent.SetVariableValue("Command", UnitCommands.BuildBuilding);
 
             SetCommandOverrides(new BaseCommand[] { CancelBuildingCommand });
-            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -building.Cost.Minerals, building.Cost.MineralsSO));
-            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -building.Cost.Gas, building.Cost.GasSO));
+            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -building.Cost.Stone, building.Cost.StoneSO));
+            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -building.Cost.Wood, building.Cost.WoodSO));
+            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -building.Cost.Food, building.Cost.FoodSO));
 
             return instance;
         }
@@ -104,13 +105,18 @@ namespace GameDevTV.RTS.Units
                 BuildingSO buildingSO = buildingVariable.Value.BuildingSO;
                 Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(
                     Owner,
-                    Mathf.FloorToInt(0.75f * buildingSO.Cost.Minerals),
-                    buildingSO.Cost.MineralsSO
+                    Mathf.FloorToInt(0.75f * buildingSO.Cost.Stone),
+                    buildingSO.Cost.StoneSO
                 ));
                 Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(
                     Owner,
-                    Mathf.FloorToInt(0.75f * buildingSO.Cost.Gas),
-                    buildingSO.Cost.GasSO
+                    Mathf.FloorToInt(0.75f * buildingSO.Cost.Wood),
+                    buildingSO.Cost.WoodSO
+                ));
+                Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(
+                    Owner,
+                    Mathf.FloorToInt(0.75f * buildingSO.Cost.Food),
+                    buildingSO.Cost.FoodSO
                 ));
             }
 

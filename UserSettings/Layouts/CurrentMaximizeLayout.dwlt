@@ -737,9 +737,9 @@ MonoBehaviour:
     speed: 2
     m_Value: {x: 0.35936198, y: -0.018580997, z: 0.007244197, w: 0.9329851}
   m_Size:
-    m_Target: 40.67102
+    m_Target: 58.88411
     speed: 2
-    m_Value: 40.67102
+    m_Value: 61.658752
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -895,8 +895,8 @@ MonoBehaviour:
     y: 527.2
     width: 949.6
     height: 237.59998
-  m_MinSize: {x: 101, y: 126}
-  m_MaxSize: {x: 4001, y: 4026}
+  m_MinSize: {x: 100, y: 100}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 2}
   m_Panes:
   - {fileID: 8}
@@ -1210,7 +1210,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 949.6
     y: 0
-    width: 285.59998
+    width: 280
     height: 764.8
   m_MinSize: {x: 100, y: 112}
   m_MaxSize: {x: 8096, y: 16192}
@@ -1234,7 +1234,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 285.59998
+    width: 280
     height: 450.4
   m_MinSize: {x: 200, y: 200}
   m_MaxSize: {x: 4000, y: 4000}
@@ -1266,7 +1266,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 949.60004
     y: 79.200005
-    width: 283.59998
+    width: 278
     height: 424.4
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -1283,19 +1283,18 @@ MonoBehaviour:
     m_DynamicPanelBehavior: 0
   m_SceneHierarchy:
     m_TreeViewState:
-      scrollPos: {x: 0, y: 11020.6}
+      scrollPos: {x: 0, y: 12.600006}
       m_SelectedIDs:
-      - m_Data: -52480
+      - m_Data: 54200
       m_LastClickedID:
-        m_Data: -52480
+        m_Data: 0
       m_ExpandedIDs:
-      - m_Data: -52470
+      - m_Data: -52460
       - m_Data: -1304
-      - m_Data: 63862
       m_RenameOverlay:
         m_UserAcceptedRename: 0
-        m_Name: Conifer_LOD0
-        m_OriginalName: Conifer_LOD0
+        m_Name: 
+        m_OriginalName: 
         m_EditFieldRect:
           serializedVersion: 2
           x: 0
@@ -1303,10 +1302,10 @@ MonoBehaviour:
           width: 0
           height: 0
         m_UserData:
-          m_Data: 71414
+          m_Data: 0
         m_IsWaitingForDelay: 0
         m_IsRenaming: 0
-        m_OriginalEventType: 0
+        m_OriginalEventType: 11
         m_IsRenamingFilename: 0
         m_TrimLeadingAndTrailingWhitespace: 0
         m_ClientGUIView: {fileID: 12}
@@ -1334,7 +1333,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 450.4
-    width: 285.59998
+    width: 280
     height: 314.4
   m_MinSize: {x: 232, y: 276}
   m_MaxSize: {x: 10002, y: 10026}
@@ -1366,7 +1365,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 949.60004
     y: 529.60004
-    width: 283.59998
+    width: 278
     height: 288.4
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -1392,7 +1391,7 @@ MonoBehaviour:
     m_SkipHidden: 1
     m_SearchArea: 1
     m_Folders:
-    - Assets/Data/Commands
+    - Assets/Data/Unit/Costs
     m_Globs: []
     m_ProductIds: 
     m_AnyWithAssetOrigin: 0
@@ -1417,6 +1416,10 @@ MonoBehaviour:
     - m_Data: 0
     - m_Data: 54342
     - m_Data: 54374
+    - m_Data: 69864
+    - m_Data: 69866
+    - m_Data: 69868
+    - m_Data: 69870
     - m_Data: 69872
     - m_Data: 69874
     - m_Data: 69876
@@ -1531,11 +1534,6 @@ MonoBehaviour:
     - m_Data: 70094
     - m_Data: 70096
     - m_Data: 70098
-    - m_Data: 70100
-    - m_Data: 70102
-    - m_Data: 70104
-    - m_Data: 70106
-    - m_Data: 70108
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1562,15 +1560,19 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_AssetTreeState:
-    scrollPos: {x: 0, y: 540}
+    scrollPos: {x: 0, y: 3757.6}
     m_SelectedIDs:
-    - m_Data: -52480
+    - m_Data: 54200
     m_LastClickedID:
-      m_Data: 0
+      m_Data: 54200
     m_ExpandedIDs:
     - m_Data: 0
     - m_Data: 54342
     - m_Data: 54374
+    - m_Data: 69864
+    - m_Data: 69866
+    - m_Data: 69868
+    - m_Data: 69870
     - m_Data: 69872
     - m_Data: 69874
     - m_Data: 69876
@@ -1682,17 +1684,16 @@ MonoBehaviour:
     - m_Data: 70088
     - m_Data: 70090
     - m_Data: 70092
-    - m_Data: 70094
     - m_Data: 70096
     - m_Data: 70098
-    - m_Data: 70102
-    - m_Data: 70104
-    - m_Data: 70106
-    - m_Data: 70108
+    - m_Data: 70458
+    - m_Data: 70464
+    - m_Data: 70466
+    - m_Data: 70468
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: Rock_Overgrown_B
-      m_OriginalName: Rock_Overgrown_B
+      m_Name: Research Infantry Weapons 3
+      m_OriginalName: Research Infantry Weapons 3
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
@@ -1700,7 +1701,7 @@ MonoBehaviour:
         width: 0
         height: 0
       m_UserData:
-        m_Data: 67092
+        m_Data: 54460
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
       m_OriginalEventType: 0
@@ -1716,8 +1717,8 @@ MonoBehaviour:
       m_ResourceFile: 
   m_ListAreaState:
     m_SelectedInstanceIDs:
-    - m_Data: -52480
-    m_LastClickedInstanceID: -52480
+    - m_Data: 54200
+    m_LastClickedInstanceID: 54200
     m_HadKeyboardFocusLastEvent: 0
     m_ExpandedInstanceIDs: []
     m_RenameOverlay:
@@ -1764,12 +1765,12 @@ MonoBehaviour:
   m_Children: []
   m_Position:
     serializedVersion: 2
-    x: 1235.2
+    x: 1229.6
     y: 0
-    width: 300.80005
+    width: 306.40002
     height: 764.8
-  m_MinSize: {x: 276, y: 76}
-  m_MaxSize: {x: 4001, y: 4026}
+  m_MinSize: {x: 275, y: 50}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 17}
   m_Panes:
   - {fileID: 17}
@@ -1797,9 +1798,9 @@ MonoBehaviour:
     m_TextWithWhitespace: "Inspector\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 1235.2001
+    x: 1229.6
     y: 79.200005
-    width: 299.80005
+    width: 305.40002
     height: 738.8
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -1821,7 +1822,7 @@ MonoBehaviour:
     m_ControlHash: -371814159
     m_PrefName: Preview_InspectorPreview
   m_LastInspectedObjectInstanceID: -1
-  m_LastVerticalScrollValue: 0
+  m_LastVerticalScrollValue: 1246.3999
   m_GlobalObjectId: 
   m_InspectorMode: 0
   m_LockTracker:
