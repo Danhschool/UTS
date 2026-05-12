@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0eef7dcb35dcdc54091cba8fca578602, type: 3}
   m_Name: Attack Delay 1
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.TechTree.AdditiveFloatModifierSO
-  <Name>k__BackingField: Attack Delay
+  <Name>k__BackingField: Attack Delay 1
   <IsOneTimeUnlock>k__BackingField: 1
   <BuildTime>k__BackingField: 5
   <Icon>k__BackingField: {fileID: 21300000, guid: 3746b5272e9908f449636cda6e6c67e6, type: 3}

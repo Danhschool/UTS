@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99123b4c91ef4f0d8a7c019c45e90d33, type: 3}
   m_Name: Gather Amount 3
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.TechTree.AdditiveIntModifierSO
-  <Name>k__BackingField: Gather Amount
+  <Name>k__BackingField: Gather Amount 3
   <IsOneTimeUnlock>k__BackingField: 1
   <BuildTime>k__BackingField: 5
   <Icon>k__BackingField: {fileID: 21300000, guid: 1c21b4da4e72a3043b303ec1fc3dd82f, type: 3}

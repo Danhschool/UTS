@@ -21,7 +21,22 @@ MonoBehaviour:
   <unlockRequirements>k__BackingField: []
   <Health>k__BackingField: 200
   <Prefab>k__BackingField: {fileID: 3127381923673660962, guid: f66f116ca87be0142970f69d81af2967, type: 3}
-  <Upgrades>k__BackingField: []
+  <Upgrades>k__BackingField:
+  - {fileID: 11400000, guid: 5b0b6af605c07ac48b70bdb931e0ff17, type: 2}
+  - {fileID: 11400000, guid: 4113d3b50f3b34c4f93298a287f69e11, type: 2}
+  - {fileID: 11400000, guid: 4ec413adae59aa74987852e58d68060f, type: 2}
+  - {fileID: 11400000, guid: 8f022912492d9fa4c948e01d2d7c20f5, type: 2}
+  - {fileID: 11400000, guid: f8852cd73fbbfe24a869cdb3abe2740f, type: 2}
+  - {fileID: 11400000, guid: e1bd4f29149e6224981aa919752b5a2e, type: 2}
+  - {fileID: 11400000, guid: 35a264f03396c544ba2137324727a50d, type: 2}
+  - {fileID: 11400000, guid: 1cdc59f0d4e72d04d9908dd605aa19fa, type: 2}
+  - {fileID: 11400000, guid: 2a94b3ffe6f83c74aa72f8dedc9ba774, type: 2}
+  - {fileID: 11400000, guid: e8cb3adce017a704cbd6d3f90fca9844, type: 2}
+  - {fileID: 11400000, guid: 5795e5fff15537343876403dff3e12bc, type: 2}
+  - {fileID: 11400000, guid: 81f02ac8079bf964f803aba15ac34f66, type: 2}
   <SightConfig>k__BackingField: {fileID: 11400000, guid: 5c3b553eafeb3c346b8a160742ab07c1, type: 2}
   <AttackConfig>k__BackingField: {fileID: 11400000, guid: 5d53c0fd6d425b1488fadda4862c808c, type: 2}
   <TransportConfig>k__BackingField: {fileID: 11400000, guid: 934e598ea6a2e664dba1454f8964f255, type: 2}
+  <MoveSpeed>k__BackingField: 3.5
+  <GatherTimeMultiplier>k__BackingField: 1
+  <GatherAmountBonus>k__BackingField: 0
