@@ -21,15 +21,15 @@ namespace GameDevTV.RTS.Behavior
         protected override Status OnStart()
         {
             Collider[] colliders = Physics.OverlapSphere(
-                Unit.Value.transform.position, 
-                SearchRadius.Value, 
+                Unit.Value.transform.position,
+                SearchRadius.Value,
                 LayerMask.GetMask("Buildings"));
 
             List<BaseBuilding> nearbyCommandPosts = new();
 
-            foreach(Collider collider in colliders)
+            foreach (Collider collider in colliders)
             {
-                if (collider.TryGetComponent(out BaseBuilding building) 
+                if (collider.TryGetComponent(out BaseBuilding building)
                         && building.UnitSO.Equals(CommandPostBuilding.Value)
                         && building.Progress.State == BuildingProgress.BuildingState.Completed)
                 {

@@ -14,7 +14,7 @@ namespace GameDevTV.RTS.Environment
         [field: SerializeField] public bool IsBusy { get; private set; }
         [field: SerializeField] public bool IsVisible { get; private set; }
         public Transform Transform => this == null ? null : transform;
-        
+
         private Placeholder culledVisuals;
         private Renderer[] renderers = Array.Empty<Renderer>();
         private ParticleSystem[] particleSystems = Array.Empty<ParticleSystem>();

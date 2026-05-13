@@ -448,7 +448,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 729bb45b4c50acd449385bcc3c54bb31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Environment.GatherableSupply
-  <Supply>k__BackingField: {fileID: 11400000, guid: eb946746825c03d4aaa584efe3a790f5, type: 2}
+  <Supply>k__BackingField: {fileID: 11400000, guid: 7d796433841096a47826454e08f211d8, type: 2}
   <Amount>k__BackingField: 0
   <IsBusy>k__BackingField: 0
   <IsVisible>k__BackingField: 0

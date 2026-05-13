@@ -43,6 +43,6 @@ MonoBehaviour:
   <SightConfig>k__BackingField: {fileID: 11400000, guid: 5c3b553eafeb3c346b8a160742ab07c1, type: 2}
   <AttackConfig>k__BackingField: {fileID: 11400000, guid: 24ebff1112b1b024ab9a5b6c913d27f7, type: 2}
   <TransportConfig>k__BackingField: {fileID: 11400000, guid: 934e598ea6a2e664dba1454f8964f255, type: 2}
-  <MoveSpeed>k__BackingField: 3.5
+  <MoveSpeed>k__BackingField: 7
   <GatherTimeMultiplier>k__BackingField: 1
   <GatherAmountBonus>k__BackingField: 0

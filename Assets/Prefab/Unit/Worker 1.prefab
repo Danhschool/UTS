@@ -122,7 +122,7 @@ Animator:
   m_Controller: {fileID: 9100000, guid: 221c5e65582f6724eaf85900ee49835a, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
-  m_ApplyRootMotion: 0
+  m_ApplyRootMotion: 1
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
@@ -141,10 +141,10 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 3.5
+  m_Speed: 7
   m_Acceleration: 8
   avoidancePriority: 50
-  m_AngularSpeed: 120
+  m_AngularSpeed: 360
   m_StoppingDistance: 1
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
@@ -168,21 +168,21 @@ MonoBehaviour:
   <IsSelected>k__BackingField: 0
   <CurrentHealth>k__BackingField: 0
   <MaxHealth>k__BackingField: 0
-  <Owner>k__BackingField: 0
+  <Owner>k__BackingField: 2
   <IsVisible>k__BackingField: 1
   <AvailableCommands>k__BackingField:
-  - {fileID: 11400000, guid: ed12d7bbbd8a32d46a3315cea9f38791, type: 2}
-  - {fileID: 11400000, guid: 5711e626ee3260d4388aaac5e505ab47, type: 2}
-  - {fileID: 11400000, guid: 9d6e954ce0a9a934492a858213ad680e, type: 2}
-  - {fileID: 11400000, guid: 5b88f1c2df63cea41a0b8cd466334886, type: 2}
-  - {fileID: 11400000, guid: 84c8d4cd8863b1244994c4ca7b8d09a6, type: 2}
-  - {fileID: 11400000, guid: cc4c6cbe12074ef4381e6e573f4503b5, type: 2}
-  <UnitSO>k__BackingField: {fileID: 11400000, guid: f15d9d4a0e8b3d848a49aaba59177157, type: 2}
+  - {fileID: 11400000, guid: 54a888bdb0cc15f468e29ca9f58032bd, type: 2}
+  - {fileID: 11400000, guid: 26bf2e9ce501b104d99d28589db47a82, type: 2}
+  - {fileID: 11400000, guid: cc8def21fcb1a9042b36ef47f5448b30, type: 2}
+  - {fileID: 11400000, guid: 6ad2276b264dcb84e9ea2f32d944240b, type: 2}
+  - {fileID: 11400000, guid: de6013e80ff244c49831aa4c5b3e4aec, type: 2}
+  - {fileID: 11400000, guid: ed3aefcbdfec5494ebe14a2091e8704d, type: 2}
+  <UnitSO>k__BackingField: {fileID: 11400000, guid: b3a52b4c84453094d9ce598d151af20e, type: 2}
   decalProjector: {fileID: 502642769604517157}
   VisionTransform: {fileID: 7021267853508300106}
   <AttackingParticleSystem>k__BackingField: {fileID: 0}
   DamageableSensor: {fileID: 3910576773276331809}
-  CancelBuildingCommand: {fileID: 11400000, guid: 166415456c8d4cd4282c9686f36a509b, type: 2}
+  CancelBuildingCommand: {fileID: 11400000, guid: 3d8b91764e7675d4f9c61f40d9e7fed5, type: 2}
 --- !u!136 &1320190712326493636
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -221,12 +221,21 @@ MonoBehaviour:
   m_Graph: {fileID: 4598362100129326914, guid: 10e583af0fed7ba439be975c79f1f0fc, type: 2}
   m_BlackboardVariableOverridesList:
   - rid: 9064456540193555416
-  m_OriginalGraph: {fileID: 0}
+  - rid: 6661590505573318866
+  m_OriginalGraph: {fileID: 4598362100129326914, guid: 10e583af0fed7ba439be975c79f1f0fc, type: 2}
   m_IsInitialised: 0
   m_IsStarted: 0
   references:
     version: 2
     RefIds:
+    - rid: 6661590505573318866
+      type: {class: 'BlackboardVariable`1[[GameDevTV.RTS.Units.BuildingSO, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
+      data:
+        GUID:
+          m_Value0: 18043796197266423170
+          m_Value1: 17242000418660485340
+        Name: CommandPostSO
+        m_Value: {fileID: 11400000, guid: 2b6d7a8b04944ea4eaebc73001c8442d, type: 2}
     - rid: 9064456540193555416
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
@@ -314,7 +323,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 1052221357102757136, guid: 995a366c4d822d44abd89d10d725deb1, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

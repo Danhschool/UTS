@@ -23,7 +23,7 @@ namespace GameDevTV.RTS.Behavior
 
         protected override Status OnStart()
         {
-            if (GatherableSupplies.Value == null) 
+            if (GatherableSupplies.Value == null)
             {
                 return Status.Failure;
             }

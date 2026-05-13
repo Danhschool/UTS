@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe71856ab070fd748aaf455281f9040e, type: 3}
   m_Name: Show Buildings
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   <Name>k__BackingField: Build
   <Icon>k__BackingField: {fileID: 21300000, guid: a5df28aa58ab6264bb16fe1e21c4e327, type: 3}
   <Slot>k__BackingField: 6

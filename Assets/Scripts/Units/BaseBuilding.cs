@@ -23,6 +23,8 @@ namespace GameDevTV.RTS.Units
         [field: SerializeField] public BuildingSO BuildingSO { get; private set; }
         [SerializeField] private Material primaryMaterial;
         [SerializeField] private NavMeshObstacle navMeshObstacle;
+        [Tooltip("Kéo child empty (ví dụ cửa nhà) nằm trên NavMesh. Để trống thì unit spawn tại vị trí building.")]
+        [SerializeField] private Transform unitSpawnPoint;
 
         public delegate void QueueUpdatedEvent(UnlockableSO[] unitsInQueue);
         public event QueueUpdatedEvent OnQueueUpdated;
@@ -168,7 +170,8 @@ namespace GameDevTV.RTS.Units
 
                 if (SOBeingBuilt is AbstractUnitSO unitSO)
                 {
-                    GameObject instance = Instantiate(unitSO.Prefab, transform.position, Quaternion.identity);
+                    Vector3 spawn = GetUnitSpawnWorldPosition();
+                    GameObject instance = Instantiate(unitSO.Prefab, spawn, Quaternion.identity);
                     if (instance.TryGetComponent(out AbstractCommandable commandable))
                     {
                         commandable.Owner = Owner;
@@ -184,6 +187,13 @@ namespace GameDevTV.RTS.Units
 
             OnQueueUpdated?.Invoke(buildingQueue.ToArray());
         }
+
+        /// <summary>
+        /// Mục tiêu: Cho biết world position spawn unit từ hàng đợi nhà (theo điểm bạn chọn trong Inspector hoặc pivot nhà).
+        /// Cách hoạt động: Nếu có <see cref="unitSpawnPoint"/> thì trả về vị trí của nó, không thì dùng <see cref="Transform.position"/> của building.
+        /// </summary>
+        private Vector3 GetUnitSpawnWorldPosition() =>
+            unitSpawnPoint != null ? unitSpawnPoint.position : transform.position;
 
         protected override void OnDestroy()
         {
