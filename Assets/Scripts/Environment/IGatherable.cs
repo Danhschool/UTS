@@ -4,9 +4,8 @@ namespace GameDevTV.RTS.Environment
     {
         public SupplySO Supply { get; }
         public int Amount { get; }
-        public bool IsBusy { get; }
 
-        public bool BeginGather();
+        public void BeginGather();
         public int EndGather(int bonusPerGather = 0);
         public void AbortGather();
     }

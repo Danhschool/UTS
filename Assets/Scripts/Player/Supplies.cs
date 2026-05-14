@@ -113,6 +113,11 @@ namespace GameDevTV.RTS.Player
 
         private void HandleSupplyEvent(SupplyEvent evt)
         {
+            if (evt.Supply == null)
+            {
+                return;
+            }
+
             if (evt.Supply.Equals(stoneSO))
             {
                 Stone[evt.Owner] += evt.Amount;

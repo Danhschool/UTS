@@ -27,7 +27,7 @@ Tài liệu này mô tả **cấu trúc code hiện có** trong `Assets/Scripts`
 | **Fog of war (ẩn unit ngoài tầm nhìn)** | `Player/FogVisibilityManager.cs`, `Units/AbstractCommandable.cs` (`IHideable`, `VisionTransform`) |
 | **HUD tổng** | `UI/RuntimeUI.cs` |
 | **Camera RTS** | `Player/PlayerInput.cs` (pan/zoom/rotate), `Player/CameraConfig.cs`, Cinemachine refs trên `PlayerInput` |
-| **Con trỏ di chuyển** | `Movement/MovementCursor.cs` (global namespace) |
+| **Con trỏ di chuyển** | `Movement/MovementCursor.cs` (spawn từ `AbstractUnit.MoveTo`) |
 | **Minimap** | **Chưa có code** — chỉ khung UI trong `Assets/UI/Runtime UI UGUI.prefab` (`Minimap Container` / `Minimap Mask` / `Minimap`); object `Minimap` hiện chỉ có `RectTransform` + `CanvasRenderer`, chưa gắn `RawImage`/camera RT; kế hoạch xem `docs/detailed-game-development-plan.md` (Phase 8). |
 | **Ràng buộc đặt nhà** | `Commands/BuildingRestrictionSO.cs` |
 | **Giọng nói** | `SpeechRecognition/Core/VoiceCommandRouter.cs`, `Vosk/VoskSpeechRecognitionBackend.cs`, `VoiceCommandProfile` |

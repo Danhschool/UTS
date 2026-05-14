@@ -11,7 +11,6 @@ namespace GameDevTV.RTS.Environment
     {
         [field: SerializeField] public SupplySO Supply { get; private set; }
         [field: SerializeField] public int Amount { get; private set; }
-        [field: SerializeField] public bool IsBusy { get; private set; }
         [field: SerializeField] public bool IsVisible { get; private set; }
         public Transform Transform => this == null ? null : transform;
 
@@ -38,20 +37,13 @@ namespace GameDevTV.RTS.Environment
             Bus<SupplyDepletedEvent>.Raise(Owner.Unowned, new SupplyDepletedEvent(this));
         }
 
-        public bool BeginGather()
+        public void BeginGather()
         {
-            if (IsBusy)
-            {
-                return false;
-            }
-
-            IsBusy = true;
-            return true;
+            // Nhiều unit có thể gather cùng lúc — không khóa node.
         }
 
         public int EndGather(int bonusPerGather = 0)
         {
-            IsBusy = false;
             int perTrip = Mathf.Max(0, Supply.AmountPerGather + bonusPerGather);
             int amountGathered = Mathf.Min(perTrip, Amount);
             Amount -= amountGathered;
@@ -66,7 +58,7 @@ namespace GameDevTV.RTS.Environment
 
         public void AbortGather()
         {
-            IsBusy = false;
+            // Không còn trạng thái busy trên supply; giữ hook cho behavior graph / hủy gather.
         }
 
         public void SetVisible(bool isVisible)

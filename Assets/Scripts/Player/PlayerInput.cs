@@ -399,7 +399,12 @@ namespace GameDevTV.RTS.Player
             Ray cameraRay = camera.ScreenPointToRay(Mouse.current.position.ReadValue());
 
             if (Mouse.current.rightButton.wasReleasedThisFrame
-                && Physics.Raycast(cameraRay, out RaycastHit hit, float.MaxValue, interactableLayers | floorLayers))
+                && Physics.Raycast(
+                    cameraRay,
+                    out RaycastHit hit,
+                    float.MaxValue,
+                    interactableLayers | floorLayers,
+                    QueryTriggerInteraction.Collide))
             {
                 List<AbstractUnit> abstractUnits = new (selectedUnits.Count);
                 foreach(ISelectable selectable in selectedUnits)
@@ -431,27 +436,12 @@ namespace GameDevTV.RTS.Player
             }
         }
 
-        private List<BaseCommand> GetAvailableCommands(AbstractUnit unit)
-        {
-            OverrideCommandsCommand[] overrideCommandsCommands = unit.AvailableCommands
-                .Where(command => command is OverrideCommandsCommand)
-                .Cast<OverrideCommandsCommand>()
-                .ToArray();
+        private List<BaseCommand> GetAvailableCommands(AbstractUnit unit) => AvailableCommandsResolver.GetFlattened(unit);
 
-            List<BaseCommand> allAvailableCommands = new();
-            foreach(OverrideCommandsCommand overrideCommand in overrideCommandsCommands)
-            {
-                allAvailableCommands.AddRange(overrideCommand.Commands
-                    .Where(command => command is not OverrideCommandsCommand)
-                );
-            }
-
-            allAvailableCommands.AddRange(unit.AvailableCommands
-                .Where(command => command is not OverrideCommandsCommand)
-            );
-
-            return allAvailableCommands;
-        }
+        /// <summary>
+        /// True khi người chơi đang chọn lệnh cần click thế giới (ghost đặt nhà / v.v.) — không nên đổi hardware cursor.
+        /// </summary>
+        public bool IsAwaitingWorldCommandClick => activeCommand != null && activeCommand.RequiresClickToActivate;
 
         private void HandleLeftClick()
         {
@@ -459,15 +449,48 @@ namespace GameDevTV.RTS.Player
 
             Ray cameraRay = camera.ScreenPointToRay(Mouse.current.position.ReadValue());
 
-            if (activeCommand == null
-                && Physics.Raycast(cameraRay, out RaycastHit hit, float.MaxValue, selectableUnitsLayers)
-                && hit.collider.TryGetComponent(out ISelectable selectable))
+            if (activeCommand == null)
             {
-                selectable.Select();
+                RaycastHit[] hits = Physics.RaycastAll(
+                    cameraRay,
+                    float.MaxValue,
+                    selectableUnitsLayers,
+                    QueryTriggerInteraction.Collide);
+                if (hits.Length == 0)
+                {
+                    return;
+                }
+
+                System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+                foreach (RaycastHit h in hits)
+                {
+                    AbstractUnit unit = h.collider.GetComponentInParent<AbstractUnit>();
+                    if (unit != null)
+                    {
+                        unit.Select();
+                        return;
+                    }
+                }
+
+                foreach (RaycastHit h in hits)
+                {
+                    AbstractCommandable commandable = h.collider.GetComponentInParent<AbstractCommandable>();
+                    if (commandable is ISelectable selectable)
+                    {
+                        selectable.Select();
+                        return;
+                    }
+                }
             }
             else if (activeCommand != null
                 && !EventSystem.current.IsPointerOverGameObject()
-                && Physics.Raycast(cameraRay, out hit, float.MaxValue, interactableLayers | floorLayers))
+                && Physics.Raycast(
+                    cameraRay,
+                    out RaycastHit hit,
+                    float.MaxValue,
+                    interactableLayers | floorLayers,
+                    QueryTriggerInteraction.Collide))
             {
                 ActivateAction(hit);
             }

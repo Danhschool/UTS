@@ -1,5 +1,6 @@
 using GameDevTV.RTS.Units;
 using UnityEngine;
+using UnityEngine.InputSystem.LowLevel;
 
 namespace GameDevTV.RTS.Commands
 {
@@ -8,7 +9,8 @@ namespace GameDevTV.RTS.Commands
     {
         public override bool CanHandle(CommandContext context)
         {
-            return context.Commandable is AbstractUnit;
+            // Stop chỉ dùng từ UI / ActivateAction (MouseButton.Left mặc định), không cướp chuột phải ra lệnh di chuyển.
+            return context.Commandable is AbstractUnit && context.Button != MouseButton.Right;
         }
 
         public override void Handle(CommandContext context)

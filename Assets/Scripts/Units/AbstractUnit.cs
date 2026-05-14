@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
@@ -19,6 +20,16 @@ namespace GameDevTV.RTS.Units
         public Sprite Icon => UnitSO.Icon;
         protected BehaviorGraphAgent graphAgent;
         protected UnitSO unitSO;
+
+        [Header("Movement destination marker")]
+        [Tooltip("Spawned at move target when MoveTo is issued; destroyed when the unit finishes this move or changes command.")]
+        [SerializeField] private GameObject movementDestinationCursorPrefab;
+        [SerializeField] private Color movementDestinationCursorColor = new(0f, 0.85f, 1f, 1f);
+        [Tooltip("Minimum time the cursor stays visible so it is not destroyed before NavMesh builds a path.")]
+        [SerializeField] private float movementDestinationCursorMinVisibleSeconds = 0.2f;
+
+        private GameObject activeMovementDestinationCursor;
+        private Coroutine movementDestinationCursorRoutine;
 
         protected override void Awake()
         {
@@ -95,28 +106,33 @@ namespace GameDevTV.RTS.Units
             graphAgent.SetVariableValue("TargetLocation", position);
             graphAgent.SetVariableValue<GameObject>("TargetGameObject", null);
             graphAgent.SetVariableValue("Command", UnitCommands.Move);
+            SpawnMovementDestinationCursorAt(position);
         }
 
         public void MoveTo(Transform transform)
         {
             graphAgent.SetVariableValue("TargetGameObject", transform.gameObject);
             graphAgent.SetVariableValue("Command", UnitCommands.Move);
+            SpawnMovementDestinationCursorAt(transform.position);
         }
 
         public void Stop()
         {
+            DisposeMovementDestinationCursor();
             SetCommandOverrides(null);
             graphAgent.SetVariableValue("Command", UnitCommands.Stop);
         }
 
         public void Attack(IDamageable damageable)
         {
+            DisposeMovementDestinationCursor();
             graphAgent.SetVariableValue("TargetGameObject", damageable.Transform.gameObject);
             graphAgent.SetVariableValue("Command", UnitCommands.Attack);
         }
 
         public void Attack(Vector3 location)
         {
+            DisposeMovementDestinationCursor();
             graphAgent.SetVariableValue<GameObject>("TargetGameObject", null);
             graphAgent.SetVariableValue("TargetLocation", location);
             graphAgent.SetVariableValue("Command", UnitCommands.Attack);
@@ -162,8 +178,83 @@ namespace GameDevTV.RTS.Units
             return nearbyEnemies;
         }
 
+        /// <summary>
+        /// Stops tracking and destroys the move-destination cursor (e.g. when issuing Gather/Build or on death).
+        /// </summary>
+        protected void DisposeMovementDestinationCursor()
+        {
+            if (movementDestinationCursorRoutine != null)
+            {
+                StopCoroutine(movementDestinationCursorRoutine);
+                movementDestinationCursorRoutine = null;
+            }
+
+            if (activeMovementDestinationCursor != null)
+            {
+                Destroy(activeMovementDestinationCursor);
+                activeMovementDestinationCursor = null;
+            }
+        }
+
+        /// <summary>
+        /// Spawns the optional cursor prefab at the move goal and removes it when Nav arrival matches MoveToTarget*Action or command leaves Move.
+        /// </summary>
+        private void SpawnMovementDestinationCursorAt(Vector3 worldPosition)
+        {
+            DisposeMovementDestinationCursor();
+
+            if (movementDestinationCursorPrefab == null)
+            {
+                return;
+            }
+
+            activeMovementDestinationCursor = Instantiate(movementDestinationCursorPrefab, worldPosition, Quaternion.identity);
+            MovementCursor cursor = activeMovementDestinationCursor.GetComponentInChildren<MovementCursor>();
+            if (cursor != null)
+            {
+                cursor.AnimateOnPos(worldPosition, movementDestinationCursorColor);
+            }
+
+            movementDestinationCursorRoutine = StartCoroutine(MovementDestinationCursorLifetimeRoutine());
+        }
+
+        private IEnumerator MovementDestinationCursorLifetimeRoutine()
+        {
+            yield return null;
+
+            float spawnTime = Time.time;
+
+            while (enabled && graphAgent != null)
+            {
+                if (!graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> cmdVar)
+                    || cmdVar.Value != UnitCommands.Move)
+                {
+                    break;
+                }
+
+                bool minTimeElapsed = Time.time - spawnTime >= movementDestinationCursorMinVisibleSeconds;
+                bool pathReady = Agent != null && Agent.hasPath && !Agent.pathPending;
+                bool atDestination = Agent != null && Agent.remainingDistance <= Agent.stoppingDistance;
+
+                if (minTimeElapsed && pathReady && atDestination)
+                {
+                    break;
+                }
+
+                yield return null;
+            }
+
+            movementDestinationCursorRoutine = null;
+            if (activeMovementDestinationCursor != null)
+            {
+                Destroy(activeMovementDestinationCursor);
+                activeMovementDestinationCursor = null;
+            }
+        }
+
         protected override void OnDestroy()
         {
+            DisposeMovementDestinationCursor();
             base.OnDestroy();
             Bus<UnitDeathEvent>.Raise(Owner, new UnitDeathEvent(this));
         }

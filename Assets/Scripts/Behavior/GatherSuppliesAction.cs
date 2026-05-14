@@ -20,26 +20,38 @@ namespace GameDevTV.RTS.Behavior
 
         private Animator animator;
         private float enterTime;
+        private bool didBeginGather;
 
         protected override Status OnStart()
         {
+            didBeginGather = false;
+
+            // Hết node / chưa gán Supply: không fail cả Sequence (để các node sau như về CP vẫn chạy).
             if (GatherableSupplies.Value == null)
             {
-                return Status.Failure;
+                return Status.Success;
             }
+
             enterTime = Time.time;
 
-            if (Unit.Value.TryGetComponent(out animator))
+            if (Unit.Value != null && Unit.Value.TryGetComponent(out animator))
             {
                 animator.SetBool(AnimationConstants.IS_ENGAGING, true);
             }
+
             GatherableSupplies.Value.BeginGather();
+            didBeginGather = true;
             SupplySO.Value = GatherableSupplies.Value.Supply;
             return Status.Running;
         }
 
         protected override Status OnUpdate()
         {
+            if (GatherableSupplies.Value == null)
+            {
+                return Status.Success;
+            }
+
             float baseTime = GatherableSupplies.Value.Supply.BaseGatherTime;
             float mult = 1f;
             if (Unit.Value != null
@@ -59,28 +71,48 @@ namespace GameDevTV.RTS.Behavior
 
         protected override void OnEnd()
         {
-            if (animator != null)
+            try
             {
-                animator.SetBool(AnimationConstants.IS_ENGAGING, false);
-            }
-
-            if (GatherableSupplies.Value == null) return;
-
-            if (CurrentStatus == Status.Success)
-            {
-                int bonus = 0;
-                if (Unit.Value != null
-                    && Unit.Value.TryGetComponent(out AbstractCommandable commandable)
-                    && commandable.UnitSO is UnitSO unitSo)
+                if (animator != null)
                 {
-                    bonus = unitSo.GatherAmountBonus;
+                    animator.SetBool(AnimationConstants.IS_ENGAGING, false);
                 }
 
-                Amount.Value = GatherableSupplies.Value.EndGather(bonus);
+                if (CurrentStatus == Status.Success)
+                {
+                    if (!didBeginGather)
+                    {
+                        return;
+                    }
+
+                    if (GatherableSupplies.Value == null)
+                    {
+                        return;
+                    }
+
+                    int bonus = 0;
+                    if (Unit.Value != null
+                        && Unit.Value.TryGetComponent(out AbstractCommandable commandable)
+                        && commandable.UnitSO is UnitSO unitSo)
+                    {
+                        bonus = unitSo.GatherAmountBonus;
+                    }
+
+                    GatherableSupply supplyRef = GatherableSupplies.Value;
+                    Amount.Value = supplyRef.EndGather(bonus);
+                    if (supplyRef == null)
+                    {
+                        GatherableSupplies.Value = null;
+                    }
+                }
+                else if (didBeginGather && GatherableSupplies.Value != null)
+                {
+                    GatherableSupplies.Value.AbortGather();
+                }
             }
-            else
+            finally
             {
-                GatherableSupplies.Value.AbortGather();
+                didBeginGather = false;
             }
         }
     }

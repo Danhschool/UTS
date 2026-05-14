@@ -48,6 +48,7 @@ namespace GameDevTV.RTS.Units
 
         public void Gather(GatherableSupply supply)
         {
+            DisposeMovementDestinationCursor();
             graphAgent.SetVariableValue("Supply", supply);
             graphAgent.SetVariableValue("TargetGameObject", supply.gameObject);
             graphAgent.SetVariableValue("Command", UnitCommands.Gather);
@@ -55,12 +56,14 @@ namespace GameDevTV.RTS.Units
 
         public void ReturnSupplies(GameObject commandPost)
         {
+            DisposeMovementDestinationCursor();
             graphAgent.SetVariableValue("CommandPost", commandPost);
             graphAgent.SetVariableValue("Command", UnitCommands.ReturnSupplies);
         }
 
         public GameObject Build(BuildingSO building, Vector3 targetLocation)
         {
+            DisposeMovementDestinationCursor();
             GameObject instance = Instantiate(building.Prefab, targetLocation, Quaternion.identity);
             if (!instance.TryGetComponent(out BaseBuilding baseBuilding))
             {
@@ -83,6 +86,7 @@ namespace GameDevTV.RTS.Units
 
         public void ResumeBuilding(BaseBuilding building)
         {
+            DisposeMovementDestinationCursor();
             graphAgent.SetVariableValue("TargetLocation", building.transform.position);
             graphAgent.SetVariableValue("BuildingUnderConstruction", building);
             graphAgent.SetVariableValue("BuildingSO", building.BuildingSO);
@@ -142,6 +146,11 @@ namespace GameDevTV.RTS.Units
 
         private void HandleGatherSupplies(GameObject self, int amount, SupplySO supply)
         {
+            if (supply == null)
+            {
+                return;
+            }
+
             Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, amount, supply));
         }
 

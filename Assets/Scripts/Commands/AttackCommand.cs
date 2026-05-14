@@ -13,10 +13,15 @@ namespace GameDevTV.RTS.Commands
                 return false;
             }
 
-            // Right-click dispatch should only pick attack when clicking a valid visible damageable target.
+            // Right-click: chỉ địch có Owner khác unit đang ra lệnh (không “attack” đồng minh / chính mình).
             if (context.Button == UnityEngine.InputSystem.LowLevel.MouseButton.Right)
             {
-                return context.Hit.collider.TryGetComponent(out IDamageable _) && IsHitColliderVisible(context);
+                if (!context.Hit.collider.TryGetComponent(out IDamageable damageable) || !IsHitColliderVisible(context))
+                {
+                    return false;
+                }
+
+                return damageable.Owner != context.Commandable.Owner;
             }
 
             return true;
@@ -27,7 +32,14 @@ namespace GameDevTV.RTS.Commands
             IAttacker attacker = context.Commandable as IAttacker;
             if (context.Hit.collider.TryGetComponent(out IDamageable damageable) && IsHitColliderVisible(context))
             {
-                attacker.Attack(damageable);
+                if (damageable.Owner != context.Commandable.Owner)
+                {
+                    attacker.Attack(damageable);
+                }
+                else
+                {
+                    attacker.Attack(context.Hit.point);
+                }
             }
             else
             {

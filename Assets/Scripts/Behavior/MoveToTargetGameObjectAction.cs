@@ -20,6 +20,31 @@ namespace GameDevTV.RTS.Behavior
         private Animator animator;
         private Vector3 lastPosition;
 
+        /// <summary>Kiểm tra agent đã tới gần điểm đích trong không gian thế giới (tránh Success sớm chỉ dựa vào remainingDistance).</summary>
+        /// <remarks>Dùng max(stoppingDistance, MoveThreshold) làm ngưỡng slack; phù hợp khi stoppingDistance NavMesh rất nhỏ hoặc remainingDistance báo sai lúc path pending.</remarks>
+        private bool IsWithinArrivalSlack(Vector3 goalWorld)
+        {
+            float slack = Mathf.Max(agent.stoppingDistance, MoveThreshold != null ? MoveThreshold.Value : 0.25f);
+            return Vector3.Distance(agent.transform.position, goalWorld) <= slack;
+        }
+
+        /// <summary>Coi là đã tới khi path không còn pending và vị trí thực nằm trong slack tới goal.</summary>
+        /// <remarks>Không chỉ dựa remainingDistance vì giá trị này có thể 0/sai trước khi path ổn định, gây Success sớm.</remarks>
+        private bool HasArrivedAt(Vector3 goalWorld)
+        {
+            if (agent == null || !agent.isOnNavMesh)
+            {
+                return false;
+            }
+
+            if (agent.pathPending)
+            {
+                return false;
+            }
+
+            return IsWithinArrivalSlack(goalWorld);
+        }
+
         protected override Status OnStart()
         {
             if (!Agent.Value.TryGetComponent(out agent))
@@ -43,7 +68,7 @@ namespace GameDevTV.RTS.Behavior
 
             Vector3 targetPosition = GetTargetPosition();
 
-            if (Vector3.Distance(agent.transform.position, targetPosition) <= agent.stoppingDistance)
+            if (IsWithinArrivalSlack(targetPosition))
             {
                 return Status.Success;
             }
@@ -67,13 +92,14 @@ namespace GameDevTV.RTS.Behavior
                     && Agent.Value.TryGetComponent(out BehaviorGraphAgent graphAgent)
                     && graphAgent.GetVariable("TargetLocation", out BlackboardVariable<Vector3> targetLocation))
                 {
-                    if (Vector3.Distance(targetLocation.Value, lastPosition) >= MoveThreshold)
+                    float threshold = MoveThreshold != null ? MoveThreshold.Value : 0.25f;
+                    if (Vector3.Distance(targetLocation.Value, lastPosition) >= threshold)
                     {
                         agent.SetDestination(targetLocation.Value);
                         lastPosition = targetLocation.Value;
                     }
 
-                    if (agent.remainingDistance <= agent.stoppingDistance)
+                    if (HasArrivedAt(targetLocation.Value))
                     {
                         return Status.Success;
                     }
@@ -84,14 +110,15 @@ namespace GameDevTV.RTS.Behavior
             }
 
             Vector3 targetPosition = GetTargetPosition();
-            if (Vector3.Distance(targetPosition, lastPosition) >= MoveThreshold)
+            float moveThreshold = MoveThreshold != null ? MoveThreshold.Value : 0.25f;
+            if (Vector3.Distance(targetPosition, lastPosition) >= moveThreshold)
             {
                 agent.SetDestination(targetPosition);
                 lastPosition = agent.destination;
                 return Status.Running;
             }
 
-            if (agent.remainingDistance <= agent.stoppingDistance)
+            if (HasArrivedAt(targetPosition))
             {
                 return Status.Success;
             }
