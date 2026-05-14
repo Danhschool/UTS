@@ -7,6 +7,7 @@ using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Linq;
+using UnityEngine.AI;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.LowLevel;
 
@@ -22,20 +23,27 @@ namespace GameDevTV.RTS.Player
         [SerializeField] private LayerMask interactableLayers;
         [SerializeField] private LayerMask floorLayers;
         [SerializeField] private RectTransform selectionBox;
-        [SerializeField] [ColorUsage(showAlpha: true, hdr: true)]
-        private Color errorTintColor = Color.red;
-        [SerializeField] [ColorUsage(showAlpha: true, hdr: true)]
-        private Color errorFresnelColor = new (4, 1.7f, 0, 2);
-        [SerializeField] [ColorUsage(showAlpha: true, hdr: true)]
-        private Color availableToPlaceTintColor = new (0.2f, 0.65f, 1, 2);
-        [SerializeField] [ColorUsage(showAlpha: true, hdr: true)]
-        private Color availableToPlaceFresnelColor = new(4, 1.7f, 0, 2);
+        [Tooltip("Ghost đặt nhà: khi vị trí không hợp lệ, mỗi slot material trên renderer được thay bằng material này (đỏ). Để trống thì dùng MaterialPropertyBlock _BaseColor/_Color.")]
+        [SerializeField] private Material ghostPlacementInvalidMaterial;
+        [Tooltip("Bán kính > 0: OverlapSphere bổ sung — nếu chạm collider có NavMeshObstacle (bật) thì coi là không đặt được. 0 = chỉ dùng Restrictions trên lệnh.")]
+        [SerializeField] private float placementNavMeshObstacleProbeRadius;
+        [SerializeField] private LayerMask placementNavMeshObstacleProbeLayers = ~0;
 
         private Vector2 startingMousePosition;
 
         private BaseCommand activeCommand;
         private GameObject ghostInstance;
-        private MeshRenderer ghostRenderer;
+        private Renderer[] ghostPlacementRenderers;
+        private Material[][] ghostPlacementOriginalSharedMaterials;
+        private bool ghostPlacementVisualCached;
+        private bool lastGhostPlacementValid = true;
+        private MaterialPropertyBlock ghostPlacementMpb;
+        private static readonly int ShaderIdBaseColor = Shader.PropertyToID("_BaseColor");
+        private static readonly int ShaderIdColor = Shader.PropertyToID("_Color");
+        private readonly Collider[] placementObstacleOverlapBuffer = new Collider[24];
+        private bool placementGhostPinnedToWorld;
+        private Vector3 placementGhostPinnedPosition;
+        private BaseCommand pinnedPlacementRestrictionsCommand;
         private bool wasMouseDownOnUI;
         private CinemachineFollow cinemachineFollow;
         private Vector3 startingFollowOffset;
@@ -54,9 +62,6 @@ namespace GameDevTV.RTS.Player
         private HashSet<AbstractUnit> aliveUnits = new(100);
         private HashSet<AbstractUnit> addedUnits = new(24);
         private List<ISelectable> selectedUnits = new(12);
-
-        private static readonly int TINT = Shader.PropertyToID("_Tint");
-        private static readonly int FRESNEL = Shader.PropertyToID("_FresnelColor");
 
         private void Awake()
         {
@@ -77,6 +82,7 @@ namespace GameDevTV.RTS.Player
             Bus<UnitSpawnEvent>.OnEvent[Owner.Player1] += HandleUnitSpawn;
             Bus<CommandSelectedEvent>.OnEvent[Owner.Player1] += HandleActionSelected;
             Bus<UnitDeathEvent>.OnEvent[Owner.Player1] += HandleUnitDeath;
+            Bus<BuildingConstructStartedEvent>.OnEvent[Owner.Player1] += OnBuildingConstructStarted;
         }
 
         private void OnDestroy()
@@ -86,6 +92,37 @@ namespace GameDevTV.RTS.Player
             Bus<UnitSpawnEvent>.OnEvent[Owner.Player1] -= HandleUnitSpawn;
             Bus<CommandSelectedEvent>.OnEvent[Owner.Player1] -= HandleActionSelected;
             Bus<UnitDeathEvent>.OnEvent[Owner.Player1] -= HandleUnitDeath;
+            Bus<BuildingConstructStartedEvent>.OnEvent[Owner.Player1] -= OnBuildingConstructStarted;
+            DisposePlacementGhost();
+        }
+
+        private void OnBuildingConstructStarted(BuildingConstructStartedEvent evt)
+        {
+            if (evt.Owner != Owner.Player1)
+            {
+                return;
+            }
+
+            if (placementGhostPinnedToWorld)
+            {
+                DisposePlacementGhost();
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Gỡ ghost đặt nhà (ghim hoặc theo chuột) và reset trạng thái pin.
+        /// Cách hoạt động: Hủy pin, xóa lệnh cache cho Restrictions, Destroy ghost và cache material.
+        /// </summary>
+        private void DisposePlacementGhost()
+        {
+            placementGhostPinnedToWorld = false;
+            pinnedPlacementRestrictionsCommand = null;
+            if (ghostInstance != null)
+            {
+                Destroy(ghostInstance);
+                ghostInstance = null;
+                ClearGhostPlacementVisualCache();
+            }
         }
 
         private void HandleUnitSelected(UnitSelectedEvent evt)
@@ -105,6 +142,7 @@ namespace GameDevTV.RTS.Player
 
         private void HandleActionSelected(CommandSelectedEvent evt)
         {
+            DisposePlacementGhost();
             activeCommand = evt.Command;
             if (!activeCommand.RequiresClickToActivate)
             {
@@ -113,7 +151,7 @@ namespace GameDevTV.RTS.Player
             else if (activeCommand.GhostPrefab != null)
             {
                 ghostInstance = Instantiate(activeCommand.GhostPrefab);
-                ghostRenderer = ghostInstance.GetComponentInChildren<MeshRenderer>();
+                CacheGhostPlacementVisuals();
             }
         }
 
@@ -292,9 +330,16 @@ namespace GameDevTV.RTS.Player
 
             if (Keyboard.current.escapeKey.wasReleasedThisFrame)
             {
-                Destroy(ghostInstance);
-                ghostInstance = null;
+                DisposePlacementGhost();
                 activeCommand = null;
+                return;
+            }
+
+            if (placementGhostPinnedToWorld)
+            {
+                ghostInstance.transform.position = placementGhostPinnedPosition;
+                bool pinnedValid = EvaluateGhostPlacementValid(placementGhostPinnedPosition, pinnedPlacementRestrictionsCommand);
+                UpdateGhostPlacementVisual(pinnedValid);
                 return;
             }
 
@@ -302,13 +347,174 @@ namespace GameDevTV.RTS.Player
             if (Physics.Raycast(cameraRay, out RaycastHit hit, float.MaxValue, floorLayers))
             {
                 ghostInstance.transform.position = hit.point;
+                bool valid = EvaluateGhostPlacementValid(hit.point);
+                UpdateGhostPlacementVisual(valid);
+            }
+            else
+            {
+                UpdateGhostPlacementVisual(false);
+            }
+        }
 
-                bool allRestrictionsPass = activeCommand.AllRestrictionsPass(hit.point);
+        /// <summary>
+        /// Mục tiêu: Lưu sharedMaterials gốc của ghost để bật/tắt trạng thái đỏ mà không hỏng asset prefab.
+        /// Cách hoạt động: Lấy mọi Renderer con (kể cả inactive), copy mảng tham chiếu material vào buffer nội bộ.
+        /// </summary>
+        private void CacheGhostPlacementVisuals()
+        {
+            ClearGhostPlacementVisualCache();
+            if (ghostInstance == null)
+            {
+                return;
+            }
 
-                ghostRenderer.material.SetColor(TINT, allRestrictionsPass ? availableToPlaceTintColor : errorTintColor);
-                ghostRenderer.material.SetColor(FRESNEL,
-                    allRestrictionsPass ? availableToPlaceFresnelColor : errorFresnelColor
-                );
+            ghostPlacementRenderers = ghostInstance.GetComponentsInChildren<Renderer>(true);
+            if (ghostPlacementRenderers.Length == 0)
+            {
+                ghostPlacementOriginalSharedMaterials = System.Array.Empty<Material[]>();
+                ghostPlacementVisualCached = false;
+                return;
+            }
+
+            ghostPlacementOriginalSharedMaterials = new Material[ghostPlacementRenderers.Length][];
+            for (int i = 0; i < ghostPlacementRenderers.Length; i++)
+            {
+                Material[] shared = ghostPlacementRenderers[i].sharedMaterials;
+                ghostPlacementOriginalSharedMaterials[i] = new Material[shared.Length];
+                System.Array.Copy(shared, ghostPlacementOriginalSharedMaterials[i], shared.Length);
+            }
+
+            ghostPlacementVisualCached = true;
+            lastGhostPlacementValid = true;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Bỏ cache ghost khi hủy instance để tránh tham chiếu tới object đã Destroy.
+        /// Cách hoạt động: Xóa mảng và reset cờ; gọi khi Destroy ghost hoặc trước khi spawn ghost mới.
+        /// </summary>
+        private void ClearGhostPlacementVisualCache()
+        {
+            ghostPlacementRenderers = null;
+            ghostPlacementOriginalSharedMaterials = null;
+            ghostPlacementVisualCached = false;
+            lastGhostPlacementValid = true;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Quyết định điểm đặt có hợp lệ không — khớp logic placement của lệnh (Restrictions) và tùy chọn NavMeshObstacle.
+        /// Cách hoạt động: Gọi <see cref="BaseCommand.AllRestrictionsPass"/>; nếu bật probe thì OverlapSphere và tìm <see cref="NavMeshObstacle"/> bật trên collider/object cha.
+        /// </summary>
+        private bool EvaluateGhostPlacementValid(Vector3 worldPoint, BaseCommand commandForRestrictions = null)
+        {
+            BaseCommand cmd = commandForRestrictions != null ? commandForRestrictions : activeCommand;
+            if (cmd == null || !cmd.AllRestrictionsPass(worldPoint))
+            {
+                return false;
+            }
+
+            if (placementNavMeshObstacleProbeRadius > 0f
+                && HasBlockingNavMeshObstacleNear(worldPoint, placementNavMeshObstacleProbeRadius, placementNavMeshObstacleProbeLayers))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Phát hiện vật cản carving NavMesh (hoặc chặn vật lý) gần điểm đặt nhà.
+        /// Cách hoạt động: OverlapSphereNonAlloc; với mỗi collider, kiểm tra component <see cref="NavMeshObstacle"/> phía trên còn enabled.
+        /// </summary>
+        private bool HasBlockingNavMeshObstacleNear(Vector3 worldPoint, float radius, LayerMask mask)
+        {
+            int count = Physics.OverlapSphereNonAlloc(
+                worldPoint,
+                radius,
+                placementObstacleOverlapBuffer,
+                mask,
+                QueryTriggerInteraction.Collide);
+            for (int i = 0; i < count; i++)
+            {
+                Collider c = placementObstacleOverlapBuffer[i];
+                if (c == null || !c.enabled)
+                {
+                    continue;
+                }
+
+                NavMeshObstacle obstacle = c.GetComponentInParent<NavMeshObstacle>();
+                if (obstacle != null && obstacle.enabled && obstacle.gameObject.activeInHierarchy)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Hiển thị ghost đỏ khi không đặt được, trả về material/MPB gốc khi hợp lệ.
+        /// Cách hoạt động: Nếu gán <see cref="ghostPlacementInvalidMaterial"/> thì thay <c>sharedMaterials</c> từng slot; không thì tint đỏ qua MaterialPropertyBlock.
+        /// </summary>
+        private void UpdateGhostPlacementVisual(bool valid)
+        {
+            if (!ghostPlacementVisualCached || ghostPlacementRenderers == null || ghostPlacementRenderers.Length == 0)
+            {
+                return;
+            }
+
+            if (valid == lastGhostPlacementValid)
+            {
+                return;
+            }
+
+            lastGhostPlacementValid = valid;
+            if (valid)
+            {
+                if (ghostPlacementInvalidMaterial != null)
+                {
+                    for (int i = 0; i < ghostPlacementRenderers.Length; i++)
+                    {
+                        ghostPlacementRenderers[i].sharedMaterials = ghostPlacementOriginalSharedMaterials[i];
+                    }
+                }
+                else
+                {
+                    MaterialPropertyBlock empty = new();
+                    for (int i = 0; i < ghostPlacementRenderers.Length; i++)
+                    {
+                        ghostPlacementRenderers[i].SetPropertyBlock(empty);
+                    }
+                }
+
+                return;
+            }
+
+            if (ghostPlacementInvalidMaterial != null)
+            {
+                for (int i = 0; i < ghostPlacementRenderers.Length; i++)
+                {
+                    int n = ghostPlacementOriginalSharedMaterials[i].Length;
+                    Material[] redSlots = new Material[n];
+                    for (int j = 0; j < n; j++)
+                    {
+                        redSlots[j] = ghostPlacementInvalidMaterial;
+                    }
+
+                    ghostPlacementRenderers[i].sharedMaterials = redSlots;
+                }
+            }
+            else
+            {
+                ghostPlacementMpb ??= new MaterialPropertyBlock();
+                Color red = Color.red;
+                for (int i = 0; i < ghostPlacementRenderers.Length; i++)
+                {
+                    Renderer r = ghostPlacementRenderers[i];
+                    r.GetPropertyBlock(ghostPlacementMpb);
+                    ghostPlacementMpb.SetColor(ShaderIdBaseColor, red);
+                    ghostPlacementMpb.SetColor(ShaderIdColor, red);
+                    r.SetPropertyBlock(ghostPlacementMpb);
+                }
             }
         }
 
@@ -441,7 +647,8 @@ namespace GameDevTV.RTS.Player
         /// <summary>
         /// True khi người chơi đang chọn lệnh cần click thế giới (ghost đặt nhà / v.v.) — không nên đổi hardware cursor.
         /// </summary>
-        public bool IsAwaitingWorldCommandClick => activeCommand != null && activeCommand.RequiresClickToActivate;
+        public bool IsAwaitingWorldCommandClick =>
+            (activeCommand != null && activeCommand.RequiresClickToActivate) || placementGhostPinnedToWorld;
 
         private void HandleLeftClick()
         {
@@ -498,10 +705,12 @@ namespace GameDevTV.RTS.Player
 
         private void ActivateAction(RaycastHit hit)
         {
-            if (ghostInstance != null)
+            BaseCommand commandBeingActivated = activeCommand;
+            bool deferDestroyGhostForBuild = commandBeingActivated is BuildBuildingCommand && ghostInstance != null;
+
+            if (ghostInstance != null && !deferDestroyGhostForBuild)
             {
-                Destroy(ghostInstance);
-                ghostInstance = null;
+                DisposePlacementGhost();
             }
 
             List<AbstractCommandable> abstractCommandables = selectedUnits
@@ -509,13 +718,15 @@ namespace GameDevTV.RTS.Player
                                 .Cast<AbstractCommandable>()
                                 .ToList();
 
+            bool buildDispatched = false;
             for (int i = 0; i < abstractCommandables.Count; i++)
             {
                 CommandContext context = new(abstractCommandables[i], hit, i);
-                if (activeCommand.CanHandle(context))
+                if (commandBeingActivated.CanHandle(context))
                 {
-                    activeCommand.Handle(context);
-                    if (activeCommand.IsSingleUnitCommand)
+                    commandBeingActivated.Handle(context);
+                    buildDispatched = true;
+                    if (commandBeingActivated.IsSingleUnitCommand)
                     {
                         break;
                     }
@@ -523,6 +734,22 @@ namespace GameDevTV.RTS.Player
             }
 
             activeCommand = null;
+
+            if (deferDestroyGhostForBuild)
+            {
+                if (buildDispatched && ghostInstance != null)
+                {
+                    placementGhostPinnedToWorld = true;
+                    placementGhostPinnedPosition = hit.point;
+                    pinnedPlacementRestrictionsCommand = commandBeingActivated;
+                    ghostInstance.transform.position = placementGhostPinnedPosition;
+                    UpdateGhostPlacementVisual(EvaluateGhostPlacementValid(placementGhostPinnedPosition, pinnedPlacementRestrictionsCommand));
+                }
+                else if (ghostInstance != null)
+                {
+                    DisposePlacementGhost();
+                }
+            }
         }
 
         private void HandlePanning()

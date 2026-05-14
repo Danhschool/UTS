@@ -15482,11 +15482,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   selectionBox: {fileID: 723108417}
-  ghostPlacementInvalidMaterial: {fileID: 2100000, guid: 381567376b4f6b047a32537357cebff8, type: 2}
-  placementNavMeshObstacleProbeRadius: 0
-  placementNavMeshObstacleProbeLayers:
-    serializedVersion: 2
-    m_Bits: 960
 --- !u!114 &330585550
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20563,10 +20558,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 25776115040269689, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 2665764001411241133, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
       propertyPath: m_Name
       value: civil_central (1)

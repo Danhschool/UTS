@@ -1,3 +1,5 @@
+using GameDevTV.RTS.EventBus;
+using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Units;
 using System;
 using Unity.Behavior;
@@ -19,9 +21,10 @@ namespace GameDevTV.RTS.Behavior
         private float startBuildTime;
         private BaseBuilding completedBuilding;
         private Renderer buildingRenderer;
-        private Vector3 startPosition;
-        private Vector3 endPosition;
+        private Vector3 rootStartWorld;
+        private Vector3 rootEndWorld;
         private float targetHealth;
+        private bool animateRootFromBelow;
 
         protected override Status OnStart()
         {
@@ -29,7 +32,7 @@ namespace GameDevTV.RTS.Behavior
 
             if (BuildingUnderConstruction.Value == null)
             {
-                GameObject building = GameObject.Instantiate(BuildingSO.Value.Prefab, TargetLocation, Quaternion.identity);
+                GameObject building = GameObject.Instantiate(BuildingSO.Value.Prefab, TargetLocation.Value, Quaternion.identity);
                 if (!building.TryGetComponent(out completedBuilding)
                     || completedBuilding.MainRenderer == null) return Status.Failure;
             }
@@ -38,16 +41,36 @@ namespace GameDevTV.RTS.Behavior
                 completedBuilding = BuildingUnderConstruction.Value;
             }
 
+            buildingRenderer = completedBuilding.MainRenderer;
+            rootEndWorld = TargetLocation.Value;
+
+            BuildingProgress progressBeforeStart = completedBuilding.Progress;
+            bool skipBuriedIntro = progressBeforeStart.State == BuildingProgress.BuildingState.Paused
+                || progressBeforeStart.Completion > 0.001f;
+
             completedBuilding.StartBuilding(Self.Value.GetComponent<IBuildingBuilder>());
             startBuildTime = completedBuilding.Progress.StartTime;
-
-            buildingRenderer = completedBuilding.MainRenderer;
+            targetHealth = 0f;
 
             BuildingUnderConstruction.Value = completedBuilding;
 
-            startPosition = TargetLocation.Value - Vector3.up * buildingRenderer.bounds.size.y;
-            endPosition = TargetLocation.Value;
-            buildingRenderer.transform.position = startPosition;
+            Bus<BuildingConstructStartedEvent>.Raise(
+                completedBuilding.Owner,
+                new BuildingConstructStartedEvent(completedBuilding.Owner));
+
+            if (skipBuriedIntro)
+            {
+                animateRootFromBelow = false;
+                completedBuilding.transform.position = rootEndWorld;
+            }
+            else
+            {
+                animateRootFromBelow = true;
+                completedBuilding.transform.position = rootEndWorld;
+                float buryDepth = Mathf.Max(buildingRenderer.bounds.size.y, 0.5f);
+                rootStartWorld = rootEndWorld + Vector3.down * buryDepth;
+                completedBuilding.transform.position = rootStartWorld;
+            }
 
             return OnUpdate();
         }
@@ -64,7 +87,10 @@ namespace GameDevTV.RTS.Behavior
                 targetHealth -= healAmount;
             }
 
-            buildingRenderer.transform.position = Vector3.Lerp(startPosition, endPosition, normalizedTime);
+            if (animateRootFromBelow)
+            {
+                completedBuilding.transform.position = Vector3.Lerp(rootStartWorld, rootEndWorld, normalizedTime);
+            }
 
             return normalizedTime >= 1 ? Status.Success : Status.Running;
         }
@@ -73,6 +99,11 @@ namespace GameDevTV.RTS.Behavior
         {
             if (CurrentStatus == Status.Success)
             {
+                if (completedBuilding != null && animateRootFromBelow)
+                {
+                    completedBuilding.transform.position = rootEndWorld;
+                }
+
                 completedBuilding.enabled = true;
             }
         }

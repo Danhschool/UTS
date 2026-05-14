@@ -21,7 +21,6 @@ namespace GameDevTV.RTS.Units
             BuildingProgress.BuildingState.Destroyed, 0, 0
         );
         [field: SerializeField] public BuildingSO BuildingSO { get; private set; }
-        [SerializeField] private Material primaryMaterial;
         [SerializeField] private NavMeshObstacle navMeshObstacle;
         [Tooltip("Kéo child empty (ví dụ cửa nhà) nằm trên NavMesh. Để trống thì unit spawn tại vị trí building.")]
         [SerializeField] private Transform unitSpawnPoint;
@@ -46,10 +45,6 @@ namespace GameDevTV.RTS.Units
         protected override void Start()
         {
             base.Start();
-            if (MainRenderer != null)
-            {
-                MainRenderer.material = primaryMaterial;
-            }
             Progress = new BuildingProgress(BuildingProgress.BuildingState.Completed, Progress.StartTime, 1);
             unitBuildingThis = null;
             Bus<UnitDeathEvent>.OnEvent[Owner] -= HandleUnitDeath;
@@ -127,7 +122,6 @@ namespace GameDevTV.RTS.Units
             Awake();
             unitBuildingThis = buildingBuilder;
             Owner = unitBuildingThis.Owner;
-            MainRenderer.material = BuildingSO.PlacementMaterial;
 
             Progress = new BuildingProgress(
                 BuildingProgress.BuildingState.Building,

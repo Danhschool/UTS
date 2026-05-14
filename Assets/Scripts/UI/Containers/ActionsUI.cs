@@ -20,6 +20,12 @@ namespace GameDevTV.RTS.UI.Containers
 
         public void EnableFor(HashSet<AbstractCommandable> selectedUnits)
         {
+            if (selectedUnits == null || selectedUnits.Count == 0)
+            {
+                Disable();
+                return;
+            }
+
             RefreshButtons(selectedUnits);
 
             foreach(BaseBuilding building in selectedBuildings)
@@ -54,19 +60,33 @@ namespace GameDevTV.RTS.UI.Containers
 
         private void OnBuildingQueueUpdated(UnlockableSO[] unitsInQueue)
         {
+            if (selectedBuildings == null || selectedBuildings.Count == 0)
+            {
+                return;
+            }
+
             RefreshButtons(selectedBuildings.Cast<AbstractCommandable>().ToHashSet());
         }
 
         private void RefreshButtons(HashSet<AbstractCommandable> selectedUnits)
         {
-            IEnumerable<BaseCommand> availableCommands = selectedUnits.Count > 0 
-                ? selectedUnits.ElementAt(0).AvailableCommands 
-                : Array.Empty<BaseCommand>();
+            if (selectedUnits == null || selectedUnits.Count == 0)
+            {
+                for (int i = 0; i < actionButtons.Length; i++)
+                {
+                    actionButtons[i].Disable();
+                }
 
-            availableCommands = availableCommands.Where(action => action.IsAvailable(
+                return;
+            }
+
+            AbstractCommandable first = selectedUnits.First();
+            IEnumerable<BaseCommand> firstCommands = first.AvailableCommands ?? Array.Empty<BaseCommand>();
+
+            IEnumerable<BaseCommand> availableCommands = firstCommands.Where(action => action.IsAvailable(
                 new CommandContext(
                     Owner.Player1,
-                    selectedUnits.FirstOrDefault(),
+                    first,
                     new RaycastHit()
                 )
             ));
@@ -80,9 +100,11 @@ namespace GameDevTV.RTS.UI.Containers
                 }
             }
 
+            BaseCommand[] slotSource = availableCommands.ToArray();
+
             for (int i = 0; i < actionButtons.Length; i++)
             {
-                BaseCommand actionForSlot = availableCommands.Where(action => action.Slot == i).FirstOrDefault();
+                BaseCommand actionForSlot = slotSource.Where(action => action.Slot == i).FirstOrDefault();
 
                 if (actionForSlot != null)
                 {

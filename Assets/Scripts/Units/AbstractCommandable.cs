@@ -42,6 +42,11 @@ namespace GameDevTV.RTS.Units
 
         protected virtual void Start()
         {
+            if (AvailableCommands == null)
+            {
+                AvailableCommands = Array.Empty<BaseCommand>();
+            }
+
             initialCommands = AvailableCommands;
 
             Bus<UpgradeResearchedEvent>.OnEvent[Owner] += HandleUpgradeResearched;
@@ -123,7 +128,7 @@ namespace GameDevTV.RTS.Units
         {
             if (commands == null || commands.Length == 0)
             {
-                AvailableCommands = initialCommands;
+                AvailableCommands = initialCommands ?? Array.Empty<BaseCommand>();
             }
             else
             {

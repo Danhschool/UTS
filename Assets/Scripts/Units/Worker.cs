@@ -64,16 +64,19 @@ namespace GameDevTV.RTS.Units
         public GameObject Build(BuildingSO building, Vector3 targetLocation)
         {
             DisposeMovementDestinationCursor();
-            GameObject instance = Instantiate(building.Prefab, targetLocation, Quaternion.identity);
-            if (!instance.TryGetComponent(out BaseBuilding baseBuilding))
+            if (building.Prefab != null && !building.Prefab.TryGetComponent(out BaseBuilding _))
             {
                 Debug.LogError($"Missing BaseBuilding on Prefab for BuildingSO \"{building.name}\"! Cannot build!");
                 return null;
             }
 
+            GameObject ghostMarker = new GameObject("BuildPlacementMarker");
+            ghostMarker.transform.SetPositionAndRotation(targetLocation, Quaternion.identity);
+
             graphAgent.SetVariableValue("BuildingSO", building);
             graphAgent.SetVariableValue("TargetLocation", targetLocation);
-            graphAgent.SetVariableValue("Ghost", instance);
+            graphAgent.SetVariableValue("Ghost", ghostMarker);
+            graphAgent.SetVariableValue<BaseBuilding>("BuildingUnderConstruction", null);
             graphAgent.SetVariableValue("Command", UnitCommands.BuildBuilding);
 
             SetCommandOverrides(new BaseCommand[] { CancelBuildingCommand });
@@ -81,7 +84,7 @@ namespace GameDevTV.RTS.Units
             Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -building.Cost.Wood, building.Cost.WoodSO));
             Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -building.Cost.Food, building.Cost.FoodSO));
 
-            return instance;
+            return null;
         }
 
         public void ResumeBuilding(BaseBuilding building)

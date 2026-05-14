@@ -75,13 +75,27 @@ namespace GameDevTV.RTS.Units
 
         private void OnDestroy()
         {
-            foreach(IDamageable damageable in allDamageables)
+            // Unit trong trigger có thể đã Destroy mà không có OnTriggerExit — Transform / object có thể null.
+            foreach (IDamageable damageable in allDamageables.ToArray())
             {
-                if (damageable.Transform.TryGetComponent(out IHideable hideable))
+                if (damageable is UnityEngine.Object unityRef && unityRef == null)
+                {
+                    continue;
+                }
+
+                Transform t = damageable.Transform;
+                if (t == null)
+                {
+                    continue;
+                }
+
+                if (t.TryGetComponent(out IHideable hideable))
                 {
                     hideable.OnVisibilityChanged -= HandleVisibilityChange;
                 }
             }
+
+            allDamageables.Clear();
             Bus<UnitDeathEvent>.UnregisterForAll(HandleUnitDeath);
         }
 
