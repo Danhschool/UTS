@@ -59,6 +59,13 @@ namespace GameDevTV.RTS.Units
             }
 
             SyncRuntimeHealthFromUnitSo(healAddedMaxPortion: true);
+            // Giống AbstractUnit: nhà hoàn thành phải có máu đầy. SyncRuntimeHealthFromUnitSo không tăng máu khi max không đổi
+            // và CurrentHealth prefab = 0 → thanh máu / combat sai (CurrentHealth = 0).
+            if (MaxHealth > 0 && CurrentHealth <= 0)
+            {
+                Heal(MaxHealth);
+            }
+
             RefreshVisionFromSightConfig();
         }
 
