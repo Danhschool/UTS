@@ -13,27 +13,58 @@ namespace GameDevTV.RTS.Commands
 
         public override bool CanHandle(CommandContext context)
         {
-            if (context.Commandable is not IBuildingBuilder buildingBuilder || buildingBuilder.IsBuilding) return false;
-
-            if (context.Hit.collider != null && context.Button == MouseButton.Right)
+            // Chỉ qua UI: CommandSelectedEvent → ghost → click trái (ActivateAction). Không cướp chuột phải như Move/Gather/Attack.
+            if (context.Commandable is not IBuildingBuilder buildingBuilder || context.Button == MouseButton.Right)
             {
-                return context.Hit.collider.TryGetComponent(out BaseBuilding building)
-                    && Building == building.BuildingSO
-                       && (building.Progress.State == BuildingProgress.BuildingState.Paused
-                           || building.Progress.State == BuildingProgress.BuildingState.Destroyed
-                       );
+                return false;
+            }
+
+            if (TryGetResumeTarget(context, out BaseBuilding _))
+            {
+                return true;
+            }
+
+            if (buildingBuilder.IsBuilding)
+            {
+                return false;
             }
 
             return HasEnoughSupplies(context) && AllRestrictionsPass(context.Hit.point);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Nhận diện click lên công trình đang dở để resume (không trừ tài nguyên lần hai).
+        /// Cách hoạt động: Collider có BaseBuilding cùng BuildingSO và CanResumeConstruction.
+        /// </summary>
+        private bool TryGetResumeTarget(CommandContext context, out BaseBuilding building)
+        {
+            building = null;
+            if (context.Hit.collider == null)
+            {
+                return false;
+            }
+
+            building = context.Hit.collider.GetComponentInParent<BaseBuilding>();
+            if (building == null)
+            {
+                return false;
+            }
+
+            if (Building != building.BuildingSO)
+            {
+                return false;
+            }
+
+            return building.CanResumeConstruction();
         }
 
         public override void Handle(CommandContext context)
         {
             IBuildingBuilder builder = (IBuildingBuilder)context.Commandable;
 
-            if (context.Hit.collider != null && context.Hit.collider.TryGetComponent(out BaseBuilding building))
+            if (TryGetResumeTarget(context, out BaseBuilding resumeTarget))
             {
-                builder.ResumeBuilding(building);
+                builder.ResumeBuilding(resumeTarget);
             }
             else if (HasEnoughSupplies(context) && AllRestrictionsPass(context.Hit.point))
             {

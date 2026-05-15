@@ -543,7 +543,12 @@ namespace GameDevTV.RTS.Player
                 DeselectAllUnits();
             }
 
-            HandleLeftClick();
+            // Khung kéo đã có unit → chỉ chọn unit, không raycast building/commandable dưới con trỏ.
+            if (addedUnits.Count == 0)
+            {
+                HandleLeftClick();
+            }
+
             foreach (AbstractUnit unit in addedUnits)
             {
                 unit.Select();
@@ -650,6 +655,34 @@ namespace GameDevTV.RTS.Player
         public bool IsAwaitingWorldCommandClick =>
             (activeCommand != null && activeCommand.RequiresClickToActivate) || placementGhostPinnedToWorld;
 
+        /// <summary>
+        /// Mục tiêu: Click chọn đúng unit khi ray chạm cả unit lẫn building (ưu tiên tuyệt đối unit).
+        /// Cách hoạt động: Quét mọi hit, chọn AbstractUnit có distance nhỏ nhất; chỉ khi không có unit mới chọn ISelectable khác.
+        /// </summary>
+        private static bool TrySelectClosestUnitFromHits(RaycastHit[] hits)
+        {
+            AbstractUnit closestUnit = null;
+            float closestDistance = float.MaxValue;
+
+            foreach (RaycastHit hit in hits)
+            {
+                AbstractUnit unit = hit.collider.GetComponentInParent<AbstractUnit>();
+                if (unit != null && hit.distance < closestDistance)
+                {
+                    closestUnit = unit;
+                    closestDistance = hit.distance;
+                }
+            }
+
+            if (closestUnit == null)
+            {
+                return false;
+            }
+
+            closestUnit.Select();
+            return true;
+        }
+
         private void HandleLeftClick()
         {
             if (camera == null) { return ; }
@@ -670,18 +703,18 @@ namespace GameDevTV.RTS.Player
 
                 System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
-                foreach (RaycastHit h in hits)
+                if (TrySelectClosestUnitFromHits(hits))
                 {
-                    AbstractUnit unit = h.collider.GetComponentInParent<AbstractUnit>();
-                    if (unit != null)
-                    {
-                        unit.Select();
-                        return;
-                    }
+                    return;
                 }
 
                 foreach (RaycastHit h in hits)
                 {
+                    if (h.collider.GetComponentInParent<AbstractUnit>() != null)
+                    {
+                        continue;
+                    }
+
                     AbstractCommandable commandable = h.collider.GetComponentInParent<AbstractCommandable>();
                     if (commandable is ISelectable selectable)
                     {
@@ -799,21 +832,22 @@ namespace GameDevTV.RTS.Player
             Vector2 mousePosition = Mouse.current.position.ReadValue();
             int screenWidth = Screen.width;
             int screenHeight = Screen.height;
+            float edgeBorder = cameraConfig.GetEdgePanBorderPixels();
 
-            if (mousePosition.x <= cameraConfig.EdgePanSize)
+            if (mousePosition.x <= edgeBorder)
             {
                 moveAmount.x -= cameraConfig.MousePanSpeed;
             }
-            else if (mousePosition.x >= screenWidth - cameraConfig.EdgePanSize)
+            else if (mousePosition.x >= screenWidth - edgeBorder)
             {
                 moveAmount.x += cameraConfig.MousePanSpeed;
             }
 
-            if (mousePosition.y >= screenHeight - cameraConfig.EdgePanSize)
+            if (mousePosition.y >= screenHeight - edgeBorder)
             {
                 moveAmount.y += cameraConfig.MousePanSpeed;
             }
-            else if (mousePosition.y <= cameraConfig.EdgePanSize)
+            else if (mousePosition.y <= edgeBorder)
             {
                 moveAmount.y -= cameraConfig.MousePanSpeed;
             }

@@ -31,6 +31,7 @@ namespace GameDevTV.RTS.Units
         private BaseCommand[] initialCommands;
         private Renderer[] renderers = Array.Empty<Renderer>();
         private ParticleSystem[] particleSystems = Array.Empty<ParticleSystem>();
+        private bool deathSequenceStarted;
 
         protected virtual void Awake()
         {
@@ -141,8 +142,17 @@ namespace GameDevTV.RTS.Units
             }
         }
 
+        public bool IsInDeathSequence => deathSequenceStarted;
+
+        internal void MarkDeathSequenceStarted() => deathSequenceStarted = true;
+
         public void TakeDamage(int damage)
         {
+            if (deathSequenceStarted)
+            {
+                return;
+            }
+
             int lastHealth = CurrentHealth;
             CurrentHealth = Mathf.Clamp(CurrentHealth - damage, 0, CurrentHealth);
 
@@ -153,7 +163,7 @@ namespace GameDevTV.RTS.Units
             }
         }
 
-        public void Die()
+        public virtual void Die()
         {
             Destroy(gameObject);
         }

@@ -10,7 +10,7 @@ using UnityEngine.AI;
 
 namespace GameDevTV.RTS.Units
 {
-    [RequireComponent(typeof(NavMeshAgent), typeof(BehaviorGraphAgent))]
+    [RequireComponent(typeof(NavMeshAgent), typeof(BehaviorGraphAgent), typeof(UnitDeathController))]
     public abstract class AbstractUnit : AbstractCommandable, IMoveable, IAttacker
     {
         public float AgentRadius => Agent.radius;
@@ -28,8 +28,14 @@ namespace GameDevTV.RTS.Units
         [Tooltip("Minimum time the cursor stays visible so it is not destroyed before NavMesh builds a path.")]
         [SerializeField] private float movementDestinationCursorMinVisibleSeconds = 0.2f;
 
+        [Header("Death")]
+        [Tooltip("Ghi đè Death Config trên UnitSO (nếu cần test trên prefab).")]
+        [SerializeField] private UnitDeathConfigSO deathConfigOverride;
+
         private GameObject activeMovementDestinationCursor;
         private Coroutine movementDestinationCursorRoutine;
+        private UnitDeathController deathController;
+        private bool unitDeathEventRaised;
 
         protected override void Awake()
         {
@@ -37,6 +43,7 @@ namespace GameDevTV.RTS.Units
 
             Agent = GetComponent<NavMeshAgent>();
             graphAgent = GetComponent<BehaviorGraphAgent>();
+            deathController = GetComponent<UnitDeathController>();
 
             unitSO = UnitSO as UnitSO;
 
@@ -47,6 +54,8 @@ namespace GameDevTV.RTS.Units
         protected override void Start()
         {
             base.Start();
+
+            deathController.Configure(unitSO.DeathConfig, deathConfigOverride);
 
             foreach (UpgradeSO upgrade in unitSO.Upgrades)
             {
@@ -101,7 +110,7 @@ namespace GameDevTV.RTS.Units
             }
         }
 
-        public void MoveTo(Vector3 position)
+        public virtual void MoveTo(Vector3 position)
         {
             graphAgent.SetVariableValue("TargetLocation", position);
             graphAgent.SetVariableValue<GameObject>("TargetGameObject", null);
@@ -109,28 +118,28 @@ namespace GameDevTV.RTS.Units
             SpawnMovementDestinationCursorAt(position);
         }
 
-        public void MoveTo(Transform transform)
+        public virtual void MoveTo(Transform transform)
         {
             graphAgent.SetVariableValue("TargetGameObject", transform.gameObject);
             graphAgent.SetVariableValue("Command", UnitCommands.Move);
             SpawnMovementDestinationCursorAt(transform.position);
         }
 
-        public void Stop()
+        public virtual void Stop()
         {
             DisposeMovementDestinationCursor();
             SetCommandOverrides(null);
             graphAgent.SetVariableValue("Command", UnitCommands.Stop);
         }
 
-        public void Attack(IDamageable damageable)
+        public virtual void Attack(IDamageable damageable)
         {
             DisposeMovementDestinationCursor();
             graphAgent.SetVariableValue("TargetGameObject", damageable.Transform.gameObject);
             graphAgent.SetVariableValue("Command", UnitCommands.Attack);
         }
 
-        public void Attack(Vector3 location)
+        public virtual void Attack(Vector3 location)
         {
             DisposeMovementDestinationCursor();
             graphAgent.SetVariableValue<GameObject>("TargetGameObject", null);
@@ -252,11 +261,67 @@ namespace GameDevTV.RTS.Units
             }
         }
 
+        /// <summary>
+        /// Gọi từ Animation Event trên clip chết (Function: OnDieAnimationEvent).
+        /// </summary>
+        public void OnDieAnimationEvent()
+        {
+            deathController?.NotifyDeathAnimationEvent();
+        }
+
+        /// <summary>
+        /// Mục tiêu: bắt đầu chết qua Behavior Graph (Command = Die).
+        /// Cách hoạt động: raise event, gán Command; graph chạy chuỗi node Death hoặc fallback coroutine.
+        /// </summary>
+        public override void Die()
+        {
+            if (IsInDeathSequence)
+            {
+                return;
+            }
+
+            MarkDeathSequenceStarted();
+            DisposeMovementDestinationCursor();
+
+            if (IsSelected)
+            {
+                Deselect();
+            }
+
+            unitDeathEventRaised = true;
+            Bus<UnitDeathEvent>.Raise(Owner, new UnitDeathEvent(this));
+
+            graphAgent.SetVariableValue("Command", UnitCommands.Die);
+            StartCoroutine(EnsureDeathHandledByBehaviorGraph());
+        }
+
+        private IEnumerator EnsureDeathHandledByBehaviorGraph()
+        {
+            yield return null;
+            yield return null;
+
+            if (deathController == null || !IsInDeathSequence || deathController.IsDeathSequenceActive)
+            {
+                yield break;
+            }
+
+            yield return deathController.RunFallbackDeathSequence();
+
+            if (gameObject != null)
+            {
+                Destroy(gameObject);
+            }
+        }
+
         protected override void OnDestroy()
         {
             DisposeMovementDestinationCursor();
             base.OnDestroy();
-            Bus<UnitDeathEvent>.Raise(Owner, new UnitDeathEvent(this));
+
+            if (!unitDeathEventRaised)
+            {
+                Bus<UnitDeathEvent>.Raise(Owner, new UnitDeathEvent(this));
+            }
         }
     }
 }

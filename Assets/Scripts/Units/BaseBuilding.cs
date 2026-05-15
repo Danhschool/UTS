@@ -138,12 +138,45 @@ namespace GameDevTV.RTS.Units
 
             if (Progress.Completion == 0)
             {
-                Heal(1);
+                // Tránh trường hợp Resume/StartBuilding được gọi nhiều lần khi CurrentHealth đã có sẵn.
+                if (CurrentHealth <= 0)
+                {
+                    Heal(1);
+                }
             }
 
             Bus<UnitDeathEvent>.OnEvent[Owner] -= HandleUnitDeath;
             Bus<UnitDeathEvent>.OnEvent[Owner] += HandleUnitDeath;
         }
+
+        /// <summary>
+        /// Mục tiêu: Worker rời công trường (lệnh move/gather…) mà không hủy nhà — giữ tiến độ để resume sau.
+        /// Cách hoạt động: Nếu đang Building thì tính Completion, đặt Paused, gỡ builder và đăng ký chết.
+        /// </summary>
+        public void PauseConstructionAndReleaseBuilder()
+        {
+            if (Progress.State != BuildingProgress.BuildingState.Building)
+            {
+                return;
+            }
+
+            float completion = Mathf.Clamp01((Time.time - Progress.StartTime) / BuildingSO.BuildTime);
+            Progress = new BuildingProgress(
+                BuildingProgress.BuildingState.Paused,
+                Progress.StartTime,
+                completion
+            );
+            unitBuildingThis = null;
+            Bus<UnitDeathEvent>.OnEvent[Owner] -= HandleUnitDeath;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Cho phép UI/lệnh build biết công trình này có thể tiếp tục.
+        /// Cách hoạt động: True khi state Paused (hoặc Destroyed placeholder theo data cũ).
+        /// </summary>
+        public bool CanResumeConstruction() =>
+            Progress.State == BuildingProgress.BuildingState.Paused
+            || Progress.State == BuildingProgress.BuildingState.Destroyed;
 
         private void HandleUnitDeath(UnitDeathEvent evt)
         {

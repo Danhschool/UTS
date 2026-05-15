@@ -7,6 +7,7 @@ namespace GameDevTV.RTS.Units
     {
         [field: SerializeField] public AttackConfigSO AttackConfig { get; private set; }
         [field: SerializeField] public TransportConfigSO TransportConfig { get; private set; }
+        [field: SerializeField] public UnitDeathConfigSO DeathConfig { get; private set; }
 
         [field: SerializeField] public float MoveSpeed { get; private set; } = 3.5f;
         [field: SerializeField, Tooltip("Nhân với BaseGatherTime trên SupplySO (< 1 = khai thác nhanh hơn).")]
@@ -20,6 +21,7 @@ namespace GameDevTV.RTS.Units
 
             copy.AttackConfig = AttackConfig == null ? null : Instantiate(AttackConfig);
             copy.TransportConfig = TransportConfig == null ? null : Instantiate(TransportConfig);
+            copy.DeathConfig = DeathConfig == null ? null : Instantiate(DeathConfig);
             copy.SightConfig = SightConfig == null ? null : Instantiate(SightConfig);
 
             return copy;

@@ -82,6 +82,7 @@ GameObject:
   - component: {fileID: 1320190712326493636}
   - component: {fileID: 5277151710803293189}
   - component: {fileID: 1815119216873606696}
+  - component: {fileID: 3015558142851732647}
   m_Layer: 6
   m_Name: Worker 1
   m_TagString: Untagged
@@ -186,6 +187,7 @@ MonoBehaviour:
   movementDestinationCursorPrefab: {fileID: 100000, guid: 6231157e01c79d6488cbc25d2e1cb67e, type: 3}
   movementDestinationCursorColor: {r: 0, g: 0, b: 0, a: 1}
   movementDestinationCursorMinVisibleSeconds: 0.2
+  deathConfigOverride: {fileID: 0}
   CancelBuildingCommand: {fileID: 11400000, guid: 3d8b91764e7675d4f9c61f40d9e7fed5, type: 2}
 --- !u!136 &1320190712326493636
 CapsuleCollider:
@@ -275,6 +277,19 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &3015558142851732647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6510919576379171628}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba5863352f422e54b81b330ae05e737a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Units.UnitDeathController
+  deathSinkTransform: {fileID: 0}
 --- !u!1001 &1212549121195770183
 PrefabInstance:
   m_ObjectHideFlags: 0

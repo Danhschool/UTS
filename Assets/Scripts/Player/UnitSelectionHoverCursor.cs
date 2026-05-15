@@ -152,10 +152,6 @@ namespace GameDevTV.RTS.Player
             ApplyAttackCursor();
         }
 
-        /// <summary>
-        /// Mục tiêu: Đổ đệm các <see cref="AbstractUnit"/> đang được chọn để xử lý hover mà không cấp phát mỗi frame.
-        /// Cách hoạt động: Xóa buffer rồi thêm mọi phần tử trong <see cref="selectionMirror"/> kiểu <see cref="AbstractUnit"/>.
-        /// </summary>
         private void CollectSelectedAbstractUnits()
         {
             selectedUnitsBuffer.Clear();
@@ -168,10 +164,6 @@ namespace GameDevTV.RTS.Player
             }
         }
 
-        /// <summary>
-        /// Mục tiêu: Với một unit và một hit raycast, xác định cursor gather/attack có áp được không (giống vòng lệnh trong <c>LateUpdate</c> trước đây).
-        /// Cách hoạt động: Dựng <see cref="CommandContext"/> chuột phải, duyệt <see cref="AvailableCommandsResolver.GetFlattened"/>; lệnh đầu tiên <c>CanHandle</c> quyết định Gather, Attack hoặc mặc định (kể cả khi layer filter từ chối gather/attack thì thử lệnh tiếp theo).
-        /// </summary>
         private HoverCursorEvaluation EvaluateHoverCursorForUnit(AbstractUnit unit, RaycastHit hit)
         {
             CommandContext context = new(unit.Owner, unit, hit, 0, MouseButton.Right);
@@ -209,10 +201,6 @@ namespace GameDevTV.RTS.Player
             return HoverCursorEvaluation.SystemDefault;
         }
 
-        /// <summary>
-        /// Mục tiêu: Áp texture gather khi lệnh gather sẽ thắng chuột phải.
-        /// Cách hoạt động: Nếu có texture thì <see cref="Cursor.SetCursor"/> một lần khi đổi trạng thái; không thì về cursor hệ thống.
-        /// </summary>
         private void ApplyGatherCursor()
         {
             if (gatherCursorBaked == null)
@@ -230,10 +218,6 @@ namespace GameDevTV.RTS.Player
             lastApplied = AppliedCursorKind.Gather;
         }
 
-        /// <summary>
-        /// Mục tiêu: Áp texture attack khi lệnh attack sẽ thắng chuột phải.
-        /// Cách hoạt động: Giống gather — set cursor khi đổi trạng thái, bỏ qua nếu chưa gán texture.
-        /// </summary>
         private void ApplyAttackCursor()
         {
             if (attackCursorBaked == null)
@@ -251,10 +235,6 @@ namespace GameDevTV.RTS.Player
             lastApplied = AppliedCursorKind.Attack;
         }
 
-        /// <summary>
-        /// Mục tiêu: Trả cursor về mặc định OS khi rời mục tiêu gather/attack hoặc không còn đủ điều kiện hover.
-        /// Cách hoạt động: Gọi <see cref="Cursor.SetCursor"/> với null chỉ khi trước đó đang dùng texture tùy chỉnh.
-        /// </summary>
         private void TransitionToSystemDefault()
         {
             if (lastApplied == AppliedCursorKind.SystemDefault || lastApplied == AppliedCursorKind.None)
@@ -266,10 +246,6 @@ namespace GameDevTV.RTS.Player
             lastApplied = AppliedCursorKind.SystemDefault;
         }
 
-        /// <summary>
-        /// Mục tiêu: Luôn xóa cursor tùy chỉnh khi hủy component (tránh để cursor lạ sau khi thoát Play).
-        /// Cách hoạt động: Gọi SetCursor(null) không điều kiện và reset cờ nội bộ.
-        /// </summary>
         private void ForceSystemDefaultCursor()
         {
             Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
@@ -288,10 +264,6 @@ namespace GameDevTV.RTS.Player
 
         private void OnUnitDeath(UnitDeathEvent evt) => selectionMirror.Remove(evt.Unit);
 
-        /// <summary>
-        /// Mục tiêu: Giải phóng texture runtime do baker tạo, tránh rò bộ nhớ.
-        /// Cách hoạt động: Chỉ <see cref="Object.Destroy"/> khi tham chiếu khác null.
-        /// </summary>
         private static void DestroyRuntimeCursorTexture(Texture2D texture)
         {
             if (texture != null)
@@ -300,10 +272,6 @@ namespace GameDevTV.RTS.Player
             }
         }
 
-        /// <summary>
-        /// Mục tiêu: Chọn hit đầu tiên không thuộc vật đang ẩn (fog) theo <see cref="IHideable.IsVisible"/>.
-        /// Cách hoạt động: Duyệt theo khoảng cách; bỏ qua collider có <see cref="IHideable"/> trên self/parent với <c>IsVisible == false</c>; không có interface thì coi là được dùng.
-        /// </summary>
         private static bool TryGetFirstVisibilityEligibleHit(RaycastHit[] sortedHits, out RaycastHit hit)
         {
             for (int i = 0; i < sortedHits.Length; i++)
@@ -319,10 +287,6 @@ namespace GameDevTV.RTS.Player
             return false;
         }
 
-        /// <summary>
-        /// Mục tiêu: Không dùng hit lên vật bị ẩn để quyết định cursor gather/attack.
-        /// Cách hoạt động: <see cref="Component.GetComponentInParent{T}"/> tìm <see cref="IHideable"/>; nếu có và <see cref="IHideable.IsVisible"/> false thì loại hit này.
-        /// </summary>
         private static bool IsRayHitEligibleForCommandCursor(RaycastHit h)
         {
             if (h.collider == null)
@@ -339,10 +303,6 @@ namespace GameDevTV.RTS.Player
             return hideable.IsVisible;
         }
 
-        /// <summary>
-        /// Mục tiêu: Lọc layer tùy chọn cho icon cursor; mask = 0 nghĩa là không giới hạn layer (giữ hành vi cũ).
-        /// Cách hoạt động: Nếu <paramref name="mask"/> có bit thì collider phải thuộc một layer trong mask.
-        /// </summary>
         private static bool PassesOptionalLayerMask(LayerMask mask, int gameObjectLayer)
         {
             if (mask.value == 0)

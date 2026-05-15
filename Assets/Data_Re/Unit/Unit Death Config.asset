@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85fade9135293d0408948a868cad8ba4, type: 3}
+  m_Name: Unit Death Config
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Units.UnitDeathConfigSO
+  <AnimatorBoolParameter>k__BackingField: isDying
+  <PrimaryDeathStateName>k__BackingField: Dying
+  <AlternateDeathStateNames>k__BackingField: []
+  <CompleteViaAnimationEvent>k__BackingField: 1
+  <ClipEndNormalizedTime>k__BackingField: 0.98
+  <HoldDeathPoseSeconds>k__BackingField: 0.315
+  <AnimationFallbackSeconds>k__BackingField: 2
+  <AnimationMaxWaitSeconds>k__BackingField: 8
+  <SinkDepth>k__BackingField: 1.5
+  <SinkDuration>k__BackingField: 1

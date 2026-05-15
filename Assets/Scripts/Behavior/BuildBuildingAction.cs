@@ -77,7 +77,18 @@ namespace GameDevTV.RTS.Behavior
 
         protected override Status OnUpdate()
         {
-            float normalizedTime = (Time.time - startBuildTime) / BuildingSO.Value.BuildTime;
+            if (completedBuilding == null)
+            {
+                return Status.Failure;
+            }
+
+            // Khi đang bị Pause (worker rời công trường), tạm dừng tiến độ build để cho worker có thể làm việc khác.
+            if (completedBuilding.Progress.State != BuildingProgress.BuildingState.Building)
+            {
+                return Status.Running;
+            }
+
+            float normalizedTime = (Time.time - completedBuilding.Progress.StartTime) / BuildingSO.Value.BuildTime;
 
             targetHealth += Time.deltaTime * (BuildingSO.Value.Health / BuildingSO.Value.BuildTime);
             if (targetHealth >= 1)
