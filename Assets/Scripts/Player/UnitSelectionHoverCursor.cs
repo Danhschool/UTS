@@ -164,10 +164,17 @@ namespace GameDevTV.RTS.Player
             }
         }
 
+        /// <summary>
+        /// Mục tiêu: chọn cursor gather/attack theo lệnh thắng khi chuột phải, bỏ qua Move/Stop (luôn CanHandle).
+        /// Cách hoạt động: quét toàn bộ AvailableCommands; chỉ Gather/Attack quyết định cursor, ưu tiên Gather trước Attack.
+        /// </summary>
         private HoverCursorEvaluation EvaluateHoverCursorForUnit(AbstractUnit unit, RaycastHit hit)
         {
             CommandContext context = new(unit.Owner, unit, hit, 0, MouseButton.Right);
             List<BaseCommand> commands = AvailableCommandsResolver.GetFlattened(unit);
+            bool canGather = false;
+            bool canAttack = false;
+
             foreach (BaseCommand command in commands)
             {
                 if (!command.CanHandle(context))
@@ -179,7 +186,7 @@ namespace GameDevTV.RTS.Player
                 {
                     if (PassesOptionalLayerMask(gatherCursorLayerFilter, hit.collider.gameObject.layer))
                     {
-                        return HoverCursorEvaluation.Gather;
+                        canGather = true;
                     }
 
                     continue;
@@ -187,15 +194,22 @@ namespace GameDevTV.RTS.Player
 
                 if (command is AttackCommand)
                 {
-                    if (PassesOptionalLayerMask(attackCursorLayerFilter, hit.collider.gameObject.layer))
-                    {
-                        return HoverCursorEvaluation.Attack;
-                    }
-
+                    // AttackCommand.CanHandle đã kiểm tra IDamageable + địch + visible; không lọc layer để tránh miss collider con.
+                    canAttack = true;
                     continue;
                 }
 
-                return HoverCursorEvaluation.SystemDefault;
+                // Move, Stop, Load… — bỏ qua, không chặn Attack/Gather phía sau trong danh sách.
+            }
+
+            if (canGather)
+            {
+                return HoverCursorEvaluation.Gather;
+            }
+
+            if (canAttack)
+            {
+                return HoverCursorEvaluation.Attack;
             }
 
             return HoverCursorEvaluation.SystemDefault;

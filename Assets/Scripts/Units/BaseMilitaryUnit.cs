@@ -7,7 +7,7 @@ namespace GameDevTV.RTS.Units
         protected override void Start()
         {
             base.Start();
-            graphAgent.SetVariableValue("Command", UnitCommands.Attack);
+            graphAgent.SetVariableValue("Command", UnitCommands.Stop);
         }
 
         public void LoadInto(ITransporter transporter)

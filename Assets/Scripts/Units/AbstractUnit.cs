@@ -27,6 +27,8 @@ namespace GameDevTV.RTS.Units
         [SerializeField] private Color movementDestinationCursorColor = new(0f, 0.85f, 1f, 1f);
         [Tooltip("Minimum time the cursor stays visible so it is not destroyed before NavMesh builds a path.")]
         [SerializeField] private float movementDestinationCursorMinVisibleSeconds = 0.2f;
+        [Tooltip("Khoảng cách tới đích (giống MoveToTarget*Action) để xóa marker; tránh remainingDistance=0 trên military.")]
+        [SerializeField] private float movementDestinationArrivalSlack = 0.25f;
 
         [Header("Death")]
         [Tooltip("Ghi đè Death Config trên UnitSO (nếu cần test trên prefab).")]
@@ -232,6 +234,7 @@ namespace GameDevTV.RTS.Units
             yield return null;
 
             float spawnTime = Time.time;
+            Vector3 movementGoal = ResolveMovementGoalFromBlackboard();
 
             while (enabled && graphAgent != null)
             {
@@ -241,11 +244,10 @@ namespace GameDevTV.RTS.Units
                     break;
                 }
 
-                bool minTimeElapsed = Time.time - spawnTime >= movementDestinationCursorMinVisibleSeconds;
-                bool pathReady = Agent != null && Agent.hasPath && !Agent.pathPending;
-                bool atDestination = Agent != null && Agent.remainingDistance <= Agent.stoppingDistance;
+                movementGoal = ResolveMovementGoalFromBlackboard();
 
-                if (minTimeElapsed && pathReady && atDestination)
+                bool minTimeElapsed = Time.time - spawnTime >= movementDestinationCursorMinVisibleSeconds;
+                if (minTimeElapsed && HasArrivedAtMovementGoal(movementGoal))
                 {
                     break;
                 }
@@ -259,6 +261,53 @@ namespace GameDevTV.RTS.Units
                 Destroy(activeMovementDestinationCursor);
                 activeMovementDestinationCursor = null;
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: lấy điểm đích Move từ blackboard (TargetGameObject hoặc TargetLocation).
+        /// Cách hoạt động: ưu tiên vị trí TargetGameObject; không có thì dùng TargetLocation.
+        /// </summary>
+        private Vector3 ResolveMovementGoalFromBlackboard()
+        {
+            if (graphAgent != null
+                && graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetObject)
+                && targetObject.Value != null)
+            {
+                return targetObject.Value.transform.position;
+            }
+
+            if (graphAgent != null
+                && graphAgent.GetVariable("TargetLocation", out BlackboardVariable<Vector3> targetLocation))
+            {
+                return targetLocation.Value;
+            }
+
+            return transform.position;
+        }
+
+        /// <summary>
+        /// Mục tiêu: biết unit đã tới đích Move (khớp logic MoveToTarget* trong Behavior Graph).
+        /// Cách hoạt động: path không pending và khoảng cách world tới goal ≤ max(stoppingDistance, slack).
+        /// </summary>
+        private bool HasArrivedAtMovementGoal(Vector3 goalWorld)
+        {
+            if (Agent == null || !Agent.isOnNavMesh)
+            {
+                return false;
+            }
+
+            if (Agent.pathPending)
+            {
+                return false;
+            }
+
+            float slack = Mathf.Max(Agent.stoppingDistance, movementDestinationArrivalSlack);
+            if (Vector3.Distance(transform.position, goalWorld) <= slack)
+            {
+                return true;
+            }
+
+            return !float.IsInfinity(Agent.remainingDistance) && Agent.remainingDistance <= slack;
         }
 
         /// <summary>

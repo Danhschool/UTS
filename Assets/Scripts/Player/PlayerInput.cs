@@ -59,6 +59,8 @@ namespace GameDevTV.RTS.Player
         private float orthoSizeVelocity;
         private float smoothedFollowZ;
         private float followZVelocity;
+        private const Owner LocalPlayerOwner = Owner.Player1;
+
         private HashSet<AbstractUnit> aliveUnits = new(100);
         private HashSet<AbstractUnit> addedUnits = new(24);
         private List<ISelectable> selectedUnits = new(12);
@@ -133,7 +135,13 @@ namespace GameDevTV.RTS.Player
             }
         }
         private void HandleUnitDeselected(UnitDeselectedEvent evt) => selectedUnits.Remove(evt.Unit);
-        private void HandleUnitSpawn(UnitSpawnEvent evt) => aliveUnits.Add(evt.Unit);
+        private void HandleUnitSpawn(UnitSpawnEvent evt)
+        {
+            if (evt.Unit.Owner == LocalPlayerOwner)
+            {
+                aliveUnits.Add(evt.Unit);
+            }
+        }
         private void HandleUnitDeath(UnitDeathEvent evt)
         {
             aliveUnits.Remove(evt.Unit);
@@ -563,6 +571,11 @@ namespace GameDevTV.RTS.Player
             Bounds selectionBoxBounds = ResizeSelectionBox();
             foreach (AbstractUnit unit in aliveUnits.Where(aliveUnits => aliveUnits.gameObject.activeInHierarchy))
             {
+                if (!IsOwnedByLocalPlayer(unit))
+                {
+                    continue;
+                }
+
                 Vector2 unitPosition = camera.WorldToScreenPoint(unit.transform.position);
 
                 if (selectionBoxBounds.Contains(unitPosition))
@@ -667,7 +680,7 @@ namespace GameDevTV.RTS.Player
             foreach (RaycastHit hit in hits)
             {
                 AbstractUnit unit = hit.collider.GetComponentInParent<AbstractUnit>();
-                if (unit != null && hit.distance < closestDistance)
+                if (unit != null && IsOwnedByLocalPlayer(unit) && hit.distance < closestDistance)
                 {
                     closestUnit = unit;
                     closestDistance = hit.distance;
@@ -716,7 +729,7 @@ namespace GameDevTV.RTS.Player
                     }
 
                     AbstractCommandable commandable = h.collider.GetComponentInParent<AbstractCommandable>();
-                    if (commandable is ISelectable selectable)
+                    if (commandable is ISelectable selectable && IsOwnedByLocalPlayer(commandable))
                     {
                         selectable.Select();
                         return;
@@ -735,6 +748,13 @@ namespace GameDevTV.RTS.Player
                 ActivateAction(hit);
             }
         }
+
+        /// <summary>
+        /// Mục tiêu: Chỉ cho phép chọn unit/nhà thuộc phe người chơi local.
+        /// Cách hoạt động: So sánh <see cref="AbstractCommandable.Owner"/> với <see cref="LocalPlayerOwner"/>.
+        /// </summary>
+        private static bool IsOwnedByLocalPlayer(AbstractCommandable commandable) =>
+            commandable != null && commandable.Owner == LocalPlayerOwner;
 
         private void ActivateAction(RaycastHit hit)
         {

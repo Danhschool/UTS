@@ -118,8 +118,15 @@ namespace GameDevTV.RTS.Behavior
                 unit.AttackingParticleSystem.Play();
             }
 
-            // projectile attacks are handled by the specific subclass of AbstractUnit that shoot projectiles
-            if (AttackConfig.Value.HasProjectileAttacks) return;
+            if (AttackConfig.Value.HasProjectileAttacks)
+            {
+                if (selfTransform.TryGetComponent(out IProjectileAttacker projectileAttacker))
+                {
+                    projectileAttacker.LaunchProjectile(targetDamageable);
+                }
+
+                return;
+            }
 
             targetDamageable.TakeDamage(AttackConfig.Value.Damage);
 
