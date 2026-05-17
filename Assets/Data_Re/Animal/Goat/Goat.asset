@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0dfa12f3e60a8441b5388bf205af9e7, type: 3}
+  m_Name: Goat
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Units.UnitSO
+  <Name>k__BackingField: Goat
+  <IsOneTimeUnlock>k__BackingField: 0
+  <BuildTime>k__BackingField: 5
+  <Icon>k__BackingField: {fileID: 0}
+  <Cost>k__BackingField: {fileID: 11400000, guid: 5992400cc99a1b045998d504ae48f2e3, type: 2}
+  <TechTree>k__BackingField: {fileID: 11400000, guid: 3a07828278e4cdb44ab0c2a943ccf22a, type: 2}
+  <unlockRequirements>k__BackingField: []
+  <Health>k__BackingField: 100
+  <Prefab>k__BackingField: {fileID: 1677176852055214, guid: a4619e2f6c84b7542a0ee8ee2f7cf491, type: 3}
+  <Upgrades>k__BackingField: []
+  <SightConfig>k__BackingField: {fileID: 11400000, guid: 5c3b553eafeb3c346b8a160742ab07c1, type: 2}
+  <AttackConfig>k__BackingField: {fileID: 11400000, guid: 921c22afd2d4f24489902d045d277eba, type: 2}
+  <TransportConfig>k__BackingField: {fileID: 0}
+  <DeathConfig>k__BackingField: {fileID: 0}
+  <MoveSpeed>k__BackingField: 3.5
+  <GatherTimeMultiplier>k__BackingField: 1
+  <GatherAmountBonus>k__BackingField: 0

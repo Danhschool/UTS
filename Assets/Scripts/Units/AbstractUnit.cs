@@ -168,11 +168,29 @@ namespace GameDevTV.RTS.Units
         {
             List<GameObject> nearbyEnemies = UpdateNearbyEnemiesBlackboard();
 
-            if (graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetVariable)
-                && targetVariable.Value == null && nearbyEnemies.Count > 0)
+            if (ShouldAutoAssignNearestEnemyTarget()
+                && graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetVariable)
+                && targetVariable.Value == null
+                && nearbyEnemies.Count > 0)
             {
                 graphAgent.SetVariableValue("TargetGameObject", nearbyEnemies[0]);
             }
+
+            OnNearbyEnemyEntered(damageable, nearbyEnemies);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Cho unit con (WildAnimal) phản ứng ngay khi sensor thấy kẻ địch.
+        /// Cách hoạt động: Gọi sau khi cập nhật NearbyEnemies; mặc định không làm gì.
+        /// </summary>
+        /// <summary>
+        /// Mục tiêu: Cho phép unit con (WildAnimal) tắt auto-gán Target khi thấy địch.
+        /// Cách hoạt động: WildAnimal trả về false để không bị Move subgraph đuổi theo player.
+        /// </summary>
+        protected virtual bool ShouldAutoAssignNearestEnemyTarget() => true;
+
+        protected virtual void OnNearbyEnemyEntered(IDamageable damageable, List<GameObject> nearbyEnemies)
+        {
         }
 
         private void HandleUnitExit(IDamageable damageable)

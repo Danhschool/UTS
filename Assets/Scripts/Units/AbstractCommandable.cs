@@ -149,6 +149,15 @@ namespace GameDevTV.RTS.Units
 
         public void TakeDamage(int damage)
         {
+            TakeDamage(damage, null);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Trừ máu và cho phép phản ứng theo nguồn sát thương (vd. animal counter-attack).
+        /// Cách hoạt động: Gọi overload có attacker; lớp con override để đổi Command ngay khi bị đánh.
+        /// </summary>
+        public virtual void TakeDamage(int damage, IDamageable attacker)
+        {
             if (deathSequenceStarted)
             {
                 return;

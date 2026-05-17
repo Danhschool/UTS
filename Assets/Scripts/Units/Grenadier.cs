@@ -80,7 +80,7 @@ namespace GameDevTV.RTS.Units
         {
             if (damageable != null && damageable.Transform != null)
             {
-                damageable?.TakeDamage(unitSO.AttackConfig.Damage);
+                damageable?.TakeDamage(unitSO.AttackConfig.Damage, this);
             }
 
             if (unitSO.AttackConfig.IsAreaOfEffect)
@@ -98,8 +98,8 @@ namespace GameDevTV.RTS.Units
                         && damageable != nearbyDamageable)
                     {
                         nearbyDamageable.TakeDamage(
-                            unitSO.AttackConfig.CalculateAreaOfEffectDamage(endPosition, nearbyDamageable.Transform.position)
-                        );
+                            unitSO.AttackConfig.CalculateAreaOfEffectDamage(endPosition, nearbyDamageable.Transform.position),
+                            this);
                     }
                 }
             }

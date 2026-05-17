@@ -15,8 +15,9 @@ namespace GameDevTV.RTS.Units
         [SerializeField] private float fleeHealthFraction = 0.35f;
         [SerializeField] private float fleeDistance = 22f;
 
-        [Header("Eat (animation only)")]
+        [Header("Eat & idle (animation only)")]
         [SerializeField] private float eatDurationSeconds = 3f;
+        [SerializeField] private float idleDurationSeconds = 3f;
         [Range(0f, 1f)]
         [SerializeField] private float eatChancePerTick = 0.25f;
 
@@ -31,6 +32,7 @@ namespace GameDevTV.RTS.Units
         public float FleeHealthFraction => fleeHealthFraction;
         public float FleeDistance => fleeDistance;
         public float EatDurationSeconds => eatDurationSeconds;
+        public float IdleDurationSeconds => idleDurationSeconds;
         public float EatChancePerTick => eatChancePerTick;
         public SupplySO CorpseFoodSupply => corpseFoodSupply;
         public int CorpseFoodAmount => corpseFoodAmount;

@@ -30,17 +30,20 @@ namespace GameDevTV.RTS.Behavior.Animal
             }
 
             GameObject prefab = CorpsePrefab.Value;
+            WildAnimal animal = Self.Value.GetComponent<WildAnimal>()
+                ?? Self.Value.GetComponentInParent<WildAnimal>()
+                ?? Self.Value.GetComponentInChildren<WildAnimal>(true);
 
-            if (Self.Value.TryGetComponent(out WildAnimal animal)
-                && animal.Config != null
-                && animal.Config.CorpseSupplyPrefab != null)
+            if (animal != null)
             {
-                prefab ??= animal.Config.CorpseSupplyPrefab;
+                return animal.TrySpawnCorpseFoodSupply() ? Status.Success : Status.Failure;
             }
 
             if (prefab == null)
             {
-                Debug.LogWarning($"{nameof(SpawnCorpseFoodSupplyAction)}: missing corpse supply prefab.");
+                Debug.LogWarning(
+                    $"{nameof(SpawnCorpseFoodSupplyAction)} on '{Self.Value.name}': missing WildAnimal and corpse prefab.",
+                    Self.Value);
                 return Status.Failure;
             }
 

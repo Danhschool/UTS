@@ -10,6 +10,10 @@ namespace GameDevTV.RTS.Units
         public Owner Owner { get; }
 
         public void TakeDamage(int damage);
+
+        /// <param name="attacker">Unit gây sát thương (null nếu không xác định).</param>
+        public void TakeDamage(int damage, IDamageable attacker);
+
         public void Die();
     }
 }

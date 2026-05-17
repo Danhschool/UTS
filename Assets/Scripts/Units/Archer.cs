@@ -94,7 +94,7 @@ namespace GameDevTV.RTS.Units
                 return;
             }
 
-            damageable.TakeDamage(unitSO.AttackConfig.Damage);
+            damageable.TakeDamage(unitSO.AttackConfig.Damage, this);
         }
 
         private bool TryBeginLaunch()

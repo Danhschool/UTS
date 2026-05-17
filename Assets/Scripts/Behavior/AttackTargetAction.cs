@@ -46,7 +46,7 @@ namespace GameDevTV.RTS.Behavior
                 enemyColliders = new Collider[AttackConfig.Value.MaxEnemiesHitPerAttack];
             }
 
-            if (!NearbyEnemies.Value.Contains(Target.Value))
+            if (!IsTargetInAttackRange())
             {
                 navMeshAgent.SetDestination(targetTransform.position);
                 navMeshAgent.isStopped = false;
@@ -67,9 +67,7 @@ namespace GameDevTV.RTS.Behavior
         {
             if (Target.Value == null || targetDamageable.CurrentHealth == 0) return Status.Success;
 
-            
-
-            if (!NearbyEnemies.Value.Contains(Target.Value))
+            if (!IsTargetInAttackRange())
             {
                 if (animator != null)
                 {
@@ -128,7 +126,7 @@ namespace GameDevTV.RTS.Behavior
                 return;
             }
 
-            targetDamageable.TakeDamage(AttackConfig.Value.Damage);
+            targetDamageable.TakeDamage(AttackConfig.Value.Damage, unit);
 
             if (!AttackConfig.Value.IsAreaOfEffect) return;
 
@@ -146,10 +144,9 @@ namespace GameDevTV.RTS.Behavior
                 {
                     nearbyDamageable.TakeDamage(
                         AttackConfig.Value.CalculateAreaOfEffectDamage(
-                            targetTransform.position, 
-                            nearbyDamageable.Transform.position
-                        )
-                    );
+                            targetTransform.position,
+                            nearbyDamageable.Transform.position),
+                        unit);
                 }
             }
         }
@@ -169,7 +166,23 @@ namespace GameDevTV.RTS.Behavior
         private bool HasValidInputs() => Self.Value != null && Self.Value.TryGetComponent(out NavMeshAgent _)
             && Self.Value.TryGetComponent(out AbstractUnit _)
             && Target.Value != null && Target.Value.TryGetComponent(out IDamageable _)
-            && AttackConfig.Value != null && NearbyEnemies.Value != null;
+            && AttackConfig.Value != null;
+
+        /// <summary>
+        /// Mục tiêu: Cho phép tấn công khi đủ tầm, không phụ thuộc sensor trigger (archer bắn từ xa).
+        /// Cách hoạt động: So khoảng cách 3D với AttackRange trên AttackConfig (+ slack nhỏ).
+        /// </summary>
+        private bool IsTargetInAttackRange()
+        {
+            if (targetTransform == null || AttackConfig.Value == null)
+            {
+                return false;
+            }
+
+            float slack = Mathf.Max(0.15f, navMeshAgent != null ? navMeshAgent.stoppingDistance : 0.15f);
+            float range = AttackConfig.Value.AttackRange + slack;
+            return Vector3.Distance(selfTransform.position, targetTransform.position) <= range;
+        }
     }
 
 }
