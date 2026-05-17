@@ -716,6 +716,7 @@ GameObject:
   - component: {fileID: 4715691591202135171}
   - component: {fileID: 938214048214118208}
   - component: {fileID: 6557403190863887536}
+  - component: {fileID: 8844226611001133559}
   m_Layer: 6
   m_Name: Archer
   m_TagString: Untagged
@@ -912,10 +913,27 @@ MonoBehaviour:
   movementDestinationCursorMinVisibleSeconds: 0.2
   movementDestinationArrivalSlack: 0.25
   deathConfigOverride: {fileID: 0}
-  arrow: {fileID: 8923746592837465123}
+  arrowFlight: {fileID: 8844226611001133559}
+  arrowPrefab: {fileID: 1454817680262554, guid: 40884fb93fdcfdb4f8174c11f1c6684a, type: 3}
   firePoint: {fileID: 8761462707885126720}
-  projectileFlightSpeed: 4
-  arcHeight: 1.5
+  launchCooldownSeconds: 0.35
+--- !u!114 &8844226611001133559
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2977037207688881033}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8e4f2a91b6d4e38a5c7d9021f3b8e6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Units.HomingArrowFlight
+  arrowPrefab: {fileID: 1454817680262554, guid: 40884fb93fdcfdb4f8174c11f1c6684a, type: 3}
+  firePoint: {fileID: 8761462707885126720}
+  speed: 12
+  stopDistance: 0.35
+  flightRotationOffsetEuler: {x: -90, y: 0, z: 0}
 --- !u!1 &3029429448437618152
 GameObject:
   m_ObjectHideFlags: 0
@@ -1981,11 +1999,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5f54888d4d3067a489ac4d494c076621, type: 3}
---- !u!1 &8923746592837465123 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1454817680262554, guid: 5f54888d4d3067a489ac4d494c076621, type: 3}
-  m_PrefabInstance: {fileID: 67205740340012460}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &67205740339887916 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: 5f54888d4d3067a489ac4d494c076621, type: 3}
