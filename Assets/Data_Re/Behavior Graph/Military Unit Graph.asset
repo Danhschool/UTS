@@ -1318,7 +1318,7 @@ MonoBehaviour:
         m_SubgraphAssetId:
           m_Value0: 0
           m_Value1: 0
-        m_SubgraphAuthoringAsset: {fileID: 0}
+        m_SubgraphAuthoringAsset: {fileID: 11400000, guid: 52dd0b07a34c3904fa259102516aa35a, type: 2}
         m_IsDynamic: 0
         m_ShowStaticSubgraphRepresentation: 0
         m_StoryFields: []

@@ -1,0 +1,35 @@
+---
+description: Cấm sửa .asset/.meta/prefab YAML trừ khi user yêu cầu rõ ràng
+alwaysApply: true
+---
+
+# Unity asset & meta — chỉ sửa khi được yêu cầu
+
+## Quy tắc bắt buộc
+
+- **KHÔNG** tạo, sửa, xóa, hoặc `git checkout` các file sau trừ khi user **yêu cầu rõ ràng** (nêu đường dẫn hoặc loại file cần đổi):
+  - `*.asset`
+  - `*.meta`
+  - `*.prefab` (YAML prefab Unity)
+  - `*.unity` (scene)
+  - `*.controller`, `*.overrideController` (Animator)
+  - `*.shadergraph`, `*.shadersubgraph`
+  - Behavior Graph / BT: `*Graph*.asset`, `*BT*.asset`, `*Sub Graph*.asset`
+
+- **Được phép** mặc định: `*.cs`, `*.asmdef`, markdown/docs **khi** user yêu cầu tính năng bằng code.
+
+## Khi user báo lỗi Editor (ví dụ `UnityEditor.Graphs.Edge.WakeUp`)
+
+1. **Giải thích** nguyên nhân có thể (reference graph/asset hỏng).
+2. **Không** tự sửa `.asset` — hướng dẫn user sửa trong Unity Editor, **hoặc** hỏi: *"Bạn có muốn tôi sửa file X.asset không?"*
+3. Chỉ sau khi user đồng ý **và** chỉ định file → mới được chỉnh đúng file đó; **không** `git checkout` hàng loạt graph/prefab.
+
+## Ví dụ
+
+- User: "fix gather" → sửa `Worker.cs`, **không** đụng `Worker BT.asset` trừ khi user nói sửa graph.
+- User: "sửa Worker BT Die subgraph" → chỉ `Assets/Data_Re/Behavior Graph/Worker/Worker BT.asset`.
+- User: "revert về trước" → **không** `git checkout` nhiều asset; hỏi phạm vi hoặc chỉ file user nêu.
+
+## Ngoại lệ
+
+- User viết rõ: "được sửa prefab X", "sửa Worker BT", "commit cả asset", "restore graph Y".

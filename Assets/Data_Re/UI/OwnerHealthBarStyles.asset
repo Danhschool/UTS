@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8e2d4a61b9c4e2f8a3d5c7b9e1f2046, type: 3}
+  m_Name: OwnerHealthBarStyles
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.UI.OwnerHealthBarStyleSO
+  player1Style:
+    borderSprite: {fileID: 21300000, guid: 0589fb23c36cfbb4aaac712b8ff6df10, type: 3}
+    fillSprite: {fileID: 21300000, guid: 7c40e298ba603a741a81fcb2b050c629, type: 3}
+  ai1Style:
+    borderSprite: {fileID: 21300000, guid: 0589fb23c36cfbb4aaac712b8ff6df10, type: 3}
+    fillSprite: {fileID: 21300000, guid: 46ee25f13dd62214b87c803abeba81b9, type: 3}
+  defaultStyle:
+    borderSprite: {fileID: 21300000, guid: 0589fb23c36cfbb4aaac712b8ff6df10, type: 3}
+    fillSprite: {fileID: 21300000, guid: 7c40e298ba603a741a81fcb2b050c629, type: 3}

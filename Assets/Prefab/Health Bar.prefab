@@ -47,6 +47,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.UI.Components.UnitWorldHealthBar
   commandable: {fileID: 0}
   progressBar: {fileID: 3310562704299923360}
+  styleLibrary: {fileID: 11400000, guid: a9c3e7f1b2d4465a8e0f1c2d3b4a5e6f, type: 2}
+  borderImage: {fileID: 0}
+  fillImage: {fileID: 0}
   worldCamera: {fileID: 0}
   billboardTowardCamera: 1
 --- !u!1 &4780678100592315078

@@ -5,6 +5,7 @@ using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.TechTree;
+using GameDevTV.RTS.UI.Components;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -228,5 +229,16 @@ namespace GameDevTV.RTS.Units
                 OnUpgradeAppliedToRuntime();
             }
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            UnitWorldHealthBar[] healthBars = GetComponentsInChildren<UnitWorldHealthBar>(true);
+            foreach (UnitWorldHealthBar healthBar in healthBars)
+            {
+                healthBar.RefreshOwnerStyleInEditor();
+            }
+        }
+#endif
     }
 }

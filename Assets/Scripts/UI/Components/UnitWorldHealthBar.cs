@@ -1,31 +1,36 @@
 using System.Collections;
+using GameDevTV.RTS.UI;
 using GameDevTV.RTS.Units;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace GameDevTV.RTS.UI.Components
 {
     /// <summary>
-    /// Thanh máu world-space trên unit: lắng nghe <see cref="AbstractCommandable.OnHealthUpdated"/> và cập nhật <see cref="ProgressBar"/>.
+    /// Thanh máu world-space: fill theo HP và đổi sprite theo <see cref="Owner"/> (Player1 / AI1).
     /// </summary>
+    [ExecuteAlways]
     public class UnitWorldHealthBar : MonoBehaviour
     {
         [SerializeField] private AbstractCommandable commandable;
         [SerializeField] private ProgressBar progressBar;
+        [SerializeField] private OwnerHealthBarStyleSO styleLibrary;
+        [SerializeField] private Image borderImage;
+        [SerializeField] private Image fillImage;
         [Tooltip("Để trống sẽ dùng Camera.main một lần trong Awake (nên gán camera gameplay trong Inspector nếu có nhiều camera).")]
         [SerializeField] private Camera worldCamera;
         [SerializeField] private bool billboardTowardCamera = true;
 
+        private Owner lastAppliedOwner = Owner.Invalid;
+
         private void Awake()
         {
-            if (commandable == null)
-            {
-                commandable = GetComponentInParent<AbstractCommandable>();
-            }
+            ResolveReferences();
+        }
 
-            if (worldCamera == null)
-            {
-                worldCamera = Camera.main;
-            }
+        private void OnEnable()
+        {
+            ApplyOwnerStyleIfNeeded();
         }
 
         private void Start()
@@ -37,16 +42,7 @@ namespace GameDevTV.RTS.UI.Components
 
             commandable.OnHealthUpdated += HandleHealthUpdated;
             StartCoroutine(RefreshAfterHealthInitialized());
-        }
-
-        /// <summary>
-        /// Mục tiêu: vẽ đúng thanh máu lúc spawn dù <see cref="UnitWorldHealthBar"/> Start chạy trước <see cref="AbstractUnit.Start"/>.
-        /// Cách hoạt động: chờ hết frame (sau batch Start), rồi gọi <see cref="ApplyFillFromHealth"/>.
-        /// </summary>
-        private IEnumerator RefreshAfterHealthInitialized()
-        {
-            yield return null;
-            ApplyFillFromHealth();
+            ApplyOwnerStyleIfNeeded();
         }
 
         private void OnDestroy()
@@ -69,12 +65,128 @@ namespace GameDevTV.RTS.UI.Components
             {
                 transform.rotation = Quaternion.LookRotation(toCamera);
             }
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                ApplyOwnerStyleIfNeeded();
+            }
+#endif
         }
 
         /// <summary>
-        /// Mục tiêu: giữ thanh máu khớp với <see cref="AbstractCommandable.CurrentHealth"/> / <see cref="AbstractCommandable.MaxHealth"/>.
-        /// Cách hoạt động: tính tỉ lệ 0–1, gọi <see cref="ProgressBar.SetProgress"/> (cùng API với UI xây nhà trong project).
+        /// Mục tiêu: Gọi từ <see cref="AbstractCommandable"/> khi đổi Owner trên Inspector (xem trước không cần Play).
+        /// Cách hoạt động: Reset cache Owner và áp lại sprite border/fill từ <see cref="OwnerHealthBarStyleSO"/>.
         /// </summary>
+        public void RefreshOwnerStyleInEditor()
+        {
+            lastAppliedOwner = Owner.Invalid;
+            ResolveReferences();
+            ApplyOwnerStyleIfNeeded();
+        }
+
+        private IEnumerator RefreshAfterHealthInitialized()
+        {
+            yield return null;
+            ApplyFillFromHealth();
+        }
+
+        private void ResolveReferences()
+        {
+            if (commandable == null)
+            {
+                commandable = GetComponentInParent<AbstractCommandable>();
+            }
+
+            if (progressBar == null)
+            {
+                progressBar = GetComponentInChildren<ProgressBar>(true);
+            }
+
+            if (progressBar != null && borderImage == null)
+            {
+                progressBar.TryGetComponent(out borderImage);
+            }
+
+            if (fillImage == null && progressBar != null)
+            {
+                Transform progressTransform = progressBar.transform.Find("Mask/Progress");
+                if (progressTransform == null)
+                {
+                    progressTransform = FindDeepChild(progressBar.transform, "Progress");
+                }
+
+                if (progressTransform != null)
+                {
+                    progressTransform.TryGetComponent(out fillImage);
+                }
+            }
+
+            if (worldCamera == null)
+            {
+                worldCamera = Camera.main;
+            }
+        }
+
+        private static Transform FindDeepChild(Transform parent, string childName)
+        {
+            if (parent.name == childName)
+            {
+                return parent;
+            }
+
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform found = FindDeepChild(parent.GetChild(i), childName);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            return null;
+        }
+
+        private void ApplyOwnerStyleIfNeeded()
+        {
+            if (styleLibrary == null || commandable == null)
+            {
+                return;
+            }
+
+            if (commandable.Owner == lastAppliedOwner)
+            {
+                return;
+            }
+
+            if (!styleLibrary.TryGetStyle(commandable.Owner, out OwnerHealthBarStyleSO.Style style))
+            {
+                return;
+            }
+
+            ApplySpriteToImage(borderImage, style.borderSprite);
+            ApplySpriteToImage(fillImage, style.fillSprite);
+
+            lastAppliedOwner = commandable.Owner;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Gán sprite và chọn Image Type phù hợp (Simple vs Sliced) để tránh cảnh báo "too many sprite tiles".
+        /// Cách hoạt động: Nếu sprite có border 9-slice thì dùng Sliced; ngược lại dùng Simple.
+        /// </summary>
+        private static void ApplySpriteToImage(Image image, Sprite sprite)
+        {
+            if (image == null || sprite == null)
+            {
+                return;
+            }
+
+            image.sprite = sprite;
+            Vector4 border = sprite.border;
+            bool hasNineSlice = border.x > 0.01f || border.y > 0.01f || border.z > 0.01f || border.w > 0.01f;
+            image.type = hasNineSlice ? Image.Type.Sliced : Image.Type.Simple;
+        }
+
         private void ApplyFillFromHealth()
         {
             if (progressBar == null || commandable == null)

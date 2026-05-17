@@ -15,7 +15,7 @@ namespace GameDevTV.RTS.Units
     {
         public float AgentRadius => Agent.radius;
         [field: SerializeField] public ParticleSystem AttackingParticleSystem { get; private set; }
-        [SerializeField] private DamageableSensor DamageableSensor;
+        [SerializeField] protected DamageableSensor DamageableSensor;
         public NavMeshAgent Agent { get; private set; }
         public Sprite Icon => UnitSO.Icon;
         protected BehaviorGraphAgent graphAgent;
@@ -149,9 +149,24 @@ namespace GameDevTV.RTS.Units
             graphAgent.SetVariableValue("Command", UnitCommands.Attack);
         }
 
+        protected List<GameObject> UpdateNearbyEnemiesBlackboard()
+        {
+            List<GameObject> nearbyEnemies = new();
+
+            if (DamageableSensor != null)
+            {
+                nearbyEnemies = DamageableSensor.Damageables
+                    .ConvertAll(damageable => damageable.Transform.gameObject);
+                nearbyEnemies.Sort(new ClosestGameObjectComparer(transform.position));
+            }
+
+            graphAgent.SetVariableValue("NearbyEnemies", nearbyEnemies);
+            return nearbyEnemies;
+        }
+
         private void HandleUnitEnter(IDamageable damageable)
         {
-            List<GameObject> nearbyEnemies = SetNearbyEnemiesOnBlackboard();
+            List<GameObject> nearbyEnemies = UpdateNearbyEnemiesBlackboard();
 
             if (graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetVariable)
                 && targetVariable.Value == null && nearbyEnemies.Count > 0)
@@ -162,7 +177,7 @@ namespace GameDevTV.RTS.Units
 
         private void HandleUnitExit(IDamageable damageable)
         {
-            List<GameObject> nearbyEnemies = SetNearbyEnemiesOnBlackboard();
+            List<GameObject> nearbyEnemies = UpdateNearbyEnemiesBlackboard();
 
             if (!graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetVariable)
                 || damageable.Transform.gameObject != targetVariable.Value) return;
@@ -176,17 +191,6 @@ namespace GameDevTV.RTS.Units
                 graphAgent.SetVariableValue<GameObject>("TargetGameObject", null);
                 graphAgent.SetVariableValue("TargetLocation", damageable.Transform.position);
             }
-        }
-
-        private List<GameObject> SetNearbyEnemiesOnBlackboard()
-        {
-            List<GameObject> nearbyEnemies = DamageableSensor.Damageables
-                            .ConvertAll(damageable => damageable.Transform.gameObject);
-            nearbyEnemies.Sort(new ClosestGameObjectComparer(transform.position));
-
-            graphAgent.SetVariableValue("NearbyEnemies", nearbyEnemies);
-
-            return nearbyEnemies;
         }
 
         /// <summary>
