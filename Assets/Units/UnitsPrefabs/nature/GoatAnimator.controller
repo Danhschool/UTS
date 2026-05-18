@@ -279,7 +279,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: a82c9f77ef4370340a9fae2125ee9b1f, type: 3}
+  m_Motion: {fileID: 7400000, guid: 716a3d8f2fd569142a5f8cd4bb777f47, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -306,7 +306,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: 112fd01a504002049a86a3147015e5ae, type: 3}
+  m_Motion: {fileID: 7400000, guid: ce4d0ac84bef9604ea34650d9f212f01, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -333,7 +333,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: a4a370f5f8a8c6f4d8e5705d512cb747, type: 3}
+  m_Motion: {fileID: 7400000, guid: 2bd56561fdc0b4b4fa4759fba83ea922, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -386,7 +386,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: cab7a5414d10c0f4b801d170b81dfb7c, type: 3}
+  m_Motion: {fileID: 7400000, guid: ef3093a151c538340be633d61d2b54ae, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -413,7 +413,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: 9b8d510327ece5849a99f47767e47288, type: 3}
+  m_Motion: {fileID: 7400000, guid: 20b361e3fd264f64b868298679629f00, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -439,7 +439,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 7400000, guid: 286ff21c7308f9d4fa4734644e554cb5, type: 3}
+  m_Motion: {fileID: 7400000, guid: a911d12b217f9384d962bbc334fe2efa, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
