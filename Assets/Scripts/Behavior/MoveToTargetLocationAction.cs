@@ -34,7 +34,7 @@ namespace GameDevTV.RTS.Behavior
 
             resolvedDestination = ResolveDestinationWorld();
 
-            if (Vector3.Distance(agent.transform.position, resolvedDestination) <= agent.stoppingDistance)
+            if (HasArrivedAt(resolvedDestination))
             {
                 return Status.Success;
             }
@@ -51,17 +51,32 @@ namespace GameDevTV.RTS.Behavior
                 animator.SetBool(AnimationConstants.IS_MOVING, true);
             }
 
-            if (agent.pathPending)
-            {
-                return Status.Running;
-            }
-
-            if (agent.remainingDistance <= agent.stoppingDistance)
+            if (HasArrivedAt(resolvedDestination))
             {
                 return Status.Success;
             }
 
             return Status.Running;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Coi là đã tới đích (tránh node Move Running mãi khi remainingDistance sai).
+        /// Cách hoạt động: Chờ path hết pending, so khoảng cách thực tới điểm đích với stoppingDistance.
+        /// </summary>
+        private bool HasArrivedAt(Vector3 goalWorld)
+        {
+            if (agent == null || !agent.isOnNavMesh)
+            {
+                return false;
+            }
+
+            if (agent.pathPending)
+            {
+                return false;
+            }
+
+            float slack = Mathf.Max(agent.stoppingDistance, 0.25f);
+            return Vector3.Distance(agent.transform.position, goalWorld) <= slack;
         }
 
         protected override void OnEnd()
