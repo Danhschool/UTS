@@ -95,7 +95,7 @@ namespace GameDevTV.RTS.Units
                 return true;
             }
 
-            if (TryMaintainAttackOnCurrentTarget())
+            if (HasLockedAttackTarget() || TryMaintainAttackOnCurrentTarget())
             {
                 return true;
             }

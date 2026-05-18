@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using GameDevTV.RTS.TechTree;
@@ -169,6 +170,7 @@ namespace GameDevTV.RTS.Units
             List<GameObject> nearbyEnemies = UpdateNearbyEnemiesBlackboard();
 
             if (ShouldAutoAssignNearestEnemyTarget()
+                && !HasLockedAttackTarget()
                 && graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetVariable)
                 && targetVariable.Value == null
                 && nearbyEnemies.Count > 0)
@@ -198,7 +200,16 @@ namespace GameDevTV.RTS.Units
             List<GameObject> nearbyEnemies = UpdateNearbyEnemiesBlackboard();
 
             if (!graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetVariable)
-                || damageable.Transform.gameObject != targetVariable.Value) return;
+                || damageable.Transform.gameObject != targetVariable.Value)
+            {
+                return;
+            }
+
+            // Lệnh Attack có target: giữ TargetGameObject để đuổi/đánh đến chết, không đổi sang enemy gần hơn.
+            if (HasLockedAttackTarget())
+            {
+                return;
+            }
 
             if (nearbyEnemies.Count > 0)
             {
@@ -209,6 +220,69 @@ namespace GameDevTV.RTS.Units
                 graphAgent.SetVariableValue<GameObject>("TargetGameObject", null);
                 graphAgent.SetVariableValue("TargetLocation", damageable.Transform.position);
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Biết unit đang khóa mục tiêu tấn công (lệnh Attack + TargetGameObject còn sống).
+        /// Cách hoạt động: Đọc Command và IDamageable trên TargetGameObject; chỉ sensor/graph bên ngoài bị chặn đổi target.
+        /// </summary>
+        protected bool HasLockedAttackTarget()
+        {
+            return TryGetLockedAttackTarget(out _, out IDamageable damageable)
+                && damageable.CurrentHealth > 0;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Lấy target đang khóa cho nhánh Attack.
+        /// Cách hoạt động: Command == Attack và TargetGameObject có IDamageable hợp lệ.
+        /// </summary>
+        protected bool TryGetLockedAttackTarget(out GameObject targetObject, out IDamageable damageable)
+        {
+            targetObject = null;
+            damageable = null;
+
+            if (graphAgent == null
+                || !graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> commandVariable)
+                || commandVariable.Value != UnitCommands.Attack
+                || !graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetVariable)
+                || targetVariable.Value == null
+                || !targetVariable.Value.TryGetComponent(out IDamageable targetDamageable))
+            {
+                return false;
+            }
+
+            targetObject = targetVariable.Value;
+            damageable = targetDamageable;
+            return true;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Biết worker đang khóa mỏ supply cho lệnh Gather (đến hết hoặc đổi lệnh mới).
+        /// Cách hoạt động: Command == Gather và Supply (hoặc TargetGameObject) còn Amount > 0.
+        /// </summary>
+        protected bool HasLockedGatherTarget()
+        {
+            if (graphAgent == null
+                || !graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> commandVariable)
+                || commandVariable.Value != UnitCommands.Gather)
+            {
+                return false;
+            }
+
+            if (graphAgent.GetVariable("Supply", out BlackboardVariable<GatherableSupply> supplyVariable)
+                && supplyVariable.Value != null)
+            {
+                return supplyVariable.Value.Amount > 0;
+            }
+
+            if (graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetVariable)
+                && targetVariable.Value != null
+                && targetVariable.Value.TryGetComponent(out GatherableSupply supplyFromTarget))
+            {
+                return supplyFromTarget.Amount > 0;
+            }
+
+            return false;
         }
 
         /// <summary>

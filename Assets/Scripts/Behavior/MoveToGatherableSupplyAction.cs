@@ -23,6 +23,7 @@ namespace GameDevTV.RTS.Behavior
         private Animator animator;
         private LayerMask suppliesMask;
         private SupplySO supplySO;
+        private GatherableSupply lockedGatherSupply;
 
         /// <summary>Kiểm tra agent đã nằm trong vùng chấp nhận quanh điểm đích supply trên bản đồ.</summary>
         /// <remarks>Chỉ dựa remainingDistance dễ Success sớm (0 khi path chưa sẵn hoặc vừa SetDestination).</remarks>
@@ -35,12 +36,14 @@ namespace GameDevTV.RTS.Behavior
         protected override Status OnStart()
         {
             suppliesMask = LayerMask.GetMask("Supplies");
+            lockedGatherSupply = null;
 
             if (!HasValidInputs())
             {
                 return Status.Failure;
             }
 
+            lockedGatherSupply = Supply.Value;
             agent.TryGetComponent(out animator);
 
             Vector3 targetPosition = GetTargetPosition();
@@ -54,6 +57,11 @@ namespace GameDevTV.RTS.Behavior
             if (Supply.Value == null)
             {
                 return Status.Failure;
+            }
+
+            if (lockedGatherSupply != null)
+            {
+                Supply.Value = lockedGatherSupply;
             }
 
             if (animator != null)
@@ -79,6 +87,11 @@ namespace GameDevTV.RTS.Behavior
                 return Status.Success;
             }
 
+            if (lockedGatherSupply != null)
+            {
+                return Supply.Value.Amount > 0 ? Status.Running : Status.Failure;
+            }
+
             Collider[] colliders = FindNearbySuppliesMatchingType();
 
             if (colliders.Length > 0)
@@ -95,6 +108,8 @@ namespace GameDevTV.RTS.Behavior
 
         protected override void OnEnd()
         {
+            lockedGatherSupply = null;
+
             if (animator != null)
             {
                 animator.SetBool(AnimationConstants.IS_MOVING, false);
