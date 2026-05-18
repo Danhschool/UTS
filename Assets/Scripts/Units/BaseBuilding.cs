@@ -206,9 +206,10 @@ namespace GameDevTV.RTS.Units
                 {
                     Vector3 spawn = GetUnitSpawnWorldPosition();
                     GameObject instance = Instantiate(unitSO.Prefab, spawn, Quaternion.identity);
-                    if (instance.TryGetComponent(out AbstractCommandable commandable))
+                    if (instance.TryGetComponent(out AbstractUnit unit))
                     {
-                        commandable.Owner = Owner;
+                        unit.Owner = Owner;
+                        unit.NotifySpawned();
                     }
                 }
                 else if (SOBeingBuilt is UpgradeSO upgrade)

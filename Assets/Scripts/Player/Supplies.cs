@@ -38,6 +38,8 @@ namespace GameDevTV.RTS.Player
         public static Dictionary<Owner, int> Population { get; private set; }
         public static Dictionary<Owner, int> PopulationLimit { get; private set; }
 
+        private readonly HashSet<AbstractUnit> playerUnitsOnField = new(128);
+
         private void Awake()
         {
             Stone = new Dictionary<Owner, int>();
@@ -56,6 +58,9 @@ namespace GameDevTV.RTS.Player
             }
 
             Bus<SupplyEvent>.RegisterForAll(HandleSupplyEvent);
+            Bus<UnitSpawnEvent>.RegisterForAll(HandleUnitSpawn);
+            Bus<UnitDeathEvent>.RegisterForAll(HandleUnitDeath);
+            RegisterExistingPlayerUnits();
             RefreshPlayer1SupplyHud();
         }
 
@@ -81,6 +86,64 @@ namespace GameDevTV.RTS.Player
             {
                 foodText.SetText(Food[Owner.Player1].ToString());
             }
+
+            RefreshPlayer1PopulationHud();
+        }
+
+        private void RegisterExistingPlayerUnits()
+        {
+            playerUnitsOnField.Clear();
+            AbstractUnit[] units = FindObjectsByType<AbstractUnit>(FindObjectsSortMode.None);
+            for (int i = 0; i < units.Length; i++)
+            {
+                AbstractUnit unit = units[i];
+                if (unit != null && unit.Owner == Owner.Player1 && unit.CurrentHealth > 0)
+                {
+                    playerUnitsOnField.Add(unit);
+                }
+            }
+        }
+
+        private void HandleUnitSpawn(UnitSpawnEvent evt)
+        {
+            if (evt.Unit == null || evt.Unit.Owner != Owner.Player1)
+            {
+                return;
+            }
+
+            playerUnitsOnField.Add(evt.Unit);
+            RefreshPlayer1PopulationHud();
+        }
+
+        private void HandleUnitDeath(UnitDeathEvent evt)
+        {
+            if (evt.Unit == null)
+            {
+                return;
+            }
+
+            playerUnitsOnField.Remove(evt.Unit);
+            RefreshPlayer1PopulationHud();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Cập nhật số unit Player1 đang sống trên Population Container (HUD).
+        /// Cách hoạt động: Đếm HashSet, ghi vào Population và populationText giống stone/wood/food.
+        /// </summary>
+        private void RefreshPlayer1PopulationHud()
+        {
+            playerUnitsOnField.RemoveWhere(unit => unit == null || unit.CurrentHealth <= 0);
+
+            int aliveCount = playerUnitsOnField.Count;
+            Population[Owner.Player1] = aliveCount;
+
+            if (populationText == null)
+            {
+                return;
+            }
+
+            int limit = PopulationLimit[Owner.Player1];
+            populationText.SetText(limit > 0 ? $"{aliveCount}/{limit}" : aliveCount.ToString());
         }
 
 #if UNITY_EDITOR
@@ -109,6 +172,8 @@ namespace GameDevTV.RTS.Player
         private void OnDestroy()
         {
             Bus<SupplyEvent>.UnregisterForAll(HandleSupplyEvent);
+            Bus<UnitSpawnEvent>.UnregisterForAll(HandleUnitSpawn);
+            Bus<UnitDeathEvent>.UnregisterForAll(HandleUnitDeath);
         }
 
         private void HandleSupplyEvent(SupplyEvent evt)

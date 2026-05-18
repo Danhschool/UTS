@@ -175,6 +175,12 @@ namespace GameDevTV.RTS.Minimap
 
         private void UpdateIconVisibility(AbstractCommandable commandable, MinimapIconView view)
         {
+            if (commandable.Owner == Owner.Player1)
+            {
+                view.SetVisible(true);
+                return;
+            }
+
             bool visible = commandable.IsVisible;
             if (hideIconsOutsideExplored && fogSystem != null && commandable.Transform != null)
             {

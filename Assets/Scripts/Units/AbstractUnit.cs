@@ -39,6 +39,7 @@ namespace GameDevTV.RTS.Units
         private Coroutine movementDestinationCursorRoutine;
         private UnitDeathController deathController;
         private bool unitDeathEventRaised;
+        private bool unitSpawnEventRaised;
 
         protected override void Awake()
         {
@@ -71,7 +72,7 @@ namespace GameDevTV.RTS.Units
             MaxHealth = UnitSO.Health;
             CurrentHealth = MaxHealth;
 
-            Bus<UnitSpawnEvent>.Raise(Owner, new UnitSpawnEvent(this));
+            NotifySpawned();
 
             if (DamageableSensor != null)
             {
@@ -84,6 +85,21 @@ namespace GameDevTV.RTS.Units
             graphAgent.SetVariableValue("AttackConfig", unitSO.AttackConfig);
             SyncMoveSpeedFromUnitSo();
             RefreshVisionFromSightConfig();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Báo spawn unit một lần (minimap, fog…) sau khi Owner đã gán đúng.
+        /// Cách hoạt động: Building queue gọi ngay sau Set Owner; Start gọi lại nếu chưa raise.
+        /// </summary>
+        public void NotifySpawned()
+        {
+            if (unitSpawnEventRaised)
+            {
+                return;
+            }
+
+            unitSpawnEventRaised = true;
+            Bus<UnitSpawnEvent>.Raise(Owner, new UnitSpawnEvent(this));
         }
 
         /// <summary>
