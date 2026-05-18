@@ -171,6 +171,8 @@ namespace GameDevTV.RTS.Units
 
             if (ShouldAutoAssignNearestEnemyTarget()
                 && !HasLockedAttackTarget()
+                && !HasLockedMoveTarget()
+                && !HasLockedGatherTarget()
                 && graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetVariable)
                 && targetVariable.Value == null
                 && nearbyEnemies.Count > 0)
@@ -208,6 +210,13 @@ namespace GameDevTV.RTS.Units
             // Lệnh Attack có target: giữ TargetGameObject để đuổi/đánh đến chết, không đổi sang enemy gần hơn.
             if (HasLockedAttackTarget())
             {
+                return;
+            }
+
+            // Move / Gather: không đổi TargetLocation; chỉ bỏ target tạm gán bởi sensor (nếu có).
+            if (HasLockedMoveTarget() || HasLockedGatherTarget())
+            {
+                graphAgent.SetVariableValue<GameObject>("TargetGameObject", null);
                 return;
             }
 
@@ -254,6 +263,17 @@ namespace GameDevTV.RTS.Units
             targetObject = targetVariable.Value;
             damageable = targetDamageable;
             return true;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Giữ lệnh Move tới TargetLocation; sensor không gán TargetGameObject (animal đi ngang).
+        /// Cách hoạt động: Command == Move — graph Move dùng TargetLocation khi TargetGameObject null.
+        /// </summary>
+        protected bool HasLockedMoveTarget()
+        {
+            return graphAgent != null
+                && graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> commandVariable)
+                && commandVariable.Value == UnitCommands.Move;
         }
 
         /// <summary>

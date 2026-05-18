@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Minimap;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Commands;
 using Unity.Cinemachine;
@@ -13,7 +14,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace GameDevTV.RTS.Player
 {
-    public class PlayerInput : MonoBehaviour
+    public class PlayerInput : MonoBehaviour, IMinimapCameraNavigator
     {
         [SerializeField] private Rigidbody cameraTarget;
         [SerializeField] private CinemachineCamera cinemachineCamera;
@@ -897,6 +898,34 @@ namespace GameDevTV.RTS.Player
             }
 
             return moveAmount;
+        }
+
+        public Transform CameraTargetTransform => cameraTarget != null ? cameraTarget.transform : null;
+
+        public Camera GameplayCamera => camera;
+
+        /// <summary>
+        /// Mục tiêu: Di chuyển camera tới điểm world khi click minimap.
+        /// Cách hoạt động: Cập nhật XZ của Rigidbody cameraTarget và clamp theo PanLimit.
+        /// </summary>
+        public void PanCameraToWorldPosition(Vector3 worldPosition)
+        {
+            if (cameraTarget == null)
+            {
+                return;
+            }
+
+            Vector3 position = cameraTarget.position;
+            position.x = worldPosition.x;
+            position.z = worldPosition.z;
+
+            if (cameraConfig.EnablePanLimits)
+            {
+                position.x = Mathf.Clamp(position.x, cameraConfig.PanLimitMinXZ.x, cameraConfig.PanLimitMaxXZ.x);
+                position.z = Mathf.Clamp(position.z, cameraConfig.PanLimitMinXZ.y, cameraConfig.PanLimitMaxXZ.y);
+            }
+
+            cameraTarget.MovePosition(position);
         }
     }
 }

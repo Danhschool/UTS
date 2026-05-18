@@ -1,0 +1,27 @@
+---
+description: Không tự tạo hoặc sửa file .meta Unity bằng tay — để Unity sinh GUID hợp lệ.
+alwaysApply: true
+---
+
+# Unity — Không tự tạo file `.meta`
+
+## Quy tắc bắt buộc
+
+- **Không** tạo, xóa, hoặc chỉnh sửa file `*.meta` thủ công (kể cả qua AI).
+- **Không** đặt `guid:` tự bịa trong `.meta` — Unity yêu cầu **đúng 32 ký tự hex**; GUID sai gây lỗi YAML Parser và asset bị ignore.
+- Khi thêm asset/script/prefab mới: chỉ tạo file nội dung (`.cs`, `.prefab`, `.asset`…); **để Unity Editor** tự sinh `.meta` khi focus project hoặc reimport.
+
+## Prefab / scene
+
+- **Không** gắn script vào prefab/scene bằng cách sửa YAML với `guid` script chưa tồn tại trong `.meta` thật.
+- Sau khi Unity compile xong: hướng dẫn user **kéo component trong Inspector** hoặc dùng prefab đã lưu từ Editor.
+
+## Nếu đã lỗi meta (Console đỏ)
+
+1. Xóa các file `.meta` bị lỗi (không xóa file asset gốc).
+2. Trong Unity: **Assets → Reimport** hoặc mở lại project.
+3. Gán lại reference trên prefab/scene trong Inspector.
+
+## Thay thế khi cần reference
+
+- Tạo file C# / ScriptableObject / prefab → user mở Unity một lần → sau đó mới wire SerializeField trong Inspector.
