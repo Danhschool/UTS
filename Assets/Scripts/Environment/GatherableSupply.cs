@@ -82,12 +82,18 @@ namespace GameDevTV.RTS.Environment
         {
             foreach (Renderer renderer in renderers)
             {
-                renderer.enabled = true;
+                if (renderer != null)
+                {
+                    renderer.enabled = true;
+                }
             }
 
             foreach (ParticleSystem particleSystem in particleSystems)
             {
-                particleSystem.gameObject.SetActive(true);
+                if (particleSystem != null)
+                {
+                    particleSystem.gameObject.SetActive(true);
+                }
             }
 
             if (culledVisuals != null)
@@ -100,40 +106,96 @@ namespace GameDevTV.RTS.Environment
         {
             foreach (Renderer renderer in renderers)
             {
-                renderer.enabled = false;
+                if (renderer != null)
+                {
+                    renderer.enabled = false;
+                }
             }
 
             foreach (ParticleSystem particleSystem in particleSystems)
             {
-                particleSystem.gameObject.SetActive(false);
+                if (particleSystem != null)
+                {
+                    particleSystem.gameObject.SetActive(false);
+                }
             }
 
             if (culledVisuals == null)
             {
-                MeshRenderer mainRenderer = GetComponentInChildren<MeshRenderer>();
-                Transform originalRendererTransform = mainRenderer.transform;
-                GameObject culledGO = new ($"Culled {name} Visuals")
+                if (!TryCreateCulledVisuals())
                 {
-                    layer = LayerMask.GetMask("TransparentFX"),
-                    transform =
-                    {
-                        position = originalRendererTransform.position,
-                        rotation = originalRendererTransform.rotation,
-                        localScale = originalRendererTransform.localScale
-                    }
-                };
-                culledVisuals = culledGO.AddComponent<Placeholder>();
-                culledVisuals.ParentObject = gameObject;
-                culledVisuals.Owner = Owner.Unowned;
-                MeshFilter meshFilter = culledGO.AddComponent<MeshFilter>();
-                meshFilter.mesh = mainRenderer.GetComponent<MeshFilter>().mesh;
-                MeshRenderer renderer = culledGO.AddComponent<MeshRenderer>();
-                renderer.materials = mainRenderer.materials;
+                    return;
+                }
             }
             else
             {
                 culledVisuals.gameObject.SetActive(true);
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Tạo placeholder nhỏ khi supply bị che fog (chưa khám phá).
+        /// Cách hoạt động: Chỉ dùng MeshRenderer tĩnh (cây/đá); bỏ qua SkinnedMesh (xác động vật) để tránh tư thế bind pose.
+        /// </summary>
+        private bool TryCreateCulledVisuals()
+        {
+            Renderer sourceRenderer = FindSourceRendererForCulledVisual();
+            if (sourceRenderer == null)
+            {
+                return false;
+            }
+
+            Transform sourceTransform = sourceRenderer.transform;
+            GameObject culledGO = new($"Culled {name} Visuals")
+            {
+                layer = LayerMask.NameToLayer("TransparentFX"),
+                transform =
+                {
+                    position = sourceTransform.position,
+                    rotation = sourceTransform.rotation,
+                    localScale = sourceTransform.lossyScale
+                }
+            };
+
+            culledVisuals = culledGO.AddComponent<Placeholder>();
+            culledVisuals.ParentObject = gameObject;
+            culledVisuals.Owner = Owner.Unowned;
+
+            MeshFilter meshFilter = culledGO.AddComponent<MeshFilter>();
+            MeshRenderer culledRenderer = culledGO.AddComponent<MeshRenderer>();
+
+            if (sourceRenderer is not MeshRenderer meshRenderer)
+            {
+                Destroy(culledGO);
+                culledVisuals = null;
+                return false;
+            }
+
+            MeshFilter sourceFilter = meshRenderer.GetComponent<MeshFilter>();
+            if (sourceFilter == null)
+            {
+                Destroy(culledGO);
+                culledVisuals = null;
+                return false;
+            }
+
+            meshFilter.sharedMesh = sourceFilter.sharedMesh;
+            culledRenderer.sharedMaterials = meshRenderer.sharedMaterials;
+
+            return true;
+        }
+
+        private Renderer FindSourceRendererForCulledVisual()
+        {
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer is MeshRenderer)
+                {
+                    return renderer;
+                }
+            }
+
+            return GetComponentInChildren<MeshRenderer>(true);
         }
     }
 }

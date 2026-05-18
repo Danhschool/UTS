@@ -45,6 +45,8 @@ namespace GameDevTV.RTS.Player
         private void LateUpdate()
         {
             ReadPixelsToVisionTexture();
+            hideables.RemoveWhere(h => h == null || h.Transform == null);
+
             foreach (IHideable hideable in hideables)
             {
                 SetUnitVisibilityStatus(hideable);

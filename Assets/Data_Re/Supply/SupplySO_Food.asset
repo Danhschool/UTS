@@ -15,3 +15,4 @@ MonoBehaviour:
   <MaxAmount>k__BackingField: 1500
   <AmountPerGather>k__BackingField: 25
   <BaseGatherTime>k__BackingField: 2
+  <Icon>k__BackingField: {fileID: 21300000, guid: 4bdf85425c813674c8b1530b2382117c, type: 3}

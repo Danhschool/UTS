@@ -684,15 +684,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Minimap.MinimapController
   mapBounds: {fileID: 11400000, guid: aa11bb22cc33dd44ee55ff6677889900, type: 2}
-  iconStyle: {fileID: 11400000, guid: bb22cc33dd44ee55ff66778899001122, type: 2}
+  renderCamera: {fileID: 0}
+  minimapDisplay: {fileID: 770001004}
+  hideStaticBackground: 0
   backgroundImage: {fileID: 8611796329180504970}
-  iconsRoot: {fileID: 1548729150298081346}
-  fogOverlay: {fileID: 770001005}
-  cameraViewport: {fileID: 770002005}
   inputHandler: {fileID: 770003001}
-  iconPrefab: {fileID: 100100005, guid: 0fb68ec6475cb794da9b5653281bc13c, type: 3}
-  exploredFogTexture: {fileID: 8400000, guid: 4a02c5810d9f4084c86767ced61de51a, type: 2}
   cameraNavigatorBehaviour: {fileID: 0}
+  unitIcons: {fileID: 770005001}
+  iconStyle: {fileID: 11400000, guid: bb22cc33dd44ee55ff66778899001122, type: 2}
+  iconPrefab: {fileID: 100100005, guid: 0fb68ec6475cb794da9b5653281bc13c, type: 3}
 --- !u!1 &1078523761725220009
 GameObject:
   m_ObjectHideFlags: 0
@@ -2236,7 +2236,6 @@ RectTransform:
   m_Children:
   - {fileID: 770001002}
   - {fileID: 1548729150298081346}
-  - {fileID: 770002002}
   m_Father: {fileID: 3815604131880151353}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3537,6 +3536,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1548729150298081346}
+  - component: {fileID: 770005001}
   m_Layer: 5
   m_Name: Icons
   m_TagString: Untagged
@@ -3563,6 +3563,23 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &770005001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8591650213339628317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f70391be22eab94f9f8d35b838a29ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Minimap.MinimapUnitIconsController
+  mapBounds: {fileID: 11400000, guid: aa11bb22cc33dd44ee55ff6677889900, type: 2}
+  iconStyle: {fileID: 11400000, guid: bb22cc33dd44ee55ff66778899001122, type: 2}
+  iconPrefab: {fileID: 100100005, guid: 0fb68ec6475cb794da9b5653281bc13c, type: 3}
+  iconsRoot: {fileID: 1548729150298081346}
+  trackPlayerUnitsOnly: 0
 --- !u!1 &770001001
 GameObject:
   m_ObjectHideFlags: 0
@@ -3574,9 +3591,8 @@ GameObject:
   - component: {fileID: 770001002}
   - component: {fileID: 770001003}
   - component: {fileID: 770001004}
-  - component: {fileID: 770001005}
   m_Layer: 5
-  m_Name: Fog Overlay
+  m_Name: Minimap Render
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3629,126 +3645,13 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 8400000, guid: 4a02c5810d9f4084c86767ced61de51a, type: 2}
+  m_Texture: {fileID: 0}
   m_UVRect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 1
     height: 1
---- !u!114 &770001005
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 770001001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fb5e44cc9413c834ea7897a02a8170de, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Minimap.MinimapFogOverlay
-  rawImage: {fileID: 770001004}
-  exploredFogTexture: {fileID: 8400000, guid: 4a02c5810d9f4084c86767ced61de51a, type: 2}
-  unexploredFogMaterial: {fileID: 0}
-  unexploredFogAlpha: 0.75
-  unexploredFogColor: {r: 0, g: 0, b: 0, a: 1}
---- !u!1 &770002001
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 770002002}
-  - component: {fileID: 770002003}
-  - component: {fileID: 770002004}
-  - component: {fileID: 770002005}
-  m_Layer: 5
-  m_Name: Camera Viewport
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &770002002
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 770002001}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 5988432910574261403}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.4, y: 0.4}
-  m_AnchorMax: {x: 0.6, y: 0.6}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &770002003
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 770002001}
-  m_CullTransparentMesh: 1
---- !u!114 &770002004
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 770002001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.35}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 0
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!114 &770002005
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 770002001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9bd074ae19d9be4da7f6c1dc0b8bc1b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Minimap.MinimapCameraViewport
-  viewportRect: {fileID: 770002002}
-  viewportImage: {fileID: 770002004}
-  mapBounds: {fileID: 11400000, guid: aa11bb22cc33dd44ee55ff6677889900, type: 2}
-  cameraNavigatorBehaviour: {fileID: 0}
-  groundHeight: 0
-  autoFindPlayerInput: 1
-  viewportFrameColor: {r: 1, g: 1, b: 1, a: 0.35}
-  viewportFrameSprite: {fileID: 0}
 --- !u!1 &8596077434121484948
 GameObject:
   m_ObjectHideFlags: 0

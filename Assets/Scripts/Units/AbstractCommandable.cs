@@ -32,6 +32,8 @@ namespace GameDevTV.RTS.Units
         private BaseCommand[] initialCommands;
         private Renderer[] renderers = Array.Empty<Renderer>();
         private ParticleSystem[] particleSystems = Array.Empty<ParticleSystem>();
+        private Animator[] animators = Array.Empty<Animator>();
+        private AnimatorCullingMode[] savedAnimatorCullingModes = Array.Empty<AnimatorCullingMode>();
         private bool deathSequenceStarted;
 
         protected virtual void Awake()
@@ -40,6 +42,7 @@ namespace GameDevTV.RTS.Units
 
             renderers = GetComponentsInChildren<Renderer>();
             particleSystems = GetComponentsInChildren<ParticleSystem>();
+            animators = GetComponentsInChildren<Animator>();
         }
 
         protected virtual void Start()
@@ -204,27 +207,86 @@ namespace GameDevTV.RTS.Units
 
         protected virtual void OnGainVisibility()
         {
-            foreach(Renderer renderer in renderers)
-            {
-                renderer.enabled = true;
-            }
-
-            foreach(ParticleSystem particleSystem in particleSystems)
-            {
-                particleSystem.gameObject.SetActive(true);
-            }
-        }
-
-        protected virtual void OnLoseVisibility()
-        {
             foreach (Renderer renderer in renderers)
             {
-                renderer.enabled = false;
+                if (renderer != null)
+                {
+                    renderer.enabled = true;
+                }
             }
 
             foreach (ParticleSystem particleSystem in particleSystems)
             {
-                particleSystem.gameObject.SetActive(false);
+                if (particleSystem != null)
+                {
+                    particleSystem.gameObject.SetActive(true);
+                }
+            }
+
+            RestoreAnimatorCullingAfterFog();
+        }
+
+        protected virtual void OnLoseVisibility()
+        {
+            KeepAnimatorsUpdatingWhileFogHidden();
+
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer != null)
+                {
+                    renderer.enabled = false;
+                }
+            }
+
+            foreach (ParticleSystem particleSystem in particleSystems)
+            {
+                if (particleSystem != null)
+                {
+                    particleSystem.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Animation vẫn chạy khi unit bị ẩn bởi fog (renderer tắt).
+        /// Cách hoạt động: Unity dừng cập nhật xương nếu không render — ép AlwaysAnimate và lưu mode cũ.
+        /// </summary>
+        private void KeepAnimatorsUpdatingWhileFogHidden()
+        {
+            savedAnimatorCullingModes = new AnimatorCullingMode[animators.Length];
+            for (int i = 0; i < animators.Length; i++)
+            {
+                Animator animator = animators[i];
+                if (animator == null)
+                {
+                    continue;
+                }
+
+                savedAnimatorCullingModes[i] = animator.cullingMode;
+                animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Khôi phục culling Animator và pose đúng khi unit hiện lại sau fog.
+        /// Cách hoạt động: Trả lại culling mode đã lưu và ép Animator cập nhật một frame.
+        /// </summary>
+        private void RestoreAnimatorCullingAfterFog()
+        {
+            for (int i = 0; i < animators.Length; i++)
+            {
+                Animator animator = animators[i];
+                if (animator == null)
+                {
+                    continue;
+                }
+
+                if (i < savedAnimatorCullingModes.Length)
+                {
+                    animator.cullingMode = savedAnimatorCullingModes[i];
+                }
+
+                animator.Update(0f);
             }
         }
 

@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b2c3d4e5f6478990abcdef1234567890, type: 3}
-  m_Name: DefaultMinimapIconStyle
+  m_Name: Minimap Icon Style
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Minimap.MinimapIconStyleSO
-  dotSprite: {fileID: 21300000, guid: e7c49208e47e57c47b55c30f3f47b29d, type: 3}
-  fallbackUnitIconSprite: {fileID: 0}
-  buildingIconSprite: {fileID: 21300000, guid: 1446c6bf9a96c3a4ba689262a64cb980, type: 3}
+  dotSprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  fallbackUnitIconSprite: {fileID: 21300000, guid: e7c49208e47e57c47b55c30f3f47b29d, type: 3}
+  buildingIconSprite: {fileID: 21300000, guid: 1dec8cbad57547f4d8a8e3559d283523, type: 3}
   playerColor: {r: 1, g: 1, b: 1, a: 1}
   enemyColor: {r: 1, g: 0.25, b: 0.2, a: 1}
   neutralColor: {r: 0.35, g: 0.95, b: 0.3, a: 1}
@@ -22,5 +22,5 @@ MonoBehaviour:
   enemyBuildingColor: {r: 1, g: 0.35, b: 0.3, a: 1}
   unitIconSize: {x: 20, y: 20}
   buildingIconSize: {x: 30, y: 30}
-  supplyIconSize: {x: 30, y: 30}
+  supplyIconSize: {x: 50, y: 50}
   supplyColor: {r: 1, g: 1, b: 1, a: 1}

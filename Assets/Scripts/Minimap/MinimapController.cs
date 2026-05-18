@@ -1,100 +1,112 @@
-using System.Collections.Generic;
-using GameDevTV.RTS.EventBus;
-using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Player;
-using GameDevTV.RTS.Units;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GameDevTV.RTS.Minimap
 {
+    /// <summary>
+    /// Gắn trên Minimap Container: hiển thị RT từ MinimapRenderCamera và click di chuyển camera.
+    /// </summary>
     public class MinimapController : MonoBehaviour
     {
         [Header("Data")]
         [SerializeField] private MinimapMapBoundsSO mapBounds;
-        [SerializeField] private MinimapIconStyleSO iconStyle;
 
-        [Header("UI layers")]
+        [Header("Render")]
+        [SerializeField] private MinimapRenderCamera renderCamera;
+        [SerializeField] private RawImage minimapDisplay;
+        [SerializeField] private bool hideStaticBackground = true;
         [SerializeField] private Image backgroundImage;
-        [SerializeField] private RectTransform iconsRoot;
-        [SerializeField] private MinimapFogOverlay fogOverlay;
-        [SerializeField] private MinimapCameraViewport cameraViewport;
+
+        [Header("UI")]
         [SerializeField] private MinimapInputHandler inputHandler;
-
-        [Header("Prefab")]
+        [SerializeField] private MinimapUnitIconsController unitIcons;
+        [SerializeField] private MinimapSupplyIconsController supplyIcons;
+        [SerializeField] private MinimapIconStyleSO iconStyle;
         [SerializeField] private MinimapIconView iconPrefab;
-
-        [Header("Fog")]
-        [SerializeField] private RenderTexture exploredFogTexture;
-
-        [Header("Camera")]
+        [SerializeField] private MinimapFogSystemReference fogSystem;
+        [SerializeField] private MinimapExploredFogOverlay exploredFogOverlay;
         [SerializeField] private MonoBehaviour cameraNavigatorBehaviour;
-
-        private readonly Dictionary<AbstractCommandable, MinimapIconView> icons = new(128);
 
         private void Awake()
         {
             ResolveReferences();
-            WireCameraNavigator();
-            if (fogOverlay != null && exploredFogTexture != null)
-            {
-                fogOverlay.SetExploredTexture(exploredFogTexture);
-            }
+            WireNavigator();
+            EnsureFogSystem();
+            EnsureUnitIcons();
+            EnsureSupplyIcons();
         }
 
-        private void WireCameraNavigator()
+        private void Start()
+        {
+            if (renderCamera != null)
+            {
+                renderCamera.SetMapBounds(mapBounds);
+                IMinimapCameraNavigator navigator = ResolveNavigator();
+                if (navigator != null)
+                {
+                    renderCamera.SetFollowTarget(navigator.CameraTargetTransform);
+                }
+            }
+
+            RefreshMinimapDisplay();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Gán RT live lên RawImage sau khi MinimapRenderCamera đã tạo texture; giữ ảnh tĩnh khi chưa có RT.
+        /// Cách hoạt động: Start gọi sau mọi Awake; bật Background chỉ khi không có live map hợp lệ.
+        /// </summary>
+        private void RefreshMinimapDisplay()
+        {
+            if (renderCamera == null)
+            {
+                renderCamera = FindFirstObjectByType<MinimapRenderCamera>();
+            }
+
+            bool hasLiveTexture = renderCamera != null && renderCamera.TargetTexture != null;
+
+            if (backgroundImage != null)
+            {
+                bool showStaticMap = !hideStaticBackground || !hasLiveTexture;
+                backgroundImage.enabled = showStaticMap;
+            }
+
+            if (minimapDisplay == null)
+            {
+                return;
+            }
+
+            if (!hasLiveTexture)
+            {
+                minimapDisplay.texture = null;
+                return;
+            }
+
+            minimapDisplay.texture = renderCamera.TargetTexture;
+            minimapDisplay.color = Color.white;
+            minimapDisplay.uvRect = new Rect(0f, 0f, 1f, 1f);
+            minimapDisplay.enabled = true;
+        }
+
+        private void WireNavigator()
+        {
+            IMinimapCameraNavigator navigator = ResolveNavigator();
+            if (navigator == null)
+            {
+                return;
+            }
+
+            inputHandler?.SetCameraNavigator(cameraNavigatorBehaviour);
+        }
+
+        private IMinimapCameraNavigator ResolveNavigator()
         {
             if (cameraNavigatorBehaviour is not IMinimapCameraNavigator)
             {
                 cameraNavigatorBehaviour = FindFirstObjectByType<PlayerInput>();
             }
 
-            if (cameraNavigatorBehaviour == null)
-            {
-                return;
-            }
-
-            inputHandler?.SetCameraNavigator(cameraNavigatorBehaviour);
-            cameraViewport?.SetCameraNavigator(cameraNavigatorBehaviour);
-        }
-
-        private void OnEnable()
-        {
-            Bus<UnitSpawnEvent>.RegisterForAll(HandleUnitSpawn);
-            Bus<UnitDeathEvent>.RegisterForAll(HandleUnitDeath);
-            Bus<BuildingSpawnEvent>.RegisterForAll(HandleBuildingSpawn);
-            Bus<BuildingDeathEvent>.RegisterForAll(HandleBuildingDeath);
-            RegisterExistingCommandables();
-        }
-
-        private void OnDisable()
-        {
-            Bus<UnitSpawnEvent>.UnregisterForAll(HandleUnitSpawn);
-            Bus<UnitDeathEvent>.UnregisterForAll(HandleUnitDeath);
-            Bus<BuildingSpawnEvent>.UnregisterForAll(HandleBuildingSpawn);
-            Bus<BuildingDeathEvent>.UnregisterForAll(HandleBuildingDeath);
-            ClearIcons();
-        }
-
-        private void LateUpdate()
-        {
-            if (mapBounds == null)
-            {
-                return;
-            }
-
-            foreach (KeyValuePair<AbstractCommandable, MinimapIconView> pair in icons)
-            {
-                AbstractCommandable commandable = pair.Key;
-                MinimapIconView view = pair.Value;
-                if (commandable == null || view == null)
-                {
-                    continue;
-                }
-
-                view.SetNormalizedPosition(mapBounds.WorldToNormalized(commandable.transform.position));
-                view.SetVisible(ShouldShowOnMinimap(commandable));
-            }
+            return cameraNavigatorBehaviour as IMinimapCameraNavigator;
         }
 
         private void ResolveReferences()
@@ -106,112 +118,171 @@ namespace GameDevTV.RTS.Minimap
             }
 
             Transform mask = background != null ? background.Find("Minimap Mask") : null;
-            if (iconsRoot == null && mask != null)
+            if (mask == null)
             {
-                Transform icons = mask.Find("Icons");
-                if (icons == null)
-                {
-                    icons = mask.Find("Minimap");
-                }
-
-                iconsRoot = icons as RectTransform;
+                return;
             }
 
-            if (fogOverlay == null && mask != null)
+            if (minimapDisplay == null)
             {
-                Transform fog = mask.Find("Fog Overlay");
-                if (fog != null)
+                Transform render = mask.Find("Minimap Render");
+                if (render == null)
                 {
-                    fogOverlay = fog.GetComponent<MinimapFogOverlay>();
+                    render = mask.Find("Fog Overlay");
                 }
-            }
 
-            if (cameraViewport == null && mask != null)
-            {
-                Transform viewport = mask.Find("Camera Viewport");
-                if (viewport != null)
+                if (render != null)
                 {
-                    cameraViewport = viewport.GetComponent<MinimapCameraViewport>();
+                    minimapDisplay = render.GetComponent<RawImage>();
                 }
             }
 
-            if (inputHandler == null && mask != null)
+            if (inputHandler == null)
             {
                 inputHandler = mask.GetComponent<MinimapInputHandler>();
             }
-        }
 
-        private void RegisterExistingCommandables()
-        {
-            AbstractCommandable[] commandables = FindObjectsByType<AbstractCommandable>(FindObjectsSortMode.None);
-            foreach (AbstractCommandable commandable in commandables)
+            if (unitIcons == null)
             {
-                TryRegister(commandable);
-            }
-        }
-
-        private void HandleUnitSpawn(UnitSpawnEvent evt) => TryRegister(evt.Unit);
-        private void HandleUnitDeath(UnitDeathEvent evt) => TryUnregister(evt.Unit);
-        private void HandleBuildingSpawn(BuildingSpawnEvent evt) => TryRegister(evt.Building);
-        private void HandleBuildingDeath(BuildingDeathEvent evt) => TryUnregister(evt.Building);
-
-        private void TryRegister(AbstractCommandable commandable)
-        {
-            if (commandable == null || commandable.UnitSO == null || icons.ContainsKey(commandable))
-            {
-                return;
-            }
-
-            if (iconPrefab == null || iconsRoot == null || iconStyle == null)
-            {
-                return;
-            }
-
-            MinimapIconView view = Instantiate(iconPrefab, iconsRoot);
-            view.Configure(
-                iconStyle.IconSprite != null ? iconStyle.IconSprite : commandable.UnitSO.Icon,
-                iconStyle.GetColor(commandable.Owner),
-                iconStyle.IconSize);
-            view.SetNormalizedPosition(mapBounds.WorldToNormalized(commandable.transform.position));
-            view.SetVisible(ShouldShowOnMinimap(commandable));
-            icons.Add(commandable, view);
-        }
-
-        private void TryUnregister(AbstractCommandable commandable)
-        {
-            if (commandable == null || !icons.TryGetValue(commandable, out MinimapIconView view))
-            {
-                return;
-            }
-
-            icons.Remove(commandable);
-            if (view != null)
-            {
-                Destroy(view.gameObject);
-            }
-        }
-
-        private void ClearIcons()
-        {
-            foreach (MinimapIconView view in icons.Values)
-            {
-                if (view != null)
+                Transform icons = mask.Find("Icons");
+                if (icons != null)
                 {
-                    Destroy(view.gameObject);
+                    unitIcons = icons.GetComponent<MinimapUnitIconsController>();
                 }
             }
 
-            icons.Clear();
+            if (renderCamera == null)
+            {
+                renderCamera = FindFirstObjectByType<MinimapRenderCamera>();
+            }
         }
 
-        private static bool ShouldShowOnMinimap(AbstractCommandable commandable)
+        /// <summary>
+        /// Mục tiêu: Bật lớp icon unit trên minimap (UI overlay, pool MinimapIconView).
+        /// Cách hoạt động: Tìm child Icons, gắn MinimapUnitIconsController nếu thiếu, truyền bounds/style/prefab.
+        /// </summary>
+        private void EnsureUnitIcons()
         {
-            if (commandable.Owner == Owner.Player1)
+            if (mapBounds == null)
             {
-                return true;
+                return;
             }
 
-            return commandable.IsVisible;
+            Transform background = transform.Find("Background");
+            Transform mask = background != null ? background.Find("Minimap Mask") : null;
+            if (mask == null)
+            {
+                return;
+            }
+
+            Transform iconsTransform = mask.Find("Icons");
+            if (iconsTransform == null)
+            {
+                return;
+            }
+
+            iconsTransform.gameObject.SetActive(true);
+
+            if (unitIcons == null)
+            {
+                unitIcons = iconsTransform.GetComponent<MinimapUnitIconsController>();
+            }
+
+            if (unitIcons == null)
+            {
+                unitIcons = iconsTransform.gameObject.AddComponent<MinimapUnitIconsController>();
+            }
+
+            if (unitIcons != null && mapBounds != null && iconStyle != null && iconPrefab != null)
+            {
+                unitIcons.Configure(mapBounds, iconStyle, iconPrefab, fogSystem);
+                return;
+            }
+
+            if (iconPrefab == null)
+            {
+                Debug.LogWarning(
+                    "MinimapController: chưa gán Icon Prefab (Assets/UI/Prefabs/Minimap/MinimapIcon.prefab).",
+                    this);
+                return;
+            }
+
+            if (iconStyle == null)
+            {
+                Debug.LogWarning(
+                    "MinimapController: chưa gán Icon Style (DefaultMinimapIconStyle.asset).",
+                    this);
+                return;
+            }
+
+            unitIcons.Configure(mapBounds, iconStyle, iconPrefab, fogSystem);
+        }
+
+        private void EnsureFogSystem()
+        {
+            if (fogSystem != null)
+            {
+                fogSystem.EnsureReferences();
+                return;
+            }
+
+            fogSystem = FindFirstObjectByType<MinimapFogSystemReference>();
+            if (fogSystem != null)
+            {
+                fogSystem.EnsureReferences();
+                return;
+            }
+
+            Camera[] cameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
+            for (int i = 0; i < cameras.Length; i++)
+            {
+                Camera camera = cameras[i];
+                if (camera == null || camera.targetTexture == null)
+                {
+                    continue;
+                }
+
+                if (!camera.gameObject.name.Contains("Explored"))
+                {
+                    continue;
+                }
+
+                fogSystem = camera.gameObject.AddComponent<MinimapFogSystemReference>();
+                fogSystem.EnsureReferences();
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Bật icon supply trên minimap (SupplySO.Icon, fallback trắng nếu null).
+        /// Cách hoạt động: Cùng layer Icons với unit; lắng nghe SupplySpawn/Depleted.
+        /// </summary>
+        private void EnsureSupplyIcons()
+        {
+            if (mapBounds == null || iconStyle == null || iconPrefab == null)
+            {
+                return;
+            }
+
+            Transform background = transform.Find("Background");
+            Transform mask = background != null ? background.Find("Minimap Mask") : null;
+            Transform iconsTransform = mask != null ? mask.Find("Icons") : null;
+            if (iconsTransform == null)
+            {
+                return;
+            }
+
+            if (supplyIcons == null)
+            {
+                supplyIcons = iconsTransform.GetComponent<MinimapSupplyIconsController>();
+            }
+
+            if (supplyIcons == null)
+            {
+                supplyIcons = iconsTransform.gameObject.AddComponent<MinimapSupplyIconsController>();
+            }
+
+            supplyIcons.Configure(mapBounds, iconStyle, iconPrefab, fogSystem);
         }
     }
 }

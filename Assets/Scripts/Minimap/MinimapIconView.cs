@@ -7,27 +7,26 @@ namespace GameDevTV.RTS.Minimap
     {
         [SerializeField] private Image iconImage;
 
-        public void Configure(Sprite sprite, Color color, Vector2 size)
+        public void Configure(MinimapMarkerPresentation presentation)
         {
             if (iconImage == null)
             {
                 iconImage = GetComponent<Image>();
             }
 
-            if (iconImage != null)
+            if (iconImage == null)
             {
-                if (sprite != null)
-                {
-                    iconImage.sprite = sprite;
-                }
-
-                iconImage.color = color;
+                return;
             }
 
-            RectTransform rectTransform = transform as RectTransform;
-            if (rectTransform != null)
+            iconImage.sprite = presentation.Sprite;
+            iconImage.color = presentation.Color;
+            iconImage.preserveAspect = presentation.IsUnitIcon;
+            iconImage.enabled = presentation.Sprite != null;
+
+            if (transform is RectTransform rectTransform)
             {
-                rectTransform.sizeDelta = size;
+                rectTransform.sizeDelta = presentation.Size;
             }
         }
 
@@ -37,8 +36,7 @@ namespace GameDevTV.RTS.Minimap
         /// </summary>
         public void SetNormalizedPosition(Vector2 normalized)
         {
-            RectTransform rectTransform = transform as RectTransform;
-            if (rectTransform == null)
+            if (transform is not RectTransform rectTransform)
             {
                 return;
             }
