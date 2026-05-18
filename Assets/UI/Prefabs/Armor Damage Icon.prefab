@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8810813777082331533}
   - component: {fileID: 2057281526577778240}
   - component: {fileID: 5353011645875316519}
+  - component: {fileID: -1874022896307471806}
   m_Layer: 5
   m_Name: Armor Damage Icon
   m_TagString: Untagged
@@ -27,8 +28,8 @@ RectTransform:
   m_GameObject: {fileID: 52138930813371874}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 5244183733624169396}
   - {fileID: 7477344338972107287}
@@ -79,6 +80,23 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &-1874022896307471806
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 52138930813371874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bcd45a088abc0c4a9886bc0517a0580, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.UI.Components.UnitStatSlotUI
+  upgradeLevelText: {fileID: 5345928508485223958}
+  statValueText: {fileID: 4089526309284811479}
+  statIconImage: {fileID: 355082885956338300}
+  tooltip: {fileID: 8307686084594837880}
+  tooltipDescription: 
 --- !u!1 &437394629219096951
 GameObject:
   m_ObjectHideFlags: 0
@@ -257,6 +275,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -301,6 +320,7 @@ GameObject:
   - component: {fileID: 1679870657894237570}
   - component: {fileID: 6429747956725189699}
   - component: {fileID: 2336459994290566589}
+  - component: {fileID: 8307686084594837880}
   m_Layer: 5
   m_Name: Tooltip
   m_TagString: Untagged
@@ -366,6 +386,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 10
+--- !u!114 &8307686084594837880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5245368203399756044}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acee47b0055020a4495beacb73574277, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.UI.Components.Tooltip
+  <RectTransform>k__BackingField: {fileID: 1679870657894237570}
+  <HoverDelay>k__BackingField: 0.5
+  text: {fileID: 4170755229565182962}
 --- !u!1 &6255073719340885734
 GameObject:
   m_ObjectHideFlags: 0
@@ -469,6 +504,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -695,6 +731,7 @@ MonoBehaviour:
   m_VerticalAlignment: 1024
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0

@@ -14,6 +14,7 @@ namespace GameDevTV.RTS.UI
         [SerializeField] private BuildingSelectedUI buildingSelectedUI;
         [SerializeField] private UnitIconUI unitIconUI;
         [SerializeField] private SingleUnitSelectedUI singleUnitSelectedUI;
+        [SerializeField] private MultiUnitSelectionUI multiUnitSelectionUI;
         [SerializeField] private UnitTransportUI unitTransportUI;
 
         private HashSet<AbstractCommandable> selectedUnits = new(12);
@@ -37,6 +38,7 @@ namespace GameDevTV.RTS.UI
             buildingSelectedUI.Disable();
             unitIconUI.Disable();
             singleUnitSelectedUI.Disable();
+            multiUnitSelectionUI?.Disable();
             unitTransportUI.Disable();
         }
 
@@ -133,6 +135,7 @@ namespace GameDevTV.RTS.UI
                     singleUnitSelectedUI.Disable();
                     buildingSelectedUI.Disable();
                     unitTransportUI.Disable();
+                    multiUnitSelectionUI?.EnableFor(selectedUnits);
                 }
             }
             else
@@ -147,11 +150,13 @@ namespace GameDevTV.RTS.UI
             buildingSelectedUI.Disable();
             unitIconUI.Disable();
             singleUnitSelectedUI.Disable();
+            multiUnitSelectionUI?.Disable();
             unitTransportUI.Disable();
         }
 
         private void ResolveSingleUnitSelectedUI()
         {
+            multiUnitSelectionUI?.Disable();
             AbstractCommandable commandable = selectedUnits.First();
             unitIconUI.EnableFor(commandable);
 
