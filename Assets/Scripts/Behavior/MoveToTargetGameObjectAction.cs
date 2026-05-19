@@ -141,17 +141,9 @@ namespace GameDevTV.RTS.Behavior
                 return lastPosition;
             }
 
-            Vector3 targetPosition;
-            if (TargetGameObject.Value.TryGetComponent(out Collider collider))
-            {
-                targetPosition = collider.ClosestPoint(agent.transform.position);
-            }
-            else
-            {
-                targetPosition = TargetGameObject.Value.transform.position;
-            }
-
-            return targetPosition;
+            return CombatTargetGeometryUtility.GetClosestPointOnTarget(
+                agent.transform.position,
+                TargetGameObject.Value);
         }
     }
 }

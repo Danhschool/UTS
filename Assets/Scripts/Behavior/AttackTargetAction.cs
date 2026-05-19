@@ -29,6 +29,7 @@ namespace GameDevTV.RTS.Behavior
         private Collider[] enemyColliders;
 
         private float lastAttackTime;
+        private Vector3 approachPoint;
 
         protected override Status OnStart()
         {
@@ -46,9 +47,11 @@ namespace GameDevTV.RTS.Behavior
                 enemyColliders = new Collider[AttackConfig.Value.MaxEnemiesHitPerAttack];
             }
 
+            approachPoint = GetApproachPoint();
+
             if (!IsTargetInAttackRange())
             {
-                navMeshAgent.SetDestination(targetTransform.position);
+                navMeshAgent.SetDestination(approachPoint);
                 navMeshAgent.isStopped = false;
                 if (animator != null)
                 {
@@ -69,6 +72,13 @@ namespace GameDevTV.RTS.Behavior
 
             if (!IsTargetInAttackRange())
             {
+                Vector3 newApproach = GetApproachPoint();
+                if (Vector3.Distance(newApproach, approachPoint) > 0.25f)
+                {
+                    approachPoint = newApproach;
+                    navMeshAgent.SetDestination(approachPoint);
+                }
+
                 if (animator != null)
                 {
                     //animator.SetFloat(AnimationConstants.IS_MOVING, navMeshAgent.velocity.magnitude);
@@ -97,10 +107,14 @@ namespace GameDevTV.RTS.Behavior
 
         private void LookAtTarget()
         {
-            Quaternion lookRotation = Quaternion.LookRotation(
-                (targetTransform.position - selfTransform.position).normalized,
-                Vector3.up
-            );
+            Vector3 aimPoint = GetApproachPoint();
+            Vector3 toTarget = aimPoint - selfTransform.position;
+            if (toTarget.sqrMagnitude < 0.0001f)
+            {
+                return;
+            }
+
+            Quaternion lookRotation = Quaternion.LookRotation(toTarget.normalized, Vector3.up);
             selfTransform.rotation = Quaternion.Euler(
                 selfTransform.rotation.eulerAngles.x,
                 lookRotation.eulerAngles.y,
@@ -168,20 +182,30 @@ namespace GameDevTV.RTS.Behavior
             && Target.Value != null && Target.Value.TryGetComponent(out IDamageable _)
             && AttackConfig.Value != null;
 
+        private Vector3 GetApproachPoint() =>
+            Target.Value != null
+                ? CombatTargetGeometryUtility.GetClosestPointOnTarget(selfTransform.position, Target.Value)
+                : targetTransform != null
+                    ? targetTransform.position
+                    : selfTransform.position;
+
         /// <summary>
-        /// Mục tiêu: Cho phép tấn công khi đủ tầm, không phụ thuộc sensor trigger (archer bắn từ xa).
-        /// Cách hoạt động: So khoảng cách 3D với AttackRange trên AttackConfig (+ slack nhỏ).
+        /// Mục tiêu: Cho phép tấn công khi đủ tầm tới rìa mục tiêu (collider / NavMeshObstacle), không phải tâm pivot.
+        /// Cách hoạt động: So khoảng cách 3D tới điểm gần nhất trên footprint với AttackRange (+ slack).
         /// </summary>
         private bool IsTargetInAttackRange()
         {
-            if (targetTransform == null || AttackConfig.Value == null)
+            if (Target.Value == null || AttackConfig.Value == null)
             {
                 return false;
             }
 
             float slack = Mathf.Max(0.15f, navMeshAgent != null ? navMeshAgent.stoppingDistance : 0.15f);
             float range = AttackConfig.Value.AttackRange + slack;
-            return Vector3.Distance(selfTransform.position, targetTransform.position) <= range;
+            float distance = CombatTargetGeometryUtility.GetDistanceToTargetSurface(
+                selfTransform.position,
+                Target.Value);
+            return distance <= range;
         }
     }
 

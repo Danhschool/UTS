@@ -1,6 +1,7 @@
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Units;
+using GameDevTV.RTS.Utilities;
 using UnityEngine;
 
 namespace GameDevTV.RTS.UI.GameEventLog
@@ -26,6 +27,7 @@ namespace GameDevTV.RTS.UI.GameEventLog
             Bus<SupplyEvent>.OnEvent[listenOwner] += HandleSupply;
             Bus<BuildingSpawnEvent>.OnEvent[listenOwner] += HandleBuildingSpawn;
             Bus<BuildingDeathEvent>.OnEvent[listenOwner] += HandleBuildingDeath;
+            Bus<BuildingDeathEvent>.RegisterForAll(HandleCivilCentralDestroyed);
             Bus<UnitDeathEvent>.OnEvent[listenOwner] += HandleUnitDeath;
             Bus<UpgradeResearchedEvent>.OnEvent[listenOwner] += HandleUpgrade;
             Bus<BuildingConstructStartedEvent>.OnEvent[listenOwner] += HandleConstructionStarted;
@@ -36,6 +38,7 @@ namespace GameDevTV.RTS.UI.GameEventLog
             Bus<SupplyEvent>.OnEvent[listenOwner] -= HandleSupply;
             Bus<BuildingSpawnEvent>.OnEvent[listenOwner] -= HandleBuildingSpawn;
             Bus<BuildingDeathEvent>.OnEvent[listenOwner] -= HandleBuildingDeath;
+            Bus<BuildingDeathEvent>.UnregisterForAll(HandleCivilCentralDestroyed);
             Bus<UnitDeathEvent>.OnEvent[listenOwner] -= HandleUnitDeath;
             Bus<UpgradeResearchedEvent>.OnEvent[listenOwner] -= HandleUpgrade;
             Bus<BuildingConstructStartedEvent>.OnEvent[listenOwner] -= HandleConstructionStarted;
@@ -78,9 +81,26 @@ namespace GameDevTV.RTS.UI.GameEventLog
                 return;
             }
 
+            if (CivilCentralUtility.IsCivilCentral(evt.Building))
+            {
+                return;
+            }
+
             GameEventLog.Post(
                 GameEventLogMessageFormatter.FormatBuildingLost(evt.Building),
                 GameEventLogCategory.Combat);
+        }
+
+        private void HandleCivilCentralDestroyed(BuildingDeathEvent evt)
+        {
+            if (!logBuildings || evt.Building == null || !CivilCentralUtility.IsCivilCentral(evt.Building))
+            {
+                return;
+            }
+
+            GameEventLog.Post(
+                GameEventLogMessageFormatter.FormatCivilCentralDestroyed(evt.Owner),
+                GameEventLogCategory.GameOver);
         }
 
         private void HandleUnitDeath(UnitDeathEvent evt)

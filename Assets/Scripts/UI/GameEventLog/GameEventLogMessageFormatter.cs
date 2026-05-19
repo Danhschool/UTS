@@ -47,6 +47,15 @@ namespace GameDevTV.RTS.UI.GameEventLog
         public static string FormatConstructionStarted() =>
             "Bắt đầu xây dựng công trình.";
 
+        /// <summary>
+        /// Mục tiêu: Tạo thông báo thắng/thua khi nhà chính bị phá (góc nhìn Player1).
+        /// Cách hoạt động: Nếu chủ sở hữu bị phá là Player1 → thua; ngược lại → thắng.
+        /// </summary>
+        public static string FormatCivilCentralDestroyed(Owner destroyedOwner) =>
+            destroyedOwner == Owner.Player1
+                ? "THUA — Nhà chính (Civil Central) đã bị phá hủy!"
+                : "CHIẾN THẮNG — Đã phá hủy Civil Central của đối phương!";
+
         private static string GetBuildingName(BaseBuilding building)
         {
             if (building?.BuildingSO != null)

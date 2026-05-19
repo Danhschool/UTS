@@ -6,6 +6,7 @@ namespace GameDevTV.RTS.UI.GameEventLog
         Resource,
         Build,
         Combat,
-        Warning
+        Warning,
+        GameOver
     }
 }

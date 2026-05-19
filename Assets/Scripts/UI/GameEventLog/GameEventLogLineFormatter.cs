@@ -23,6 +23,7 @@ namespace GameDevTV.RTS.UI.GameEventLog
             GameEventLogCategory.Build => "<color=#7EC8FF>[Xây dựng]</color> ",
             GameEventLogCategory.Combat => "<color=#FF6B6B>[Chiến đấu]</color> ",
             GameEventLogCategory.Warning => "<color=#FFB347>[Cảnh báo]</color> ",
+            GameEventLogCategory.GameOver => "<color=#FFD700>[Kết quả]</color> ",
             _ => ""
         };
     }
