@@ -7,6 +7,12 @@ Thư mục `docs` này là bộ tài liệu tổng hợp để:
 
 ## 1) Tài liệu chính
 
+- **`TAI_LIEU_KY_THUAT_DAY_DU.md`**  
+  **Tài liệu kỹ thuật đầy đủ** — từng chức năng (kể cả nhỏ): event bus, lệnh, UI, behavior nodes, minimap, log, cảnh báo tài nguyên, v.v. (198 script + data/scene).
+
+- `RTS_TECHNICAL_REFERENCE.md`  
+  Tra cứu nhanh Feature → File khi sửa code hàng ngày.
+
 - `urts-architecture-map.md`  
   Bản đồ kiến trúc chi tiết theo domain: class/interface/struct/enum, chức năng, method chính và quan hệ giao tiếp.
 
@@ -24,8 +30,9 @@ Thư mục `docs` này là bộ tài liệu tổng hợp để:
 ## 3) Cách sử dụng nhanh
 
 1. Đọc `survey-summary.md` để có bức tranh lớn trong 5-10 phút.  
-2. Mở `urts-architecture-map.md` khi cần tra chi tiết class và quan hệ.  
-3. Khi đổi repo, làm theo `repo-migration-checklist.md` + `new-repo-quickstart.md`.
+2. Mở **`TAI_LIEU_KY_THUAT_DAY_DU.md`** khi cần hiểu **toàn bộ chức năng** trong game.  
+3. Mở `RTS_TECHNICAL_REFERENCE.md` hoặc `urts-architecture-map.md` khi cần tra file/class cụ thể.  
+4. Khi đổi repo, làm theo `repo-migration-checklist.md` + `new-repo-quickstart.md`.
 
 ## 4) Phạm vi và giới hạn
 
