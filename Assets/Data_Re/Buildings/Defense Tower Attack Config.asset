@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1ad5b8c3c1b252479bea58d385da36a, type: 3}
+  m_Name: Defense Tower Attack Config
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Buildings.BuildingAutoAttackConfigSO
+  <AttackConfig>k__BackingField: {fileID: 11400000, guid: 089c29b83d7cf2f4391b7250a148ec1b, type: 2}
+  <RequireTargetVisible>k__BackingField: 1
+  <ProjectilePrefab>k__BackingField: {fileID: 5731740018319640104, guid: 40eaf708671ea214abef251c68c96e02, type: 3}

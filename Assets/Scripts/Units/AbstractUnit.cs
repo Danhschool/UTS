@@ -172,13 +172,41 @@ namespace GameDevTV.RTS.Units
 
             if (DamageableSensor != null)
             {
-                nearbyEnemies = DamageableSensor.Damageables
-                    .ConvertAll(damageable => damageable.Transform.gameObject);
+                foreach (IDamageable damageable in DamageableSensor.Damageables)
+                {
+                    if (TryGetEnemyGameObject(damageable, out GameObject enemy))
+                    {
+                        nearbyEnemies.Add(enemy);
+                    }
+                }
+
                 nearbyEnemies.Sort(new ClosestGameObjectComparer(transform.position));
             }
 
             graphAgent.SetVariableValue("NearbyEnemies", nearbyEnemies);
             return nearbyEnemies;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Lấy GameObject địch từ sensor mà không NRE khi unit vừa bị Destroy.
+        /// Cách hoạt động: Bỏ qua Unity fake-null và Transform null trước khi trả về gameObject.
+        /// </summary>
+        private static bool TryGetEnemyGameObject(IDamageable damageable, out GameObject enemyGameObject)
+        {
+            enemyGameObject = null;
+            if (damageable is UnityEngine.Object unityObject && unityObject == null)
+            {
+                return false;
+            }
+
+            Transform enemyTransform = damageable.Transform;
+            if (enemyTransform == null)
+            {
+                return false;
+            }
+
+            enemyGameObject = enemyTransform.gameObject;
+            return true;
         }
 
         private void HandleUnitEnter(IDamageable damageable)
@@ -217,8 +245,9 @@ namespace GameDevTV.RTS.Units
         {
             List<GameObject> nearbyEnemies = UpdateNearbyEnemiesBlackboard();
 
-            if (!graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetVariable)
-                || damageable.Transform.gameObject != targetVariable.Value)
+            if (!TryGetEnemyGameObject(damageable, out GameObject exitingEnemy)
+                || !graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetVariable)
+                || exitingEnemy != targetVariable.Value)
             {
                 return;
             }
@@ -243,7 +272,10 @@ namespace GameDevTV.RTS.Units
             else
             {
                 graphAgent.SetVariableValue<GameObject>("TargetGameObject", null);
-                graphAgent.SetVariableValue("TargetLocation", damageable.Transform.position);
+                if (damageable.Transform != null)
+                {
+                    graphAgent.SetVariableValue("TargetLocation", damageable.Transform.position);
+                }
             }
         }
 

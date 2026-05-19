@@ -11,7 +11,14 @@ namespace GameDevTV.RTS.Units
     [RequireComponent(typeof(SphereCollider))]
     public class DamageableSensor : MonoBehaviour
     {
-        public List<IDamageable> Damageables => visibleDamageables.ToList();
+        public List<IDamageable> Damageables
+        {
+            get
+            {
+                PruneDestroyedDamageables();
+                return visibleDamageables.ToList();
+            }
+        }
         [field: SerializeField] public Owner Owner { get; set; }
 
         public delegate void UnitDetectionEvent(IDamageable damageable);
@@ -116,10 +123,56 @@ namespace GameDevTV.RTS.Units
 
         private void HandleUnitDeath(UnitDeathEvent evt)
         {
-            if (allDamageables.Contains(evt.Unit))
+            PruneDestroyedDamageables();
+
+            if (evt.Unit == null || !allDamageables.Contains(evt.Unit))
             {
-                OnTriggerExit(evt.Unit.GetComponent<Collider>());
+                return;
             }
+
+            Collider unitCollider = evt.Unit.GetComponent<Collider>();
+            if (unitCollider != null)
+            {
+                OnTriggerExit(unitCollider);
+                return;
+            }
+
+            if (visibleDamageables.Remove(evt.Unit))
+            {
+                OnUnitExit?.Invoke(evt.Unit);
+            }
+
+            allDamageables.Remove(evt.Unit);
+            if (allDamageables.Count == 0)
+            {
+                Bus<UnitDeathEvent>.UnregisterForAll(HandleUnitDeath);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Loại reference tới unit đã Destroy khỏi sensor (Unity không luôn gọi OnTriggerExit).
+        /// Cách hoạt động: Duyệt bản sao HashSet, xóa entry có Unity object hoặc Transform null.
+        /// </summary>
+        private void PruneDestroyedDamageables()
+        {
+            foreach (IDamageable damageable in visibleDamageables.ToArray())
+            {
+                if (!IsValidDamageable(damageable))
+                {
+                    visibleDamageables.Remove(damageable);
+                    allDamageables.Remove(damageable);
+                }
+            }
+        }
+
+        private static bool IsValidDamageable(IDamageable damageable)
+        {
+            if (damageable is UnityEngine.Object unityObject && unityObject == null)
+            {
+                return false;
+            }
+
+            return damageable != null && damageable.Transform != null;
         }
 
         public void SetupFrom(AttackConfigSO attackConfig)

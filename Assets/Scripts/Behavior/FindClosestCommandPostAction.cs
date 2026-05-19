@@ -10,41 +10,50 @@ using GameDevTV.RTS.Utilities;
 namespace GameDevTV.RTS.Behavior
 {
     [Serializable, GeneratePropertyBag]
-    [NodeDescription(name: "Find Closest Command Post", story: "[Unit] finds nearest [CommandPost] .", category: "Action/Units", id: "df019f9861776b3b31754a035175faf5")]
+    [NodeDescription(
+        name: "Find Closest Supply Deposit",
+        story: "[Unit] finds nearest supply deposit (store or main base) into [CommandPost].",
+        category: "Action/Units",
+        id: "df019f9861776b3b31754a035175faf5")]
     public partial class FindClosestCommandPostAction : Action
     {
         [SerializeReference] public BlackboardVariable<GameObject> Unit;
         [SerializeReference] public BlackboardVariable<GameObject> CommandPost;
         [SerializeReference] public BlackboardVariable<float> SearchRadius = new(10);
         [SerializeReference] public BlackboardVariable<BuildingSO> CommandPostBuilding;
+        [SerializeReference] public BlackboardVariable<BuildingSO> StoreBuilding;
+        [SerializeReference] public BlackboardVariable<BuildingSO> MainBuilding;
+
+        private readonly List<AbstractUnitSO> configuredDepositTypes = new();
 
         protected override Status OnStart()
         {
-            Collider[] colliders = Physics.OverlapSphere(
-                Unit.Value.transform.position,
-                SearchRadius.Value,
-                LayerMask.GetMask("Buildings"));
-
-            List<BaseBuilding> nearbyCommandPosts = new();
-
-            foreach (Collider collider in colliders)
-            {
-                if (collider.TryGetComponent(out BaseBuilding building)
-                        && building.UnitSO.Equals(CommandPostBuilding.Value)
-                        && building.Progress.State == BuildingProgress.BuildingState.Completed)
-                {
-                    nearbyCommandPosts.Add(building);
-                }
-            }
-
-            if (nearbyCommandPosts.Count == 0)
+            if (Unit.Value == null)
             {
                 return Status.Failure;
             }
 
-            nearbyCommandPosts.Sort(new ClosestCommandPostComparer(Unit.Value.transform.position));
-            CommandPost.Value = nearbyCommandPosts[0].gameObject;
+            if (!Unit.Value.TryGetComponent(out AbstractUnit workerUnit))
+            {
+                return Status.Failure;
+            }
 
+            SupplyDepositLocator.CollectConfiguredTypes(
+                StoreBuilding != null ? StoreBuilding.Value : null,
+                MainBuilding != null ? MainBuilding.Value : null,
+                configuredDepositTypes);
+
+            if (!SupplyDepositLocator.TryFindClosest(
+                    Unit.Value.transform.position,
+                    SearchRadius.Value,
+                    workerUnit.Owner,
+                    configuredDepositTypes,
+                    out BaseBuilding closest))
+            {
+                return Status.Failure;
+            }
+
+            CommandPost.Value = closest.gameObject;
             return Status.Success;
         }
     }

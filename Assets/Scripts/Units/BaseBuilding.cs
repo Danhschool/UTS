@@ -32,6 +32,7 @@ namespace GameDevTV.RTS.Units
         private IBuildingBuilder unitBuildingThis;
         private List<UnlockableSO> buildingQueue = new(MAX_QUEUE_SIZE);
         private const int MAX_QUEUE_SIZE = 5;
+        private IBuildingPassiveEffect[] passiveEffects;
 
         protected override void Awake()
         {
@@ -40,6 +41,35 @@ namespace GameDevTV.RTS.Units
             BuildingSO = UnitSO as BuildingSO;
             MaxHealth = BuildingSO.Health;
             // Current health is set as the building is being built via Heal()
+            passiveEffects = GetComponents<IBuildingPassiveEffect>();
+            SyncPassiveEffects(false);
+        }
+
+        private void OnEnable()
+        {
+            SyncPassiveEffects(true);
+        }
+
+        private void OnDisable()
+        {
+            SyncPassiveEffects(false);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Bật/tắt food gen, tháp bắn, … cùng lúc với BaseBuilding (đang xây thì tắt).
+        /// Cách hoạt động: Gọi <see cref="IBuildingPassiveEffect.SetEffectActive"/> trên mọi implementation cùng GameObject.
+        /// </summary>
+        private void SyncPassiveEffects(bool isActive)
+        {
+            if (passiveEffects == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < passiveEffects.Length; i++)
+            {
+                passiveEffects[i]?.SetEffectActive(isActive);
+            }
         }
 
         protected override void Start()

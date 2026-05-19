@@ -19,4 +19,5 @@ MonoBehaviour:
   <IsSingleUnitCommand>k__BackingField: 0
   <GhostPrefab>k__BackingField: {fileID: 0}
   <Restrictions>k__BackingField: []
-  commandPostSO: {fileID: 11400000, guid: 2e813987328e67942957464bddd33480, type: 2}
+  storeBuildingSO: {fileID: 11400000, guid: 978ce58a96096fe4385cc86401dadedd, type: 2}
+  mainBuildingSO: {fileID: 11400000, guid: 2b6d7a8b04944ea4eaebc73001c8442d, type: 2}

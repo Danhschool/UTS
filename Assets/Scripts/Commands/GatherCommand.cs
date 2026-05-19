@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.Units;
+using GameDevTV.RTS.Utilities;
 using UnityEngine;
 
 namespace GameDevTV.RTS.Commands
@@ -7,13 +9,16 @@ namespace GameDevTV.RTS.Commands
     [CreateAssetMenu(fileName = "Gather Action", menuName = "Units/Commands/Gather", order = 105)]
     public class GatherCommand : BaseCommand
     {
-        [SerializeField] private AbstractUnitSO commandPostSO;
+        [SerializeField] private BuildingSO storeBuildingSO;
+        [SerializeField] private BuildingSO mainBuildingSO;
+
+        private readonly List<AbstractUnitSO> configuredDepositTypes = new();
 
         public override bool CanHandle(CommandContext context)
         {
             return context.Commandable is Worker
                 && context.Hit.collider != null
-                && IsGatherableSupplyOrCommandPost(context.Hit.collider);
+                && IsGatherableSupplyOrDepositBuilding(context.Hit.collider);
         }
 
         public override void Handle(CommandContext context)
@@ -27,7 +32,7 @@ namespace GameDevTV.RTS.Commands
             {
                 worker.Gather(supply);
             }
-            else if (IsCommandPost(context.Hit.collider) && worker.HasSupplies)
+            else if (IsSupplyDepositBuilding(context.Hit.collider) && worker.HasSupplies)
             {
                 worker.ReturnSupplies(context.Hit.collider.gameObject);
             }
@@ -39,7 +44,18 @@ namespace GameDevTV.RTS.Commands
 
         public override bool IsLocked(CommandContext context) => false;
 
-        private bool IsGatherableSupplyOrCommandPost(Collider collider) => collider.TryGetComponent(out GatherableSupply _) || IsCommandPost(collider);
-        private bool IsCommandPost(Collider collider) => collider.TryGetComponent(out BaseBuilding building) && building.UnitSO.Equals(commandPostSO);
+        private bool IsGatherableSupplyOrDepositBuilding(Collider collider) =>
+            collider.TryGetComponent(out GatherableSupply _) || IsSupplyDepositBuilding(collider);
+
+        private bool IsSupplyDepositBuilding(Collider collider)
+        {
+            if (!collider.TryGetComponent(out BaseBuilding building))
+            {
+                return false;
+            }
+
+            SupplyDepositLocator.CollectConfiguredTypes(storeBuildingSO, mainBuildingSO, configuredDepositTypes);
+            return SupplyDepositLocator.IsSupplyDeposit(building, configuredDepositTypes);
+        }
     }
 }
