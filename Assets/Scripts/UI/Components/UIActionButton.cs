@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using GameDevTV.RTS.Commands;
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.TechTree;
 using GameDevTV.RTS.Units;
 using UnityEngine;
@@ -19,6 +20,8 @@ namespace GameDevTV.RTS.UI.Components
         private bool isActive;
         private RectTransform rectTransform;
         private Button button;
+        private BaseCommand currentCommand;
+        private AbstractCommandable[] currentUnits = System.Array.Empty<AbstractCommandable>();
 
         private static readonly string STONE_FORMAT = "{0} <color=#B0B0B0>Stone</color>. ";
         private static readonly string WOOD_FORMAT = "{0} <color=#8B5A2B>Wood</color>. ";
@@ -35,24 +38,16 @@ namespace GameDevTV.RTS.UI.Components
 
         public void EnableFor(BaseCommand command, IEnumerable<AbstractCommandable> selectedUnits, UnityAction onClick)
         {
+            currentCommand = command;
+            currentUnits = selectedUnits.ToArray();
+
             button.onClick.RemoveAllListeners();
             SetIcon(command.Icon);
-            button.interactable = selectedUnits.Any(unit =>
-                !command.IsLocked(new CommandContext(unit, new RaycastHit())));
+            button.interactable = currentUnits.Any(unit =>
+                command.IsAvailable(new CommandContext(unit, new RaycastHit())));
             button.onClick.AddListener(() =>
             {
-                AbstractCommandable[] units = selectedUnits.ToArray();
-                bool anyCanExecute = false;
-                for (int i = 0; i < units.Length; i++)
-                {
-                    if (!command.IsLocked(new CommandContext(units[i], new RaycastHit())))
-                    {
-                        anyCanExecute = true;
-                        break;
-                    }
-                }
-
-                if (anyCanExecute)
+                if (TryExecuteOrWarn(currentCommand, currentUnits))
                 {
                     onClick.Invoke();
                 }
@@ -67,11 +62,51 @@ namespace GameDevTV.RTS.UI.Components
 
         public void Disable()
         {
+            currentCommand = null;
+            currentUnits = System.Array.Empty<AbstractCommandable>();
             SetIcon(null);
             button.interactable = false;
             button.onClick.RemoveAllListeners();
             isActive = false;
             CancelInvoke();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Cho phép bấm nút khi thiếu tài nguyên để hiện cảnh báo thay vì im lặng.
+        /// Cách hoạt động: Nếu chỉ thiếu supply thì Warn; nếu IsLocked vì tech/queue thì không gửi lệnh.
+        /// </summary>
+        private static bool TryExecuteOrWarn(BaseCommand command, AbstractCommandable[] units)
+        {
+            if (command == null || units.Length == 0)
+            {
+                return false;
+            }
+
+            SupplyCostSO cost = CommandSupplyCostUtility.TryGetCost(command);
+            string actionDescription = CommandSupplyCostUtility.GetActionDescription(command);
+            bool anyCanExecute = false;
+
+            for (int i = 0; i < units.Length; i++)
+            {
+                CommandContext context = new(units[i], new RaycastHit());
+                if (!command.IsAvailable(context))
+                {
+                    continue;
+                }
+
+                if (cost != null && !SupplyAffordability.HasEnough(context.Owner, cost))
+                {
+                    SupplyAffordability.WarnPlayerIfInsufficient(context.Owner, cost, actionDescription);
+                    continue;
+                }
+
+                if (!command.IsLocked(context))
+                {
+                    anyCanExecute = true;
+                }
+            }
+
+            return anyCanExecute;
         }
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -120,15 +155,7 @@ namespace GameDevTV.RTS.UI.Components
         {
             string tooltipText = command.Name + "\n";
 
-            SupplyCostSO supplyCost = null;
-            if (command is BuildUnitCommand unitCommand)
-            {
-                supplyCost = unitCommand.Unit.Cost;
-            }
-            else if (command is BuildBuildingCommand buildingCommand)
-            {
-                supplyCost = buildingCommand.Building.Cost;
-            }
+            SupplyCostSO supplyCost = CommandSupplyCostUtility.TryGetCost(command);
 
             if (supplyCost != null)
             {
@@ -145,6 +172,11 @@ namespace GameDevTV.RTS.UI.Components
                 if (supplyCost.Food > 0)
                 {
                     tooltipText += string.Format(FOOD_FORMAT, supplyCost.Food);
+                }
+
+                if (!SupplyAffordability.HasEnough(Owner.Player1, supplyCost))
+                {
+                    tooltipText += "\n<color=#FF8800>Không đủ tài nguyên!</color>";
                 }
             }
 

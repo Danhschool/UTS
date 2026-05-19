@@ -1,7 +1,7 @@
-using UnityEngine;
-using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.TechTree;
+using GameDevTV.RTS.Units;
+using UnityEngine;
 
 namespace GameDevTV.RTS.Commands
 {
@@ -17,7 +17,14 @@ namespace GameDevTV.RTS.Commands
 
         public override void Handle(CommandContext context)
         {
-            if (!HasEnoughSupplies(context)) return;
+            if (!HasEnoughSupplies(context))
+            {
+                SupplyAffordability.WarnPlayerIfInsufficient(
+                    context.Owner,
+                    Unit.Cost,
+                    $"sản xuất {Unit.Name}");
+                return;
+            }
 
             BaseBuilding building = (BaseBuilding)context.Commandable;
             building.BuildUnlockable(Unit);
@@ -31,11 +38,7 @@ namespace GameDevTV.RTS.Commands
             return Unit.TechTree.GetUnmetDependencies(owner, Unit);
         }
 
-        private bool HasEnoughSupplies(CommandContext context)
-        {
-            return Unit.Cost.Stone <= Supplies.Stone[context.Owner]
-                && Unit.Cost.Wood <= Supplies.Wood[context.Owner]
-                && Unit.Cost.Food <= Supplies.Food[context.Owner];
-        }
+        private bool HasEnoughSupplies(CommandContext context) =>
+            SupplyAffordability.HasEnough(context.Owner, Unit.Cost);
     }
 }

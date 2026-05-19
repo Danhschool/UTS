@@ -70,6 +70,13 @@ namespace GameDevTV.RTS.Commands
             {
                 builder.Build(Building, context.Hit.point);
             }
+            else if (!HasEnoughSupplies(context))
+            {
+                SupplyAffordability.WarnPlayerIfInsufficient(
+                    context.Owner,
+                    Building.Cost,
+                    $"xây {Building.Name}");
+            }
         }
 
         public override bool IsLocked(CommandContext context) =>
@@ -80,11 +87,7 @@ namespace GameDevTV.RTS.Commands
             return Building.TechTree.GetUnmetDependencies(owner, Building);
         }
 
-        private bool HasEnoughSupplies(CommandContext context)
-        {
-            return Building.Cost.Stone <= Supplies.Stone[context.Owner]
-                && Building.Cost.Wood <= Supplies.Wood[context.Owner]
-                && Building.Cost.Food <= Supplies.Food[context.Owner];
-        }
+        private bool HasEnoughSupplies(CommandContext context) =>
+            SupplyAffordability.HasEnough(context.Owner, Building.Cost);
     }
 }

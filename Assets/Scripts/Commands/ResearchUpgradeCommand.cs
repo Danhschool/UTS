@@ -19,8 +19,17 @@ namespace GameDevTV.RTS.Commands
                 return;
             }
 
-            if (!CanResearch(building, context) || !HasEnoughSupplies(context))
+            if (!CanResearch(building, context))
             {
+                return;
+            }
+
+            if (!HasEnoughSupplies(context))
+            {
+                SupplyAffordability.WarnPlayerIfInsufficient(
+                    context.Owner,
+                    Upgrade.Cost,
+                    $"nghiên cứu {Upgrade.Name}");
                 return;
             }
 
@@ -58,8 +67,6 @@ namespace GameDevTV.RTS.Commands
             && (!Upgrade.IsOneTimeUnlock || !Upgrade.TechTree.IsResearched(context.Owner, Upgrade));
 
         private bool HasEnoughSupplies(CommandContext context) =>
-            Upgrade.Cost.Stone <= Supplies.Stone[context.Owner]
-            && Upgrade.Cost.Wood <= Supplies.Wood[context.Owner]
-            && Upgrade.Cost.Food <= Supplies.Food[context.Owner];
+            SupplyAffordability.HasEnough(context.Owner, Upgrade.Cost);
     }
 }

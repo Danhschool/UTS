@@ -799,6 +799,15 @@ namespace GameDevTV.RTS.Player
                     ghostInstance.transform.position = placementGhostPinnedPosition;
                     UpdateGhostPlacementVisual(EvaluateGhostPlacementValid(placementGhostPinnedPosition, pinnedPlacementRestrictionsCommand));
                 }
+                else if (commandBeingActivated is BuildBuildingCommand buildCommand
+                    && !SupplyAffordability.HasEnough(LocalPlayerOwner, buildCommand.Building.Cost))
+                {
+                    SupplyAffordability.WarnPlayerIfInsufficient(
+                        LocalPlayerOwner,
+                        buildCommand.Building.Cost,
+                        $"xây {buildCommand.Building.Name}");
+                    DisposePlacementGhost();
+                }
                 else if (ghostInstance != null)
                 {
                     DisposePlacementGhost();
