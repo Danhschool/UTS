@@ -5,21 +5,20 @@ using UnityEngine.UI;
 namespace GameDevTV.RTS.UI.GameEventLog
 {
     /// <summary>
-    /// One chat row prefab; bound when instantiated by <see cref="GameEventLogUI"/>.
+    /// One chat row prefab; height driven by LayoutElement preferred height for VerticalLayoutGroup.
     /// </summary>
     public class GameEventLogLineView : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI messageText;
         [SerializeField] private LayoutElement layoutElement;
-        [SerializeField] private float minLineHeight = 18f;
-        [SerializeField] private float textVerticalPaddingPercent = 0.08f;
-
-        private GameEventLogLine cachedLine;
-        private bool cachedShowTimestamps;
-        private bool hasCachedLine;
+        [SerializeField] private RectTransform rectTransform;
+        [SerializeField] private float minLineHeight = 22f;
+        [SerializeField] private float extraVerticalPadding = 4f;
 
         private void Awake()
         {
+            rectTransform ??= transform as RectTransform;
+
             if (messageText == null)
             {
                 messageText = GetComponentInChildren<TextMeshProUGUI>();
@@ -32,8 +31,8 @@ namespace GameDevTV.RTS.UI.GameEventLog
         }
 
         /// <summary>
-        /// Mục tiêu: Hiển thị nội dung một dòng log và co chiều cao vừa khít text.
-        /// Cách hoạt động: Gán TMP, đo preferred height theo chiều rộng vùng chat, set LayoutElement.minHeight.
+        /// Mục tiêu: Hiển thị một dòng chat với chiều cao đúng để VLG xếp chồng, không chồng text.
+        /// Cách hoạt động: Đo TMP, gán preferredHeight + minHeight, cập nhật RectTransform chiều dọc.
         /// </summary>
         public void Bind(GameEventLogLine line, bool showTimestamps, float textAreaWidth)
         {
@@ -42,36 +41,26 @@ namespace GameDevTV.RTS.UI.GameEventLog
                 return;
             }
 
-            cachedLine = line;
-            cachedShowTimestamps = showTimestamps;
-            hasCachedLine = true;
-
             messageText.richText = true;
             messageText.SetText(GameEventLogLineFormatter.Format(line, showTimestamps));
-            ApplyPreferredHeight(textAreaWidth);
+            ApplyLayoutHeight(textAreaWidth);
         }
 
-        public void RefreshLayout(float textAreaWidth)
+        private void ApplyLayoutHeight(float textAreaWidth)
         {
-            if (!hasCachedLine)
-            {
-                return;
-            }
-
-            ApplyPreferredHeight(textAreaWidth);
-        }
-
-        private void ApplyPreferredHeight(float textAreaWidth)
-        {
-            if (layoutElement == null || messageText == null)
+            if (layoutElement == null || messageText == null || rectTransform == null)
             {
                 return;
             }
 
             float width = textAreaWidth > 1f ? textAreaWidth : 280f;
+            messageText.ForceMeshUpdate();
             Vector2 preferred = messageText.GetPreferredValues(messageText.text, width, 0f);
-            float verticalPad = Mathf.Max(2f, preferred.y * textVerticalPaddingPercent);
-            layoutElement.minHeight = Mathf.Max(minLineHeight, preferred.y + verticalPad);
+            float height = Mathf.Max(minLineHeight, preferred.y + extraVerticalPadding);
+
+            layoutElement.minHeight = height;
+            layoutElement.preferredHeight = height;
+            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
         }
     }
 }

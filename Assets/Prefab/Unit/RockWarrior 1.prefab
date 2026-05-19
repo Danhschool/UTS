@@ -2019,7 +2019,7 @@ MonoBehaviour:
   <IsSelected>k__BackingField: 0
   <CurrentHealth>k__BackingField: 0
   <MaxHealth>k__BackingField: 0
-  <Owner>k__BackingField: 0
+  <Owner>k__BackingField: 1
   <IsVisible>k__BackingField: 1
   <AvailableCommands>k__BackingField:
   - {fileID: 11400000, guid: 54a888bdb0cc15f468e29ca9f58032bd, type: 2}
@@ -2268,10 +2268,22 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: -137.75
       objectReference: {fileID: 0}
+    - target: {fileID: 967910581917642554, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: m_Type
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 967910581917642554, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 7c40e298ba603a741a81fcb2b050c629, type: 3}
     - target: {fileID: 1641473337118612748, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_Name
       value: Health Bar
       objectReference: {fileID: 0}
+    - target: {fileID: 4173533714198125461, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 0589fb23c36cfbb4aaac712b8ff6df10, type: 3}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2286,19 +2298,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.94071
+      value: 0.9553208
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.067433886
+      value: 0.2720586
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.33159065
+      value: -0.11110886
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.023769753
+      value: 0.031641863
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

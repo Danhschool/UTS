@@ -55,5 +55,52 @@ namespace GameDevTV.RTS.TechTree
 
             return returnValue;
         }
+
+        /// <summary>
+        /// Mục tiêu: Ghi giá trị vào property trên SO (kể cả <c>private set</c> của auto-property).
+        /// Cách hoạt động: Thử SetValue công khai → invoke setter non-public → gán backing field <c>&lt;Name&gt;k__BackingField</c>.
+        /// </summary>
+        protected void SetPropertyValue(object target, PropertyInfo propertyInfo, object value)
+        {
+            if (target == null || propertyInfo == null)
+            {
+                throw new ArgumentNullException(target == null ? nameof(target) : nameof(propertyInfo));
+            }
+
+            try
+            {
+                propertyInfo.SetValue(target, value);
+                return;
+            }
+            catch (ArgumentException)
+            {
+                // Property chỉ có private set — thử cách khác bên dưới.
+            }
+
+            MethodInfo nonPublicSetter = propertyInfo.GetSetMethod(nonPublic: true);
+            if (nonPublicSetter != null)
+            {
+                nonPublicSetter.Invoke(target, new[] { value });
+                return;
+            }
+
+            Type declaringType = propertyInfo.DeclaringType;
+            if (declaringType != null)
+            {
+                FieldInfo backingField = declaringType.GetField(
+                    $"<{propertyInfo.Name}>k__BackingField",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+
+                if (backingField != null)
+                {
+                    backingField.SetValue(target, value);
+                    return;
+                }
+            }
+
+            Debug.LogError(
+                $"Unable to apply modifier {Name} to {PropertyPath}: no setter on {target.GetType().Name}.");
+            throw new InvalidPathSpecifiedException(propertyInfo.Name);
+        }
     }
 }

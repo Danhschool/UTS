@@ -37,8 +37,26 @@ namespace GameDevTV.RTS.UI.Components
         {
             button.onClick.RemoveAllListeners();
             SetIcon(command.Icon);
-            button.interactable = selectedUnits.Any((unit) => !command.IsLocked(new CommandContext(unit, new RaycastHit())));
-            button.onClick.AddListener(onClick);
+            button.interactable = selectedUnits.Any(unit =>
+                !command.IsLocked(new CommandContext(unit, new RaycastHit())));
+            button.onClick.AddListener(() =>
+            {
+                AbstractCommandable[] units = selectedUnits.ToArray();
+                bool anyCanExecute = false;
+                for (int i = 0; i < units.Length; i++)
+                {
+                    if (!command.IsLocked(new CommandContext(units[i], new RaycastHit())))
+                    {
+                        anyCanExecute = true;
+                        break;
+                    }
+                }
+
+                if (anyCanExecute)
+                {
+                    onClick.Invoke();
+                }
+            });
             isActive = true;
 
             if (tooltip != null)

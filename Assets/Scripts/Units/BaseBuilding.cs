@@ -99,11 +99,58 @@ namespace GameDevTV.RTS.Units
             RefreshVisionFromSightConfig();
         }
 
+        /// <summary>
+        /// Mục tiêu: Upgrade một lần không được research/queue trùng.
+        /// Cách hoạt động: Đã researched (TechTree) hoặc đã có trong buildingQueue → false.
+        /// </summary>
+        public bool CanEnqueueUpgrade(UpgradeSO upgrade)
+        {
+            if (upgrade == null || BuildingSO?.TechTree == null)
+            {
+                return false;
+            }
+
+            if (!upgrade.IsOneTimeUnlock)
+            {
+                return true;
+            }
+
+            if (BuildingSO.TechTree.IsResearched(Owner, upgrade))
+            {
+                return false;
+            }
+
+            return !ContainsInQueue(upgrade);
+        }
+
+        public bool ContainsInQueue(UnlockableSO unlockable)
+        {
+            if (unlockable == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < buildingQueue.Count; i++)
+            {
+                if (buildingQueue[i] == unlockable)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public void BuildUnlockable(UnlockableSO unlockable)
         {
             if (buildingQueue.Count == MAX_QUEUE_SIZE)
             {
                 Debug.LogError("BuildUnit called when the queue was already full! This is not supported!");
+                return;
+            }
+
+            if (unlockable is UpgradeSO upgrade && !CanEnqueueUpgrade(upgrade))
+            {
                 return;
             }
 
@@ -116,10 +163,8 @@ namespace GameDevTV.RTS.Units
             {
                 StartCoroutine(DoBuildUnits());
             }
-            else
-            {
-                OnQueueUpdated?.Invoke(buildingQueue.ToArray());
-            }
+
+            OnQueueUpdated?.Invoke(buildingQueue.ToArray());
         }
 
         public void CancelBuildingUnit(int index)

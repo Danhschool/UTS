@@ -9,7 +9,11 @@ namespace GameDevTV.RTS.UI.Components
         [field: SerializeField] [Range(0,1)] public float HoverDelay { get; private set; } = 0.5f;
         [SerializeField] private TextMeshProUGUI text;
 
-        private void Awake() => RectTransform = GetComponent<RectTransform>();
+        private void Awake()
+        {
+            RectTransform = GetComponent<RectTransform>();
+            RectTransform.localScale = Vector3.one * 2;
+        }
 
         public void SetText(string text)
         {

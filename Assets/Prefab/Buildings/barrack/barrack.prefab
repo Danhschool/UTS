@@ -95,7 +95,6 @@ MonoBehaviour:
   <AvailableCommands>k__BackingField:
   - {fileID: 11400000, guid: 0852bd712e3cd9d4b8b0665620e51393, type: 2}
   - {fileID: 11400000, guid: 8613e33d5363cc2468241af51741c424, type: 2}
-  - {fileID: 11400000, guid: 4c018529da1f1794596f1ea65f551c90, type: 2}
   - {fileID: 11400000, guid: ec73fe166b9806a4aaabd2e2fc3061a5, type: 2}
   <UnitSO>k__BackingField: {fileID: 11400000, guid: 975e8b13c2fd2bf49b8dc6d9ea59028b, type: 2}
   decalProjector: {fileID: 4176347395201269546}
@@ -890,14 +889,48 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8011791996489159772, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: fillImage
+      value: 
+      objectReference: {fileID: 3168587053164778185}
+    - target: {fileID: 8011791996489159772, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: borderImage
+      value: 
+      objectReference: {fileID: 2268968018722055782}
+    - target: {fileID: 8011791996489159772, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: commandable
       value: 
       objectReference: {fileID: 3946433956372429448}
+    - target: {fileID: 8011791996489159772, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: worldCamera
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+--- !u!114 &2268968018722055782 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4173533714198125461, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+  m_PrefabInstance: {fileID: 2780867941665816051}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &3168587053164778185 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 967910581917642554, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+  m_PrefabInstance: {fileID: 2780867941665816051}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &8985988073849574236 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}

@@ -110,8 +110,30 @@ namespace GameDevTV.RTS.UI.Containers
 
         private static bool PropertyPathMatches(string upgradePath, string expectedPath)
         {
-            return !string.IsNullOrEmpty(upgradePath)
-                && string.Equals(upgradePath, expectedPath, System.StringComparison.Ordinal);
+            if (string.IsNullOrEmpty(upgradePath) || string.IsNullOrEmpty(expectedPath))
+            {
+                return false;
+            }
+
+            return string.Equals(
+                NormalizeUpgradePropertyPath(upgradePath),
+                NormalizeUpgradePropertyPath(expectedPath),
+                System.StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Khớp PropertyPath dù Inspector/scene ghi dạng rút gọn (vd. "Damage").
+        /// Cách hoạt động: Map tên cũ → path đầy đủ khớp UpgradeSO (.asset).
+        /// </summary>
+        private static string NormalizeUpgradePropertyPath(string path)
+        {
+            return path switch
+            {
+                "Damage" => "AttackConfig/Damage",
+                "AttackDelay" => "AttackConfig/AttackDelay",
+                "AttackRange" => "AttackConfig/AttackRange",
+                _ => path
+            };
         }
 
         /// <summary>

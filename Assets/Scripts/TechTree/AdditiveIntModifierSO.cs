@@ -18,7 +18,7 @@ namespace GameDevTV.RTS.TechTree
                 int currentValue = GetPropertyValue<int>(unit, out object target, out PropertyInfo attributeField);
                 Debug.Log($"Adding {Amount} to {PropertyPath}'s current value of {currentValue}");
                 currentValue += Amount;
-                attributeField.SetValue(target, currentValue);
+                SetPropertyValue(target, attributeField, currentValue);
                 Debug.Log($"Updated value to: {attributeField.GetValue(target)}");
             }
             catch(InvalidPathSpecifiedException) {}

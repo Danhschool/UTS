@@ -1,12 +1,13 @@
-using System.Collections.Generic;
+using System.Collections;
+using System.Text;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GameDevTV.RTS.UI.GameEventLog
 {
     /// <summary>
-    /// Scrollable chat panel; each log line is an instantiated <see cref="GameEventLogLineView"/> prefab.
-    /// Supports free drag, resize, and padding/spacing scaled to panel size.
+    /// Game event log: append text + ScrollRect/Viewport/Mask (không tràn viền, cuộn được).
     /// </summary>
     public class GameEventLogUI : MonoBehaviour
     {
@@ -14,61 +15,37 @@ namespace GameDevTV.RTS.UI.GameEventLog
         [SerializeField] private RectTransform panelRect;
         [SerializeField] private ScrollRect scrollRect;
         [SerializeField] private RectTransform contentRoot;
-        [SerializeField] private GameEventLogLineView linePrefab;
+        [SerializeField] private TextMeshProUGUI chatHistoryTmp;
+        [SerializeField] private Text chatHistoryText;
         [SerializeField] private RectTransform dragHandle;
-        [SerializeField] private RectTransform resizeHandle;
 
         [Header("Display")]
-        [SerializeField] private bool showTimestamps;
+        [SerializeField] private bool showTimestamps = true;
         [SerializeField] private bool autoScrollToBottom = true;
 
         [Header("Panel interaction")]
         [SerializeField] private bool allowFreeMove = true;
-        [SerializeField] private bool allowResize = true;
 
-        [Header("Flexible layout (% of panel size)")]
-        [SerializeField] private float horizontalPaddingPercent = 0.035f;
-        [SerializeField] private float verticalPaddingPercent = 0.04f;
-        [SerializeField] private float lineSpacingPercent = 0.018f;
-        [SerializeField] private float minPadding = 4f;
-        [SerializeField] private float maxPadding = 18f;
-        [SerializeField] private float minLineSpacing = 3f;
-        [SerializeField] private float maxLineSpacing = 10f;
-
-        private readonly List<GameEventLogLineView> activeLines = new();
-        private VerticalLayoutGroup contentLayout;
-        private Vector2 lastPanelSize;
+        private readonly StringBuilder stringBuilder = new(2048);
         private GameEventLogPanelDragHandle dragBehaviour;
-        private GameEventLogPanelResizeHandle resizeBehaviour;
+        private Coroutine scrollRoutine;
 
         private void Awake()
         {
             panelRect ??= transform as RectTransform;
-            contentLayout ??= contentRoot != null ? contentRoot.GetComponent<VerticalLayoutGroup>() : null;
+            scrollRect ??= GetComponentInChildren<ScrollRect>(true);
+            if (contentRoot == null && scrollRect != null)
+            {
+                contentRoot = scrollRect.content;
+            }
 
             SetupPanelInteraction();
-            ApplyFlexibleLayout();
-        }
-
-        private void LateUpdate()
-        {
-            if (panelRect == null)
-            {
-                return;
-            }
-
-            Vector2 size = panelRect.rect.size;
-            if (size != lastPanelSize)
-            {
-                lastPanelSize = size;
-                ApplyFlexibleLayout();
-            }
         }
 
         private void OnEnable()
         {
             GameEventLog.LineAdded += HandleLineAdded;
-            RebuildAllLines();
+            RebuildHistory();
         }
 
         private void OnDisable()
@@ -93,147 +70,168 @@ namespace GameDevTV.RTS.UI.GameEventLog
 
                 dragBehaviour.Initialize(panelRect);
             }
-
-            if (allowResize && resizeHandle != null)
-            {
-                resizeBehaviour = resizeHandle.GetComponent<GameEventLogPanelResizeHandle>();
-                if (resizeBehaviour == null)
-                {
-                    resizeBehaviour = resizeHandle.gameObject.AddComponent<GameEventLogPanelResizeHandle>();
-                }
-
-                resizeBehaviour.Initialize(panelRect, ApplyFlexibleLayout);
-            }
-        }
-
-        /// <summary>
-        /// Mục tiêu: Padding và khoảng cách dòng scale theo kích thước khung chat.
-        /// Cách hoạt động: Tính % width/height của panel, clamp min/max, gán vào VerticalLayoutGroup và refresh dòng.
-        /// </summary>
-        private void ApplyFlexibleLayout()
-        {
-            if (panelRect == null || contentLayout == null)
-            {
-                return;
-            }
-
-            float width = panelRect.rect.width;
-            float height = panelRect.rect.height;
-
-            int padX = Mathf.RoundToInt(Mathf.Clamp(width * horizontalPaddingPercent, minPadding, maxPadding));
-            int padY = Mathf.RoundToInt(Mathf.Clamp(height * verticalPaddingPercent, minPadding, maxPadding));
-
-            contentLayout.padding = new RectOffset(padX, padX, padY, padY);
-            contentLayout.spacing = Mathf.Clamp(height * lineSpacingPercent, minLineSpacing, maxLineSpacing);
-
-            RefreshLineLayouts(width - padX * 2f);
         }
 
         private void HandleLineAdded(GameEventLogLine line)
         {
-            if (linePrefab == null || contentRoot == null)
-            {
-                return;
-            }
+            AppendLine(line);
+            RefreshContentHeight();
 
-            SpawnLine(line);
-            TrimExcessLines();
-            ScrollToBottom();
+            if (autoScrollToBottom)
+            {
+                RequestScrollToBottom();
+            }
         }
 
-        private void RebuildAllLines()
+        private void RebuildHistory()
         {
-            ClearLineViews();
-
-            if (linePrefab == null || contentRoot == null)
-            {
-                return;
-            }
+            stringBuilder.Clear();
 
             foreach (GameEventLogLine line in GameEventLog.Lines)
             {
-                SpawnLine(line);
+                stringBuilder.Append(GameEventLogLineFormatter.Format(line, showTimestamps));
+                stringBuilder.Append('\n');
             }
 
-            ScrollToBottom();
-        }
+            ApplyHistoryText(stringBuilder.ToString());
+            RefreshContentHeight();
 
-        private void SpawnLine(GameEventLogLine line)
-        {
-            GameEventLogLineView view = Instantiate(linePrefab, contentRoot);
-            float textWidth = GetTextAreaWidth();
-            view.Bind(line, showTimestamps, textWidth);
-            activeLines.Add(view);
-        }
-
-        private void RefreshLineLayouts(float textAreaWidth)
-        {
-            for (int i = 0; i < activeLines.Count; i++)
+            if (autoScrollToBottom)
             {
-                activeLines[i]?.RefreshLayout(textAreaWidth);
-            }
-
-            if (contentRoot != null)
-            {
-                LayoutRebuilder.ForceRebuildLayoutImmediate(contentRoot);
+                RequestScrollToBottom();
             }
         }
 
-        private float GetTextAreaWidth()
+        private void AppendLine(GameEventLogLine line)
         {
-            if (panelRect == null || contentLayout == null)
+            string lineText = GameEventLogLineFormatter.Format(line, showTimestamps) + "\n";
+
+            if (chatHistoryTmp != null)
             {
-                return 280f;
+                chatHistoryTmp.text += lineText;
+                return;
             }
 
-            float width = panelRect.rect.width;
-            float pad = contentLayout.padding.left + contentLayout.padding.right;
-            return Mathf.Max(80f, width - pad);
-        }
-
-        private void TrimExcessLines()
-        {
-            while (activeLines.Count > GameEventLog.MaxLines)
+            if (chatHistoryText != null)
             {
-                GameEventLogLineView oldest = activeLines[0];
-                activeLines.RemoveAt(0);
-
-                if (oldest != null)
-                {
-                    Destroy(oldest.gameObject);
-                }
+                chatHistoryText.text += lineText;
             }
         }
 
-        private void ScrollToBottom()
+        private void ApplyHistoryText(string text)
         {
-            if (!autoScrollToBottom || scrollRect == null)
+            if (chatHistoryTmp != null)
+            {
+                chatHistoryTmp.text = text;
+                return;
+            }
+
+            if (chatHistoryText != null)
+            {
+                chatHistoryText.text = text;
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Content cao đúng bằng nội dung TMP để ScrollRect cuộn được.
+        /// Cách hoạt động: Đo preferred height theo chiều rộng viewport, gán size Content và TMP.
+        /// </summary>
+        private void RefreshContentHeight()
+        {
+            if (contentRoot == null)
             {
                 return;
             }
 
-            Canvas.ForceUpdateCanvases();
-            LayoutRebuilder.ForceRebuildLayoutImmediate(contentRoot);
-            scrollRect.verticalNormalizedPosition = 0f;
-        }
+            float width = GetTextAreaWidth();
+            float textHeight = MeasureTextHeight(width);
+            float minHeight = GetViewportHeight();
 
-        private void ClearLineViews()
-        {
-            for (int i = 0; i < activeLines.Count; i++)
+            float contentHeight = Mathf.Max(minHeight, textHeight + 8f);
+            contentRoot.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, contentHeight);
+
+            if (chatHistoryTmp != null)
             {
-                if (activeLines[i] != null)
-                {
-                    Destroy(activeLines[i].gameObject);
-                }
+                RectTransform textRect = chatHistoryTmp.rectTransform;
+                textRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, textHeight);
             }
 
-            activeLines.Clear();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(contentRoot);
+        }
+
+        private float MeasureTextHeight(float width)
+        {
+            if (chatHistoryTmp != null)
+            {
+                chatHistoryTmp.ForceMeshUpdate();
+                return chatHistoryTmp.GetPreferredValues(chatHistoryTmp.text, width, 0f).y;
+            }
+
+            if (chatHistoryText != null)
+            {
+                return chatHistoryText.preferredHeight;
+            }
+
+            return minLineHeightFallback;
+        }
+
+        private const float minLineHeightFallback = 22f;
+
+        private float GetTextAreaWidth()
+        {
+            float width = contentRoot != null ? contentRoot.rect.width : 0f;
+
+            if (width <= 1f && scrollRect != null && scrollRect.viewport != null)
+            {
+                width = scrollRect.viewport.rect.width;
+            }
+
+            return Mathf.Max(80f, width - 16f);
+        }
+
+        private float GetViewportHeight()
+        {
+            if (scrollRect != null && scrollRect.viewport != null)
+            {
+                return scrollRect.viewport.rect.height;
+            }
+
+            return 100f;
+        }
+
+        private void RequestScrollToBottom()
+        {
+            if (!autoScrollToBottom || scrollRect == null || !isActiveAndEnabled)
+            {
+                return;
+            }
+
+            if (scrollRoutine != null)
+            {
+                StopCoroutine(scrollRoutine);
+            }
+
+            scrollRoutine = StartCoroutine(ScrollToBottomNextFrame());
+        }
+
+        private IEnumerator ScrollToBottomNextFrame()
+        {
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            RefreshContentHeight();
+
+            scrollRect.StopMovement();
+            scrollRect.velocity = Vector2.zero;
+            scrollRect.verticalNormalizedPosition = 0f;
+
+            scrollRoutine = null;
         }
 
         public void ClearDisplay()
         {
             GameEventLog.Clear();
-            ClearLineViews();
+            ApplyHistoryText(string.Empty);
+            RefreshContentHeight();
         }
     }
 }

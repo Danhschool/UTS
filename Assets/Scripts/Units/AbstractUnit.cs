@@ -4,6 +4,7 @@ using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using GameDevTV.RTS.TechTree;
+using GameDevTV.RTS.Units.Visualization;
 using GameDevTV.RTS.Utilities;
 using Unity.Behavior;
 using UnityEngine;
@@ -53,6 +54,7 @@ namespace GameDevTV.RTS.Units
 
             graphAgent.SetVariableValue("Command", UnitCommands.Stop);
             graphAgent.SetVariableValue("AttackConfig", unitSO.AttackConfig);
+            AttackRangeDisplayInstaller.InstallIfNeeded(gameObject);
         }
 
         protected override void Start()
