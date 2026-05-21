@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Units;
+using GameDevTV.RTS.Units.Formation;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
 
@@ -119,6 +120,50 @@ namespace GameDevTV.RTS.AI
             }
 
             return AIWorkerCommandGuard.CanAssignCommand(worker);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Move nhóm giống player multi-select — <see cref="GroupFormationMoveUtility"/>.
+        /// Cách hoạt động: 1 unit → TryDispatchSpecificCommand; nhiều unit → formation MoveTo.
+        /// </summary>
+        public bool TryDispatchFormationMove(
+            IReadOnlyList<AbstractUnit> units,
+            MoveCommand moveCommand,
+            RaycastHit hit)
+        {
+            if (units == null || units.Count == 0 || moveCommand == null)
+            {
+                return false;
+            }
+
+            if (units.Count == 1)
+            {
+                return units[0] != null
+                    && units[0].Owner == owner
+                    && TryDispatchSpecificCommand(units[0], moveCommand, hit);
+            }
+
+            List<AbstractUnit> owned = new(units.Count);
+            for (int i = 0; i < units.Count; i++)
+            {
+                AbstractUnit unit = units[i];
+                if (unit != null && unit.Owner == owner)
+                {
+                    owned.Add(unit);
+                }
+            }
+
+            if (owned.Count == 0)
+            {
+                return false;
+            }
+
+            if (owned.Count == 1)
+            {
+                return TryDispatchSpecificCommand(owned[0], moveCommand, hit);
+            }
+
+            return GroupFormationMoveUtility.TryApplyMove(owned, hit, moveCommand);
         }
 
         /// <summary>

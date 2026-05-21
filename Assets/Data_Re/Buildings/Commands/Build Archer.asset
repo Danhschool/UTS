@@ -18,5 +18,6 @@ MonoBehaviour:
   <RequiresClickToActivate>k__BackingField: 0
   <IsSingleUnitCommand>k__BackingField: 0
   <GhostPrefab>k__BackingField: {fileID: 0}
-  <Restrictions>k__BackingField: []
+  <Restrictions>k__BackingField:
+  - {fileID: 11400000, guid: 5a53dc4ed323a3c49b55dec79f4b2845, type: 2}
   <Unit>k__BackingField: {fileID: 11400000, guid: ae6bdc56b74afcc4d99249637ebd0f61, type: 2}

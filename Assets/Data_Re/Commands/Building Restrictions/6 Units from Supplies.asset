@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af0c037a3333d554a885e97f28077f0f, type: 3}
   m_Name: 6 Units from Supplies
   m_EditorClassIdentifier: 
-  <Radius>k__BackingField: 6
+  <Radius>k__BackingField: 5
   <LayerMask>k__BackingField:
     serializedVersion: 2
     m_Bits: 512
+  <HitDetectionStyle>k__BackingField: 0
   <MustBeFullyOnNavmesh>k__BackingField: 0
   <NavMeshAgentTypeId>k__BackingField: 0
   <NavMeshTolerance>k__BackingField: 0.1

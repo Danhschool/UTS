@@ -20,7 +20,7 @@ MonoBehaviour:
   <TechTree>k__BackingField: {fileID: 11400000, guid: 3a07828278e4cdb44ab0c2a943ccf22a, type: 2}
   <unlockRequirements>k__BackingField: []
   <Health>k__BackingField: 300
-  <Prefab>k__BackingField: {fileID: 4579364991121992340, guid: 9e3e3e1aaf35e294b927a00af9656b83, type: 3}
+  <Prefab>k__BackingField: {fileID: 1000013931707134, guid: 3bc6b0cf0b103a048b598a956a4e71b7, type: 3}
   <Upgrades>k__BackingField:
   - {fileID: 11400000, guid: 5b0b6af605c07ac48b70bdb931e0ff17, type: 2}
   - {fileID: 11400000, guid: 4113d3b50f3b34c4f93298a287f69e11, type: 2}
@@ -38,6 +38,6 @@ MonoBehaviour:
   <AttackConfig>k__BackingField: {fileID: 11400000, guid: d911928208082f04691e95cd66e8a6ad, type: 2}
   <TransportConfig>k__BackingField: {fileID: 11400000, guid: 934e598ea6a2e664dba1454f8964f255, type: 2}
   <DeathConfig>k__BackingField: {fileID: 0}
-  <MoveSpeed>k__BackingField: 3.5
+  <MoveSpeed>k__BackingField: 4
   <GatherTimeMultiplier>k__BackingField: 1
   <GatherAmountBonus>k__BackingField: 0

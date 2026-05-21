@@ -19,6 +19,7 @@ namespace GameDevTV.RTS.UI.GameEventLog
 
         private static string GetCategoryPrefix(GameEventLogCategory category) => category switch
         {
+            GameEventLogCategory.AI => "<color=#9AE6B0>[AI]</color> ",
             GameEventLogCategory.Resource => "<color=#E6A817>[Tài nguyên]</color> ",
             GameEventLogCategory.Build => "<color=#7EC8FF>[Xây dựng]</color> ",
             GameEventLogCategory.Combat => "<color=#FF6B6B>[Chiến đấu]</color> ",

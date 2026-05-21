@@ -14,7 +14,10 @@ namespace GameDevTV.RTS.AI
         /// Mục tiêu: Bộ cấu hình base cho tick hiện tại.
         /// Cách hoạt động: Quét CC/workers/buildings; tính target worker và surplus research.
         /// </summary>
-        public static AIBaseRuntimeConfig Resolve(AIWorldStateSnapshot snapshot, AIBaseSettings manualOverrides)
+        public static AIBaseRuntimeConfig Resolve(
+            AIWorldStateSnapshot snapshot,
+            AIBaseSettings manualOverrides,
+            AIDifficultyRuntimeOverlay difficulty = default)
         {
             manualOverrides ??= AIBaseSettings.Default;
 
@@ -26,7 +29,7 @@ namespace GameDevTV.RTS.AI
             BuildBuildingCommand towerBuild = ResolveBuildCommand(snapshot, manualOverrides, AIInfraBuildUtility.DefenseTowerDisplayName);
             ResearchUpgradeCommand research = ResolveResearchCommand(snapshot, manualOverrides);
 
-            int targetWorkers = ResolveWorkerCap(snapshot, manualOverrides);
+            int targetWorkers = ResolveWorkerCap(snapshot, manualOverrides, difficulty);
             int surplusStone = ComputeSurplusThreshold(snapshot);
             GetWorkerTrainReserves(manualOverrides, out int reserveStone, out int reserveWood, out int reserveFood);
             BuildBuildingCommand placementRef = corralBuild ?? forgeBuild ?? storeBuild ?? barrackBuild ?? towerBuild;
@@ -39,6 +42,10 @@ namespace GameDevTV.RTS.AI
                 towerBuild);
 
             bool requireBackbone = manualOverrides.RequireBackboneBeforeBarrackAndTower;
+            if (difficulty.HasProfile)
+            {
+                requireBackbone = difficulty.RequireBackboneInfra;
+            }
             float obstacleProbeRadius = manualOverrides.PlacementNavMeshObstacleProbeRadius;
             LayerMask obstacleProbeLayers = manualOverrides.PlacementNavMeshObstacleProbeLayers;
 
@@ -248,10 +255,18 @@ namespace GameDevTV.RTS.AI
         /// Mục tiêu: Cap worker theo giai đoạn infra (Store → Corral → Forge) + cap tổng Inspector.
         /// Cách hoạt động: Chưa Store → untilStore; chưa Corral → untilCorral; chưa Forge → untilForge; sau đó maxTotal.
         /// </summary>
-        public static int ResolveWorkerCap(AIWorldStateSnapshot snapshot, AIBaseSettings settings)
+        public static int ResolveWorkerCap(
+            AIWorldStateSnapshot snapshot,
+            AIBaseSettings settings,
+            AIDifficultyRuntimeOverlay difficulty = default)
         {
             settings ??= AIBaseSettings.Default;
             int autoCap = ComputeAutoWorkerCapFromPopulation(snapshot);
+
+            if (difficulty.HasProfile && difficulty.TargetWorkerCountMax > 0)
+            {
+                autoCap = Mathf.Min(autoCap, difficulty.TargetWorkerCountMax);
+            }
 
             if (!AIInfraBuildUtility.HasInfraPresent(snapshot, AIInfraBuildUtility.StoreHouseDisplayName))
             {

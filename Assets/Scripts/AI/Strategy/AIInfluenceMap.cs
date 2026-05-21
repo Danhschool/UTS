@@ -1,12 +1,13 @@
 using System.Collections.Generic;
+using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.Units;
 using UnityEngine;
 
 namespace GameDevTV.RTS.AI
 {
     /// <summary>
-    /// SRP: Lưới influence thô (XZ) — defense quanh Civil Central, threat từ vị trí địch.
-    /// Dùng cho <see cref="AIBaseManager"/> chọn điểm đặt Corral/Forge an toàn.
+    /// SRP: Lưới influence thô (XZ) — defense quanh Civil Central, threat địch, economic cụm mỏ xa.
+    /// Dùng cho <see cref="AIBaseManager"/> / <see cref="AIEconomyManager"/> / <see cref="AIMilitaryManager"/>.
     /// </summary>
     public sealed class AIInfluenceMap
     {
@@ -22,11 +23,12 @@ namespace GameDevTV.RTS.AI
 
         /// <summary>
         /// Mục tiêu: Tái tạo lưới influence cho tick hiện tại.
-        /// Cách hoạt động: Mỗi cell = defense(CC) − threat(địch); clamp ≥ 0.
+        /// Cách hoạt động: Mỗi cell = defense(CC) − threat(địch) + economic(mỏ xa); clamp ≥ 0.
         /// </summary>
         public void Rebuild(
             Vector3 civilCentralPosition,
             IReadOnlyList<Vector3> threatPositions,
+            IReadOnlyList<Vector3> economicPositions,
             AIInfluenceMapRuntimeConfig settings)
         {
             cellSize = Mathf.Max(4f, settings.CellSize);
@@ -44,6 +46,7 @@ namespace GameDevTV.RTS.AI
 
             float defenseRadius = Mathf.Max(cellSize, settings.DefenseRadius);
             float threatRadius = Mathf.Max(cellSize, settings.ThreatRadius);
+            float economicRadius = Mathf.Max(cellSize, settings.EconomicRadius);
 
             for (int z = 0; z < gridWidth; z++)
             {
@@ -64,13 +67,22 @@ namespace GameDevTV.RTS.AI
                             settings.ThreatWeight);
                     }
 
-                    safeScores[z * gridWidth + x] = Mathf.Max(0f, defense - threat);
+                    float economic = 0f;
+                    for (int e = 0; e < economicPositions.Count; e++)
+                    {
+                        economic += GaussianFalloff(
+                            Vector3.Distance(cellCenter, economicPositions[e]),
+                            economicRadius,
+                            settings.EconomicWeight);
+                    }
+
+                    safeScores[z * gridWidth + x] = Mathf.Max(0f, defense - threat + economic);
                 }
             }
         }
 
         /// <summary>
-        /// Mục tiêu: Điểm có influence an toàn cao nhất (tùy chọn ưu tiên gần CC cho Corral).
+        /// Mục tiêu: Điểm có influence an toàn cao nhất (tùy chọn ưu tiên gần/xa anchor).
         /// Cách hoạt động: Duyệt cell; score = safe + bias gần/xa anchor.
         /// </summary>
         public bool TryGetBestCell(
@@ -113,38 +125,75 @@ namespace GameDevTV.RTS.AI
         }
 
         /// <summary>
-        /// Mục tiêu: Thu thập vị trí địch trong bán kính map (một lần mỗi tick).
-        /// Cách hoạt động: FindObjectsByType AbstractUnit; lọc owner khác + còn máu.
+        /// Mục tiêu: Thu thập vị trí địch trong bán kính map từ snapshot (không FindObjectsByType).
+        /// Cách hoạt động: Duyệt <see cref="AIWorldStateSnapshot.Units"/>; lọc hostile combat unit.
         /// </summary>
-        public static void CollectThreatPositions(
+        public static void CollectThreatPositionsFromSnapshot(
+            AIWorldStateSnapshot snapshot,
             Owner friendlyOwner,
-            Vector3 civilCentralPosition,
             float maxRadius,
+            bool requireVisible,
             List<Vector3> output)
         {
             output.Clear();
-            AbstractUnit[] allUnits = Object.FindObjectsByType<AbstractUnit>(FindObjectsSortMode.None);
+            if (snapshot?.CivilCentral == null)
+            {
+                return;
+            }
+
+            Vector3 ccPosition = snapshot.CivilCentral.transform.position;
             float maxSqr = maxRadius * maxRadius;
 
-            for (int i = 0; i < allUnits.Length; i++)
+            for (int i = 0; i < snapshot.Units.Count; i++)
             {
-                AbstractUnit unit = allUnits[i];
-                if (unit == null
-                    || unit.Owner == friendlyOwner
-                    || unit.Owner == Owner.Invalid
-                    || unit.Owner == Owner.Unowned
-                    || unit.CurrentHealth <= 0)
+                AbstractUnit unit = snapshot.Units[i];
+                if (!AIMilitaryHostileScanner.IsRtsHostileCombatUnit(unit, friendlyOwner, requireVisible))
                 {
                     continue;
                 }
 
-                float sqr = (unit.transform.position - civilCentralPosition).sqrMagnitude;
+                float sqr = (unit.transform.position - ccPosition).sqrMagnitude;
                 if (sqr > maxSqr)
                 {
                     continue;
                 }
 
                 output.Add(unit.transform.position);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Cụm mỏ xa Civil Central — tăng economic influence (ưu tiên Store).
+        /// Cách hoạt động: Lọc <see cref="GatherableSupply"/> visible, cách CC &gt; ngưỡng.
+        /// </summary>
+        public static void CollectRemoteEconomicPositionsFromSnapshot(
+            AIWorldStateSnapshot snapshot,
+            Vector3 civilCentralPosition,
+            float remoteClusterMinDistance,
+            List<Vector3> output)
+        {
+            output.Clear();
+            if (snapshot == null || remoteClusterMinDistance >= float.MaxValue * 0.5f)
+            {
+                return;
+            }
+
+            float minSqr = remoteClusterMinDistance * remoteClusterMinDistance;
+            for (int i = 0; i < snapshot.GatherableSupplies.Count; i++)
+            {
+                GatherableSupply supply = snapshot.GatherableSupplies[i];
+                if (supply == null || supply.Amount <= 0 || !supply.IsVisible)
+                {
+                    continue;
+                }
+
+                float sqr = (supply.transform.position - civilCentralPosition).sqrMagnitude;
+                if (sqr < minSqr)
+                {
+                    continue;
+                }
+
+                output.Add(supply.transform.position);
             }
         }
 

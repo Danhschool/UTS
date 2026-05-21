@@ -27,18 +27,22 @@ namespace GameDevTV.RTS.AI
         /// Mục tiêu: Sinh intent base (train, build infra, research) cho tick hiện tại.
         /// Cách hoạt động: Resolve config → train → một nhà theo build order khi đủ điều kiện.
         /// </summary>
-        public void EnqueueIntents(AIWorldStateSnapshot snapshot, AIPriorityQueue queue)
+        public void EnqueueIntents(
+            AIWorldStateSnapshot snapshot,
+            AIPriorityQueue queue,
+            in AIInfluenceMapTickContext influence = default,
+            AIDifficultyRuntimeOverlay difficulty = default)
         {
             if (snapshot == null || queue == null || snapshot.CivilCentral == null)
             {
                 return;
             }
 
-            AIBaseRuntimeConfig config = AIBaseConfigResolver.Resolve(snapshot, manualOverrides);
+            AIBaseRuntimeConfig config = AIBaseConfigResolver.Resolve(snapshot, manualOverrides, difficulty);
             Vector3 ccPosition = snapshot.CivilCentral.transform.position;
 
             EnqueueTrainWorkerIfNeeded(snapshot, queue, config);
-            EnqueueNextScheduledBuildingIfNeeded(snapshot, queue, config, ccPosition);
+            EnqueueNextScheduledBuildingIfNeeded(snapshot, queue, config, ccPosition, influence);
             EnqueueForgeResearchIfNeeded(snapshot, queue, config);
         }
 
@@ -50,19 +54,28 @@ namespace GameDevTV.RTS.AI
             AIWorldStateSnapshot snapshot,
             AIPriorityQueue queue,
             AIBaseRuntimeConfig config,
-            Vector3 ccPosition)
+            Vector3 ccPosition,
+            in AIInfluenceMapTickContext influence)
         {
             if (!AIInfraBuildUtility.TryGetNextScheduledBuild(
                     snapshot,
                     manualOverrides,
                     out BuildBuildingCommand buildCommand,
                     out int priority,
-                    out _))
+                    out bool preferNearCivilCentral))
             {
                 return;
             }
 
-            TryEnqueueInfraBuild(snapshot, queue, buildCommand, config, ccPosition, priority);
+            TryEnqueueInfraBuild(
+                snapshot,
+                queue,
+                buildCommand,
+                config,
+                ccPosition,
+                priority,
+                preferNearCivilCentral,
+                influence);
         }
 
         private void EnqueueTrainWorkerIfNeeded(
@@ -201,7 +214,9 @@ namespace GameDevTV.RTS.AI
             BuildBuildingCommand buildCommand,
             AIBaseRuntimeConfig config,
             Vector3 ccPosition,
-            int priority)
+            int priority,
+            bool preferNearCivilCentral,
+            in AIInfluenceMapTickContext influence)
         {
             if (!SupplyAffordability.HasEnough(snapshot.Owner, buildCommand.Building.Cost))
             {
@@ -217,8 +232,22 @@ namespace GameDevTV.RTS.AI
                 return false;
             }
 
-            if (!TryFindPlacementFromCivilCentral(buildCommand, ccPosition, config, expandSearch: false, out Vector3 placement)
-                && !TryFindPlacementFromCivilCentral(buildCommand, ccPosition, config, expandSearch: true, out placement))
+            if (!TryFindPlacementFromCivilCentral(
+                    buildCommand,
+                    ccPosition,
+                    config,
+                    preferNearCivilCentral,
+                    influence,
+                    expandSearch: false,
+                    out Vector3 placement)
+                && !TryFindPlacementFromCivilCentral(
+                    buildCommand,
+                    ccPosition,
+                    config,
+                    preferNearCivilCentral,
+                    influence,
+                    expandSearch: true,
+                    out placement))
             {
                 return false;
             }
@@ -309,14 +338,18 @@ namespace GameDevTV.RTS.AI
             BuildBuildingCommand buildCommand,
             Vector3 civilCentralPosition,
             AIBaseRuntimeConfig config,
+            bool preferNearCivilCentral,
+            in AIInfluenceMapTickContext influence,
             bool expandSearch,
             out Vector3 placement) =>
-            AIBuildingPlacementUtility.TryFindPlacementExpandingFromAnchor(
+            AIInfluencePlacementUtility.TryFindPlacement(
                 buildCommand,
                 civilCentralPosition,
                 config.PlacementSearchRings,
                 config.PlacementSearchStep,
                 expandSearch,
+                preferNearCivilCentral,
+                influence,
                 out placement);
 
         private static StopCommand ResolveStopCommand(Worker worker)

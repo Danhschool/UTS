@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 411a812cfba0bde41b6723b75d67d95c, type: 3}
+  m_Name: AIDifficulty_Easy
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.AI.AIDifficultySO
+  level: 0
+  displayName: "D\u1EC5"
+  tickInterval: 1.25
+  reactionDelay: 2
+  attackPowerThreshold: 1.8
+  retreatHealthRatio: 0.55
+  defenseRadius: 55
+  minArmyBeforeAttack: 8
+  enableAttack: 1
+  targetWorkerCountMin: 2
+  targetWorkerCountMax: 6
+  expandAggression: 0.2
+  buildOrderStrictness: 0.4
+  stoneWoodFoodIncomeMultiplier: 0.9
+  scoutInterval: 45
+  useFairFogMemory: 1
+  useUnitCounter: 0
+  allowResourceCheat: 0

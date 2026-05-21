@@ -3,6 +3,7 @@ using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Minimap;
 using GameDevTV.RTS.Units;
+using GameDevTV.RTS.Units.Formation;
 using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Utilities;
 using Unity.Cinemachine;
@@ -590,34 +591,101 @@ namespace GameDevTV.RTS.Player
                     interactableLayers | floorLayers,
                     QueryTriggerInteraction.Collide))
             {
-                List<AbstractUnit> abstractUnits = new (selectedUnits.Count);
-                foreach(ISelectable selectable in selectedUnits)
-                {
-                    if (selectable is AbstractUnit unit)
-                    {
-                        abstractUnits.Add(unit);
-                    }
-                }
+                List<AbstractUnit> abstractUnits = CollectSelectedAbstractUnits();
+                TryDispatchCommandsToUnits(abstractUnits, hit, commandBeingActivated: null, MouseButton.Right);
+            }
+        }
 
-                for(int i = 0; i < abstractUnits.Count; i++)
+        private List<AbstractUnit> CollectSelectedAbstractUnits()
+        {
+            List<AbstractUnit> abstractUnits = new(selectedUnits.Count);
+            foreach (ISelectable selectable in selectedUnits)
+            {
+                if (selectable is AbstractUnit unit)
                 {
-                    CommandContext context = new(abstractUnits[i], hit, i, MouseButton.Right);
-                    List<BaseCommand> availableCommands = GetAvailableCommands(abstractUnits[i]);
-
-                    foreach(ICommand command in availableCommands)
-                    {
-                        if (command.CanHandle(context))
-                        {
-                            command.Handle(context);
-                            if (command.IsSingleUnitCommand)
-                            {
-                                return;
-                            }
-                            break;
-                        }
-                    }
+                    abstractUnits.Add(unit);
                 }
             }
+
+            return abstractUnits;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Right-click / ActivateAction — Move nhóm dùng formation vuông.
+        /// Cách hoạt động: Move + &gt;1 unit → <see cref="GroupFormationMoveUtility"/>; còn lại giữ loop lệnh cũ.
+        /// </summary>
+        private bool TryDispatchCommandsToUnits(
+            List<AbstractUnit> abstractUnits,
+            RaycastHit hit,
+            BaseCommand commandBeingActivated,
+            MouseButton mouseButton)
+        {
+            if (abstractUnits.Count == 0)
+            {
+                return false;
+            }
+
+            if (commandBeingActivated is MoveCommand moveCommand
+                && abstractUnits.Count > 1
+                && GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, moveCommand))
+            {
+                return true;
+            }
+
+            for (int i = 0; i < abstractUnits.Count; i++)
+            {
+                BaseCommand command = commandBeingActivated;
+                if (command == null)
+                {
+                    List<BaseCommand> availableCommands = GetAvailableCommands(abstractUnits[i]);
+                    bool dispatched = false;
+                    foreach (ICommand candidate in availableCommands)
+                    {
+                        CommandContext probe = new(abstractUnits[i], hit, i, mouseButton);
+                        if (candidate is not BaseCommand baseCommand || !baseCommand.CanHandle(probe))
+                        {
+                            continue;
+                        }
+
+                        if (baseCommand is MoveCommand move
+                            && abstractUnits.Count > 1
+                            && GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, move))
+                        {
+                            return true;
+                        }
+
+                        command = baseCommand;
+                        dispatched = true;
+                        break;
+                    }
+
+                    if (!dispatched)
+                    {
+                        continue;
+                    }
+                }
+
+                CommandContext context = new(abstractUnits[i], hit, i, mouseButton);
+                if (!command.CanHandle(context))
+                {
+                    continue;
+                }
+
+                if (command is MoveCommand moveForGroup
+                    && abstractUnits.Count > 1
+                    && GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, moveForGroup))
+                {
+                    return true;
+                }
+
+                command.Handle(context);
+                if (command.IsSingleUnitCommand)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private List<BaseCommand> GetAvailableCommands(AbstractUnit unit) => AvailableCommandsResolver.GetFlattened(unit);
@@ -726,22 +794,32 @@ namespace GameDevTV.RTS.Player
                 DisposePlacementGhost();
             }
 
-            List<AbstractCommandable> abstractCommandables = selectedUnits
-                                .Where((unit) => unit is AbstractCommandable)
-                                .Cast<AbstractCommandable>()
-                                .ToList();
-
+            List<AbstractUnit> abstractUnits = CollectSelectedAbstractUnits();
             bool buildDispatched = false;
-            for (int i = 0; i < abstractCommandables.Count; i++)
+            if (commandBeingActivated is MoveCommand moveCommand
+                && abstractUnits.Count > 1
+                && GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, moveCommand))
             {
-                CommandContext context = new(abstractCommandables[i], hit, i);
-                if (commandBeingActivated.CanHandle(context))
+                buildDispatched = true;
+            }
+            else
+            {
+                List<AbstractCommandable> abstractCommandables = selectedUnits
+                    .Where(unit => unit is AbstractCommandable)
+                    .Cast<AbstractCommandable>()
+                    .ToList();
+
+                for (int i = 0; i < abstractCommandables.Count; i++)
                 {
-                    commandBeingActivated.Handle(context);
-                    buildDispatched = true;
-                    if (commandBeingActivated.IsSingleUnitCommand)
+                    CommandContext context = new(abstractCommandables[i], hit, i);
+                    if (commandBeingActivated.CanHandle(context))
                     {
-                        break;
+                        commandBeingActivated.Handle(context);
+                        buildDispatched = true;
+                        if (commandBeingActivated.IsSingleUnitCommand)
+                        {
+                            break;
+                        }
                     }
                 }
             }

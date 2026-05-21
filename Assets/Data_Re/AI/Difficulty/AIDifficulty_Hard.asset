@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 411a812cfba0bde41b6723b75d67d95c, type: 3}
+  m_Name: AIDifficulty_Hard
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.AI.AIDifficultySO
+  level: 2
+  displayName: "Kh\xF3"
+  tickInterval: 0.35
+  reactionDelay: 0.4
+  attackPowerThreshold: 0.85
+  retreatHealthRatio: 0.22
+  defenseRadius: 36
+  minArmyBeforeAttack: 4
+  enableAttack: 1
+  targetWorkerCountMin: 3
+  targetWorkerCountMax: 14
+  expandAggression: 0.75
+  buildOrderStrictness: 0.95
+  stoneWoodFoodIncomeMultiplier: 1
+  scoutInterval: 15
+  useFairFogMemory: 1
+  useUnitCounter: 1
+  allowResourceCheat: 0

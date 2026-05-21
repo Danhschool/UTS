@@ -4,17 +4,16 @@ AI đối thủ dùng **cùng `BaseCommand`** như người chơi (`PlayerInput`
 
 ## 1. Tạo ScriptableObject (Unity Editor)
 
-Các asset mặc định đã có trong `Assets/Data_Re/AI/`:
+Menu **RTS → AI → Create Data_Re AI Assets** tạo:
 
 | File | Mô tả |
 |------|--------|
-| `AIPetraConfig_Default.asset` | Personality, queue, command SO |
-| `Difficulty/AIDifficulty_Easy.asset` | Dễ (ít tấn công) |
+| `Difficulty/AIDifficulty_Easy.asset` | Dễ |
 | `Difficulty/AIDifficulty_Medium.asset` | Chuẩn |
 | `Difficulty/AIDifficulty_Hard.asset` | Khó |
-| `AIGameSessionConfig.asset` | Default difficulty = Medium |
+| `AIGameSessionConfig.asset` | Tham chiếu 3 difficulty; default = Medium |
 
-Tạo lại / sửa reference: menu **RTS → AI → Create Data_Re AI Assets** (hoặc mở Unity lần đầu — tự chạy nếu thiếu file).
+`AIController` đọc `AIDifficultySO` (tick, attack threshold, worker cap, fog fair). Đổi runtime: `SetDifficulty(AIDifficultySO)` hoặc `SetDifficulty(session, AIDifficultyLevel)`.
 
 ### Gán trên `AIPetraConfig_Default`
 
@@ -58,9 +57,11 @@ Tạo lại / sửa reference: menu **RTS → AI → Create Data_Re AI Assets** 
 
 - **Xây 4–5 Store liên tục:** thường do **`StoreBuildingType` không trùng `BuildingSO`** của nhà kho trên map → `Stores.Count` vẫn 0. Code dùng **`EffectiveStoreType`** (ưu tiên field, fallback `BuildStoreCommand.Building`) và **`Max Store Buildings`** (Inspector, mặc định **1**). Vẫn nên gán **Building types** trùng thật với prefab.
 
-## 4. Sandbox test (`AI_Sandbox` scene — tạo trong Editor)
+## 4. Sandbox test (`AI_Sandbox`)
 
-Checklist:
+Menu **RTS → AI → Create AI Sandbox Scene** (nhân từ `Game 1.unity`). Checklist đầy đủ: **`docs/AI_SANDBOX_CHECKLIST.md`** (gồm win/lose Civil Central).
+
+Tóm tắt:
 
 - [ ] Worker gather → return Store / Civil Central
 - [ ] Train Worker tại Civil Central

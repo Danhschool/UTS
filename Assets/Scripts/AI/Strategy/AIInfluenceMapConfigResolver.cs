@@ -12,6 +12,7 @@ namespace GameDevTV.RTS.AI
         private const float MaxCellSize = 16f;
         private const float DefenseWeight = 4f;
         private const float ThreatWeight = 3f;
+        private const float EconomicWeight = 2.5f;
 
         /// <summary>
         /// Mục tiêu: Thông số influence khớp map/prefab thay vì hardcode 12m/52m.
@@ -32,14 +33,17 @@ namespace GameDevTV.RTS.AI
                 88f);
             float defenseRadius = Mathf.Clamp(mapRadius * 0.68f, cellSize * 2.5f, mapRadius);
             float threatRadius = Mathf.Clamp(cellSize * 1.85f, 12f, defenseRadius * 0.62f);
+            float economicRadius = Mathf.Clamp(cellSize * 2.2f, 14f, mapRadius * 0.45f);
 
             return new AIInfluenceMapRuntimeConfig(
                 cellSize,
                 mapRadius,
                 defenseRadius,
                 threatRadius,
+                economicRadius,
                 DefenseWeight,
-                ThreatWeight);
+                ThreatWeight,
+                EconomicWeight);
         }
 
         /// <summary>
@@ -84,23 +88,29 @@ namespace GameDevTV.RTS.AI
         public float MapRadius { get; }
         public float DefenseRadius { get; }
         public float ThreatRadius { get; }
+        public float EconomicRadius { get; }
         public float DefenseWeight { get; }
         public float ThreatWeight { get; }
+        public float EconomicWeight { get; }
 
         public AIInfluenceMapRuntimeConfig(
             float cellSize,
             float mapRadius,
             float defenseRadius,
             float threatRadius,
+            float economicRadius,
             float defenseWeight,
-            float threatWeight)
+            float threatWeight,
+            float economicWeight)
         {
             CellSize = cellSize;
             MapRadius = mapRadius;
             DefenseRadius = defenseRadius;
             ThreatRadius = threatRadius;
+            EconomicRadius = economicRadius;
             DefenseWeight = defenseWeight;
             ThreatWeight = threatWeight;
+            EconomicWeight = economicWeight;
         }
     }
 }

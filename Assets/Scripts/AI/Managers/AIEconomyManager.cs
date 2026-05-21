@@ -20,6 +20,7 @@ namespace GameDevTV.RTS.AI
         private readonly AIEconomySettings manualOverrides;
         private readonly List<AbstractUnitSO> depositTypeScratch = new(4);
         private readonly List<Worker> idleGatherWorkersScratch = new(32);
+        private readonly HashSet<int> reservedGatherSupplyThisTick = new(32);
 
         public AIEconomyManager(AIEconomySettings manualOverrides = null)
         {
@@ -30,7 +31,11 @@ namespace GameDevTV.RTS.AI
         /// Mục tiêu: Sinh intent economy cho tick hiện tại.
         /// Cách hoạt động: Resolve config từ map → return → gather → Store xa nếu cần.
         /// </summary>
-        public void EnqueueIntents(AIWorldStateSnapshot snapshot, AIPriorityQueue queue)
+        public void EnqueueIntents(
+            AIWorldStateSnapshot snapshot,
+            AIPriorityQueue queue,
+            in AIInfluenceMapTickContext influence = default,
+            int plannerTickIndex = 0)
         {
             if (snapshot == null || queue == null)
             {
@@ -42,8 +47,22 @@ namespace GameDevTV.RTS.AI
             BuildBuildingCommand storeBuildCommand = config.StoreBuildCommand;
 
             AIConstructionAssignment.SyncReservedBuilder(snapshot.Workers);
-            EnqueueWorkerGatherAndReturn(snapshot, queue, config, ref gatherCommand);
-            EnqueueRemoteStoreBuildIfNeeded(snapshot, queue, config, ref storeBuildCommand);
+
+            bool isGatherRefreshTick = manualOverrides.EnableWorkerGatherRefresh
+                && AIWorkerGatherRefreshPlanner.ShouldRefreshThisTick(
+                    plannerTickIndex,
+                    manualOverrides.WorkerGatherRefreshIntervalTicks);
+
+            if (isGatherRefreshTick)
+            {
+                AIWorkerGatherRefreshPlanner.EnqueueRefreshIntents(snapshot, queue);
+            }
+            else
+            {
+                EnqueueWorkerGatherAndReturn(snapshot, queue, config, ref gatherCommand);
+            }
+
+            EnqueueRemoteStoreBuildIfNeeded(snapshot, queue, config, influence, ref storeBuildCommand);
         }
 
         private void EnqueueWorkerGatherAndReturn(
@@ -68,6 +87,7 @@ namespace GameDevTV.RTS.AI
                 out int foodActive);
 
             CollectIdleGatherWorkers(snapshot, idleGatherWorkersScratch);
+            reservedGatherSupplyThisTick.Clear();
 
             for (int i = 0; i < idleGatherWorkersScratch.Count; i++)
             {
@@ -125,6 +145,7 @@ namespace GameDevTV.RTS.AI
                 }
 
                 IncrementPendingGatherCount(preferredKind, ref stoneActive, ref woodActive, ref foodActive);
+                reservedGatherSupplyThisTick.Add(supply.GetInstanceID());
 
                 queue.Enqueue(new AICommandIntent(
                     AIEconomyPriority.GatherVisibleSupply,
@@ -430,6 +451,11 @@ namespace GameDevTV.RTS.AI
                     continue;
                 }
 
+                if (reservedGatherSupplyThisTick.Contains(supply.GetInstanceID()))
+                {
+                    continue;
+                }
+
                 if (ClassifySupply(config, supply.Supply) != kind)
                 {
                     continue;
@@ -467,6 +493,7 @@ namespace GameDevTV.RTS.AI
             AIWorldStateSnapshot snapshot,
             AIPriorityQueue queue,
             AIEconomyRuntimeConfig config,
+            in AIInfluenceMapTickContext influence,
             ref BuildBuildingCommand storeBuildCommandCache)
         {
             if (snapshot.CivilCentral == null)
@@ -520,7 +547,13 @@ namespace GameDevTV.RTS.AI
                 return;
             }
 
-            if (!TryFindStorePlacement(config, storeBuildCommandCache, clusterCenter, snapshot.CivilCentral.transform.position, out Vector3 placement))
+            if (!TryFindStorePlacement(
+                    config,
+                    storeBuildCommandCache,
+                    clusterCenter,
+                    snapshot.CivilCentral.transform.position,
+                    influence,
+                    out Vector3 placement))
             {
                 return;
             }
@@ -596,6 +629,7 @@ namespace GameDevTV.RTS.AI
             BuildBuildingCommand storeCommand,
             Vector3 clusterCenter,
             Vector3 civilCentralPosition,
+            in AIInfluenceMapTickContext influence,
             out Vector3 placement)
         {
             Vector3 towardBase = civilCentralPosition - clusterCenter;
@@ -607,23 +641,27 @@ namespace GameDevTV.RTS.AI
 
             Vector3 seed = clusterCenter + towardBase.normalized * config.StoreOffsetFromCluster;
 
-            if (AIBuildingPlacementUtility.TryFindPlacementExpandingFromAnchor(
+            if (AIInfluencePlacementUtility.TryFindPlacement(
                     storeCommand,
                     seed,
                     config.PlacementSearchRings,
                     config.PlacementSearchStep,
                     expandSearch: false,
+                    preferNearAnchor: false,
+                    influence,
                     out placement))
             {
                 return true;
             }
 
-            return AIBuildingPlacementUtility.TryFindPlacementExpandingFromAnchor(
+            return AIInfluencePlacementUtility.TryFindPlacement(
                 storeCommand,
                 civilCentralPosition,
                 config.PlacementSearchRings,
                 config.PlacementSearchStep,
                 expandSearch: true,
+                preferNearAnchor: true,
+                influence,
                 out placement);
         }
 
@@ -752,10 +790,18 @@ namespace GameDevTV.RTS.AI
         [Tooltip("Để trống = tự tìm Build Store trên worker.")]
         [SerializeField] private BuildBuildingCommand storeBuildCommand;
 
+        [Header("Gather refresh (mỗi N tick planner)")]
+        [Tooltip("Bật: tick 10, 20, … gửi Stop + Move ngắn cho worker đang gather; tick đó không gán mỏ mới.")]
+        [SerializeField] private bool enableWorkerGatherRefresh = true;
+        [Tooltip("Số tick AI giữa mỗi lần reset gather (AIController tick, không phải frame).")]
+        [SerializeField] private int workerGatherRefreshIntervalTicks = 10;
+
         public SupplySO StoneSupply => stoneSupply;
         public SupplySO WoodSupply => woodSupply;
         public SupplySO FoodSupply => foodSupply;
         public BuildBuildingCommand StoreBuildCommand => storeBuildCommand;
+        public bool EnableWorkerGatherRefresh => enableWorkerGatherRefresh;
+        public int WorkerGatherRefreshIntervalTicks => Mathf.Max(1, workerGatherRefreshIntervalTicks);
 
         public static AIEconomySettings Default => new();
     }

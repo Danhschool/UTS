@@ -13,6 +13,8 @@ namespace GameDevTV.RTS.UI.GameEventLog
     {
         [SerializeField] private Owner listenOwner = Owner.Player1;
         [SerializeField] private bool logSupplyChanges = true;
+        [Tooltip("Tắt thông báo \"Nhận +X\" khi gather; vẫn log chi tiêu tài nguyên (số âm).")]
+        [SerializeField] private bool logSupplyGains = false;
         [SerializeField] private bool logCombatLosses = true;
         [SerializeField] private bool logBuildings = true;
         [SerializeField] private bool logUpgrades = true;
@@ -47,6 +49,11 @@ namespace GameDevTV.RTS.UI.GameEventLog
         private void HandleSupply(SupplyEvent evt)
         {
             if (!logSupplyChanges)
+            {
+                return;
+            }
+
+            if (!logSupplyGains && evt.Amount > 0)
             {
                 return;
             }

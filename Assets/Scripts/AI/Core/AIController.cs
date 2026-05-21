@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Text;
 using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Environment;
+using GameDevTV.RTS.Minimap;
+using GameDevTV.RTS.UI.GameEventLog;
 using GameDevTV.RTS.Units;
 using UnityEngine;
 
@@ -14,24 +16,40 @@ namespace GameDevTV.RTS.AI
     public class AIController : MonoBehaviour
     {
         [SerializeField] private Owner aiOwner = Owner.AI2;
+        [SerializeField] private AIDifficultySO difficultyProfile;
         [SerializeField] private float tickInterval = 0.65f;
         [SerializeField] private bool logTickSummary;
+        [Tooltip("Đăng trạng thái AI lên khung sự kiện (thay spam gather +X).")]
+        [SerializeField] private bool postAiStatusToGameEvent = true;
+        [SerializeField] private bool postAiStatusOnlyOnChange = true;
         [Tooltip("Kéo command/supply SO vào đây; khoảng cách & placement vẫn tự tính. Để trống SO = quét map.")]
         [SerializeField] private AIEconomySettings economySettings = new();
         [Tooltip("Command SO + cap worker theo giai đoạn + reserve trước khi train (xem Base Settings).")]
         [SerializeField] private AIBaseSettings baseSettings = new();
+        [Tooltip("Mở Military Settings → 3 Unit Mix Slot: gán Build Unit SO + Spawn Weight (tỷ lệ).")]
+        [SerializeField] private AIMilitarySettings militarySettings = new();
         [SerializeField] private bool dispatchEconomyIntents = true;
         [SerializeField] private bool dispatchBaseIntents = true;
+        [SerializeField] private bool dispatchMilitaryIntents = true;
+        [Tooltip("Fog explored (minimap) — dùng biết map đã khám phá hết để gọi 100% quân đi đánh.")]
+        [SerializeField] private MinimapFogSystemReference fogSystemReference;
 
         private AIUnitRegistry registry;
         private AIWorldState worldState;
         private AICommandDispatcher commandDispatcher;
         private AIPriorityQueue priorityQueue;
+        private AIInfluenceMap influenceMap;
+        private readonly List<Vector3> influenceThreatScratch = new(32);
+        private readonly List<Vector3> influenceEconomicScratch = new(32);
         private AIEconomyManager economyManager;
         private AIBaseManager baseManager;
+        private AIMilitaryManager militaryManager;
         private float nextTickTime;
+        private int plannerTickIndex;
+        private string lastPostedAiStatusLine;
 
         public Owner AiOwner => aiOwner;
+        public AIDifficultySO DifficultyProfile => difficultyProfile;
         public AIUnitRegistry Registry => registry;
         public AIWorldState WorldState => worldState;
         public AICommandDispatcher CommandDispatcher => commandDispatcher;
@@ -43,14 +61,18 @@ namespace GameDevTV.RTS.AI
             worldState = new AIWorldState();
             commandDispatcher = new AICommandDispatcher(aiOwner);
             priorityQueue = new AIPriorityQueue();
+            influenceMap = new AIInfluenceMap();
             economyManager = new AIEconomyManager(economySettings);
             baseManager = new AIBaseManager(baseSettings);
+            militaryManager = new AIMilitaryManager(militarySettings, baseSettings, fogSystemReference);
         }
 
         private void OnEnable()
         {
             registry.Initialize(aiOwner);
+            ApplyDifficultyProfile(difficultyProfile);
             nextTickTime = Time.time;
+            plannerTickIndex = 0;
         }
 
         private void OnDisable()
@@ -65,7 +87,8 @@ namespace GameDevTV.RTS.AI
                 return;
             }
 
-            nextTickTime = Time.time + tickInterval;
+            float interval = difficultyProfile != null ? difficultyProfile.TickInterval : tickInterval;
+            nextTickTime = Time.time + interval;
             Tick();
         }
 
@@ -78,11 +101,38 @@ namespace GameDevTV.RTS.AI
             AIWorldStateSnapshot snapshot = worldState.BuildSnapshot(registry, aiOwner);
 
             RunPlannerDispatch(snapshot);
+            PostAiStatusToGameEventIfNeeded(snapshot);
 
             if (logTickSummary)
             {
                 Debug.Log(FormatTickSummaryLog(snapshot), this);
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Hiển thị trạng thái AI trên UI thay vì log từng lần gather.
+        /// Cách hoạt động: Format một dòng; chỉ Post khi nội dung đổi (tránh spam).
+        /// </summary>
+        private void PostAiStatusToGameEventIfNeeded(AIWorldStateSnapshot snapshot)
+        {
+            if (!postAiStatusToGameEvent)
+            {
+                return;
+            }
+
+            string line = AIPlannerStatusFormatter.Format(snapshot);
+            if (string.IsNullOrEmpty(line))
+            {
+                return;
+            }
+
+            if (postAiStatusOnlyOnChange && line == lastPostedAiStatusLine)
+            {
+                return;
+            }
+
+            lastPostedAiStatusLine = line;
+            GameEventLog.Post(line, GameEventLogCategory.AI);
         }
 
         /// <summary>
@@ -92,16 +142,33 @@ namespace GameDevTV.RTS.AI
         private void RunPlannerDispatch(AIWorldStateSnapshot snapshot)
         {
             priorityQueue.Clear();
+            plannerTickIndex++;
             AIInfraBuildOrderTracker.SyncWithWorld(snapshot);
+
+            AIDifficultyRuntimeOverlay difficulty = new(difficultyProfile);
+            AIBaseRuntimeConfig baseConfig = AIBaseConfigResolver.Resolve(snapshot, baseSettings, difficulty);
+            AIEconomyRuntimeConfig economyConfig = AIEconomyConfigResolver.Resolve(snapshot, economySettings);
+            AIInfluenceMapTickContext influence = AIInfluenceMapTickPlanner.Build(
+                snapshot,
+                baseConfig,
+                economyConfig.RemoteClusterMinDistance,
+                influenceMap,
+                influenceThreatScratch,
+                influenceEconomicScratch);
+
+            if (dispatchMilitaryIntents)
+            {
+                militaryManager.EnqueueIntents(snapshot, priorityQueue, influence, influenceThreatScratch, difficulty);
+            }
 
             if (dispatchBaseIntents)
             {
-                baseManager.EnqueueIntents(snapshot, priorityQueue);
+                baseManager.EnqueueIntents(snapshot, priorityQueue, influence, difficulty);
             }
 
             if (dispatchEconomyIntents)
             {
-                economyManager.EnqueueIntents(snapshot, priorityQueue);
+                economyManager.EnqueueIntents(snapshot, priorityQueue, influence, plannerTickIndex);
             }
 
             while (priorityQueue.TryPop(out AICommandIntent intent))
@@ -240,6 +307,40 @@ namespace GameDevTV.RTS.AI
         }
 
         /// <summary>
+        /// Mục tiêu: Đổi độ khó runtime (menu / GameSetup / sandbox Inspector).
+        /// Cách hoạt động: Gán SO và áp tick interval từ profile.
+        /// </summary>
+        public void SetDifficulty(AIDifficultySO profile)
+        {
+            difficultyProfile = profile;
+            ApplyDifficultyProfile(profile);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Áp độ khó từ <see cref="AIGameSessionConfigSO"/> theo enum lobby.
+        /// Cách hoạt động: Resolve asset rồi gọi <see cref="SetDifficulty"/>.
+        /// </summary>
+        public void SetDifficulty(AIGameSessionConfigSO session, AIDifficultyLevel level)
+        {
+            if (session == null)
+            {
+                return;
+            }
+
+            SetDifficulty(session.Resolve(level));
+        }
+
+        private void ApplyDifficultyProfile(AIDifficultySO profile)
+        {
+            if (profile == null)
+            {
+                return;
+            }
+
+            tickInterval = profile.TickInterval;
+        }
+
+        /// <summary>
         /// Mục tiêu: Đổi phe AI hoặc độ khó runtime (GameSetup / menu).
         /// Cách hoạt động: Cập nhật owner, registry và dispatcher.
         /// </summary>
@@ -254,6 +355,7 @@ namespace GameDevTV.RTS.AI
             commandDispatcher = new AICommandDispatcher(aiOwner);
             economyManager = new AIEconomyManager(economySettings);
             baseManager = new AIBaseManager(baseSettings);
+            militaryManager = new AIMilitaryManager(militarySettings, baseSettings, fogSystemReference);
 
             if (isActiveAndEnabled)
             {

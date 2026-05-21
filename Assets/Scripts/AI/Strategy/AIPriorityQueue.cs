@@ -2,6 +2,16 @@ using System.Collections.Generic;
 
 namespace GameDevTV.RTS.AI
 {
+    /// <summary>Priority bands theo plan V2 (cao → thấp).</summary>
+    public static class AIPriorityBands
+    {
+        public const int Critical = 900;
+        public const int High = 700;
+        public const int Medium = 500;
+        public const int Low = 300;
+        public const int Background = 100;
+    }
+
     /// <summary>
     /// Hàng đợi intent theo priority — manager enqueue, controller pop mỗi tick.
     /// </summary>

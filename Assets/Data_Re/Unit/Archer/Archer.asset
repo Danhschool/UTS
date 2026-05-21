@@ -38,6 +38,6 @@ MonoBehaviour:
   <AttackConfig>k__BackingField: {fileID: 11400000, guid: 07b6683dbf7e2a84489f2ab303916706, type: 2}
   <TransportConfig>k__BackingField: {fileID: 11400000, guid: 934e598ea6a2e664dba1454f8964f255, type: 2}
   <DeathConfig>k__BackingField: {fileID: 0}
-  <MoveSpeed>k__BackingField: 3.5
+  <MoveSpeed>k__BackingField: 8
   <GatherTimeMultiplier>k__BackingField: 1
   <GatherAmountBonus>k__BackingField: 0

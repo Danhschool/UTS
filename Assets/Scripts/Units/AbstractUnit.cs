@@ -41,6 +41,7 @@ namespace GameDevTV.RTS.Units
         private UnitDeathController deathController;
         private bool unitDeathEventRaised;
         private bool unitSpawnEventRaised;
+        private bool plannerBlackboardReady;
 
         protected override void Awake()
         {
@@ -59,6 +60,9 @@ namespace GameDevTV.RTS.Units
 
         protected override void Start()
         {
+            // BehaviorGraphAgent.Init() chạy trong Awake (order -50); bật đọc blackboard trước NotifySpawned.
+            plannerBlackboardReady = graphAgent != null && graphAgent.Graph != null;
+
             base.Start();
 
             deathController.Configure(unitSO.DeathConfig, deathConfigOverride);
@@ -151,6 +155,70 @@ namespace GameDevTV.RTS.Units
             DisposeMovementDestinationCursor();
             SetCommandOverrides(null);
             graphAgent.SetVariableValue("Command", UnitCommands.Stop);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Planner (patrol/scout) chỉ gán lệnh khi unit không đang combat hoặc đang di chuyển tới đích.
+        /// Cách hoạt động: Stop, hoặc Move đã tới TargetLocation/TargetGameObject trên NavMesh.
+        /// </summary>
+        public bool IsAvailableForPlannerPatrol()
+        {
+            if (!plannerBlackboardReady
+                || graphAgent == null
+                || CurrentHealth <= 0
+                || Agent == null
+                || !Agent.isOnNavMesh)
+            {
+                return false;
+            }
+
+            if (!graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> commandVariable))
+            {
+                return false;
+            }
+
+            return commandVariable.Value switch
+            {
+                UnitCommands.Stop => true,
+                UnitCommands.Move => HasArrivedAtMovementGoal(ResolveMovementGoalFromBlackboard()),
+                _ => false
+            };
+        }
+
+        /// <summary>
+        /// Mục tiêu: Planner kiểm tra đích Move hiện tại (tránh spam lệnh tới cùng một điểm).
+        /// Cách hoạt động: Chỉ khi Command == Move; đọc TargetGameObject hoặc TargetLocation.
+        /// </summary>
+        public bool TryGetPlannerMoveGoal(out Vector3 goal)
+        {
+            goal = transform.position;
+            if (graphAgent == null
+                || !graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> commandVariable)
+                || commandVariable.Value != UnitCommands.Move)
+            {
+                return false;
+            }
+
+            goal = ResolveMovementGoalFromBlackboard();
+            return true;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Unit đang Move tới vùng gần <paramref name="worldPoint"/> (formation đã gửi).
+        /// </summary>
+        public bool IsPursuingMoveGoalNear(Vector3 worldPoint, float horizontalTolerance)
+        {
+            if (!TryGetPlannerMoveGoal(out Vector3 goal))
+            {
+                return false;
+            }
+
+            Vector3 a = goal;
+            Vector3 b = worldPoint;
+            a.y = 0f;
+            b.y = 0f;
+            float tolerance = Mathf.Max(2f, horizontalTolerance);
+            return (a - b).sqrMagnitude <= tolerance * tolerance;
         }
 
         public virtual void Attack(IDamageable damageable)

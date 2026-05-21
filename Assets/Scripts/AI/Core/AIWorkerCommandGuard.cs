@@ -92,6 +92,11 @@ namespace GameDevTV.RTS.AI
 
             if (intent.Entity is Worker worker)
             {
+                if (AIEconomyPriority.IsGatherRefreshPriority(intent.Priority))
+                {
+                    return ShouldEnqueueGatherRefresh(worker, intent.Command);
+                }
+
                 if (intent.Command is GatherCommand)
                 {
                     if (AIConstructionAssignment.ShouldSkipGatherForWorker(worker))
@@ -119,5 +124,15 @@ namespace GameDevTV.RTS.AI
 
             return true;
         }
+
+        /// <summary>
+        /// Mục tiêu: Cho phép Stop/Move refresh khi worker đang gather (bình thường bị chặn).
+        /// Cách hoạt động: Chỉ khi không build; Stop hoặc Move từ economy refresh band.
+        /// </summary>
+        private static bool ShouldEnqueueGatherRefresh(Worker worker, BaseCommand command) =>
+            worker != null
+            && !worker.IsBuilding
+            && !worker.IsCommittedToConstructionWork
+            && (command is StopCommand || command is MoveCommand);
     }
 }

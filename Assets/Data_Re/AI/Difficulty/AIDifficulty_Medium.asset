@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 411a812cfba0bde41b6723b75d67d95c, type: 3}
+  m_Name: AIDifficulty_Medium
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.AI.AIDifficultySO
+  level: 1
+  displayName: "Trung b\xECnh"
+  tickInterval: 0.65
+  reactionDelay: 1
+  attackPowerThreshold: 1.2
+  retreatHealthRatio: 0.35
+  defenseRadius: 42
+  minArmyBeforeAttack: 6
+  enableAttack: 1
+  targetWorkerCountMin: 2
+  targetWorkerCountMax: 10
+  expandAggression: 0.5
+  buildOrderStrictness: 0.7
+  stoneWoodFoodIncomeMultiplier: 1
+  scoutInterval: 25
+  useFairFogMemory: 1
+  useUnitCounter: 0
+  allowResourceCheat: 0
