@@ -29,7 +29,7 @@ namespace GameDevTV.RTS.Commands
                 return false;
             }
 
-            return HasEnoughSupplies(context) && AllRestrictionsPass(context.Hit.point);
+            return HasEnoughSupplies(context) && AllPlacementPasses(context);
         }
 
         /// <summary>
@@ -65,17 +65,26 @@ namespace GameDevTV.RTS.Commands
             if (TryGetResumeTarget(context, out BaseBuilding resumeTarget))
             {
                 builder.ResumeBuilding(resumeTarget);
+                return;
             }
-            else if (HasEnoughSupplies(context) && AllRestrictionsPass(context.Hit.point))
-            {
-                builder.Build(Building, context.Hit.point);
-            }
-            else if (!HasEnoughSupplies(context))
+
+            if (!HasEnoughSupplies(context))
             {
                 SupplyAffordability.WarnPlayerIfInsufficient(
                     context.Owner,
                     Building.Cost,
                     $"xây {Building.Name}");
+                return;
+            }
+
+            if (builder.IsBuilding)
+            {
+                return;
+            }
+
+            if (AllPlacementPasses(context))
+            {
+                builder.Build(Building, context.Hit.point);
             }
         }
 
@@ -89,5 +98,8 @@ namespace GameDevTV.RTS.Commands
 
         private bool HasEnoughSupplies(CommandContext context) =>
             SupplyAffordability.HasEnough(context.Owner, Building.Cost);
+
+        private bool AllPlacementPasses(CommandContext context) =>
+            AllRestrictionsPass(context.Hit.point);
     }
 }

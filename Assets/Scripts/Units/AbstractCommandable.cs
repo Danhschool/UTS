@@ -43,6 +43,7 @@ namespace GameDevTV.RTS.Units
             renderers = GetComponentsInChildren<Renderer>();
             particleSystems = GetComponentsInChildren<ParticleSystem>();
             animators = GetComponentsInChildren<Animator>();
+            EnsureInitialCommandsCached();
         }
 
         protected virtual void Start()
@@ -52,9 +53,26 @@ namespace GameDevTV.RTS.Units
                 AvailableCommands = Array.Empty<BaseCommand>();
             }
 
-            initialCommands = AvailableCommands;
+            EnsureInitialCommandsCached();
 
             Bus<UpgradeResearchedEvent>.OnEvent[Owner] += HandleUpgradeResearched;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Giữ bản gốc AvailableCommands từ prefab trước khi Start (nhà xây có component tắt đến khi xong).
+        /// Cách hoạt động: Lưu mảng lệnh lần đầu có phần tử; Deselect không được ghi đè bằng mảng rỗng.
+        /// </summary>
+        private void EnsureInitialCommandsCached()
+        {
+            if (initialCommands != null && initialCommands.Length > 0)
+            {
+                return;
+            }
+
+            if (AvailableCommands != null && AvailableCommands.Length > 0)
+            {
+                initialCommands = AvailableCommands;
+            }
         }
 
         /// <summary>
@@ -131,6 +149,8 @@ namespace GameDevTV.RTS.Units
 
         public void SetCommandOverrides(BaseCommand[] commands)
         {
+            EnsureInitialCommandsCached();
+
             if (commands == null || commands.Length == 0)
             {
                 AvailableCommands = initialCommands ?? Array.Empty<BaseCommand>();

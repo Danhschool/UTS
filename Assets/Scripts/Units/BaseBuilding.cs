@@ -33,6 +33,7 @@ namespace GameDevTV.RTS.Units
         private List<UnlockableSO> buildingQueue = new(MAX_QUEUE_SIZE);
         private const int MAX_QUEUE_SIZE = 5;
         private IBuildingPassiveEffect[] passiveEffects;
+        private bool buildingSpawnEventRaised;
 
         protected override void Awake()
         {
@@ -78,7 +79,7 @@ namespace GameDevTV.RTS.Units
             Progress = new BuildingProgress(BuildingProgress.BuildingState.Completed, Progress.StartTime, 1);
             unitBuildingThis = null;
             Bus<UnitDeathEvent>.OnEvent[Owner] -= HandleUnitDeath;
-            Bus<BuildingSpawnEvent>.Raise(Owner, new BuildingSpawnEvent(Owner, this));
+            RaiseBuildingSpawnEventIfNeeded();
 
             foreach (UpgradeSO upgrade in BuildingSO.Upgrades)
             {
@@ -252,6 +253,48 @@ namespace GameDevTV.RTS.Units
         public bool CanResumeConstruction() =>
             Progress.State == BuildingProgress.BuildingState.Paused
             || Progress.State == BuildingProgress.BuildingState.Destroyed;
+
+        /// <summary>
+        /// Mục tiêu: Đánh dấu công trình đã xây xong để queue research/unit và passive effects hoạt động.
+        /// Cách hoạt động: Đặt Progress Completed, gỡ builder, bật passive; bỏ qua nếu đã Completed.
+        /// </summary>
+        public void CompleteConstruction()
+        {
+            if (Progress.State == BuildingProgress.BuildingState.Completed)
+            {
+                return;
+            }
+
+            Progress = new BuildingProgress(
+                BuildingProgress.BuildingState.Completed,
+                Progress.StartTime,
+                1f);
+            unitBuildingThis = null;
+            Bus<UnitDeathEvent>.OnEvent[Owner] -= HandleUnitDeath;
+            SyncPassiveEffects(true);
+
+            if (MaxHealth > 0 && CurrentHealth < MaxHealth)
+            {
+                Heal(MaxHealth - CurrentHealth);
+            }
+
+            RaiseBuildingSpawnEventIfNeeded();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Tech tree / UI biết nhà đã hoạt động (một lần — tránh trùng khi Start chạy sau xây xong).
+        /// Cách hoạt động: Raise <see cref="BuildingSpawnEvent"/> nếu Owner hợp lệ và chưa raise.
+        /// </summary>
+        private void RaiseBuildingSpawnEventIfNeeded()
+        {
+            if (buildingSpawnEventRaised)
+            {
+                return;
+            }
+
+            buildingSpawnEventRaised = true;
+            Bus<BuildingSpawnEvent>.Raise(Owner, new BuildingSpawnEvent(Owner, this));
+        }
 
         private void HandleUnitDeath(UnitDeathEvent evt)
         {

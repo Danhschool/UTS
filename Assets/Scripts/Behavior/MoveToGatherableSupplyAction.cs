@@ -66,7 +66,6 @@ namespace GameDevTV.RTS.Behavior
 
             if (animator != null)
             {
-                //animator.SetFloat(AnimationConstants.IS_MOVING, agent.velocity.sqrMagnitude);
                 animator.SetBool(AnimationConstants.IS_MOVING, true);
             }
 

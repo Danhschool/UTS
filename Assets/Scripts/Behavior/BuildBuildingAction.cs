@@ -1,3 +1,4 @@
+using GameDevTV.RTS.AI;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Units;
@@ -35,6 +36,11 @@ namespace GameDevTV.RTS.Behavior
                 GameObject building = GameObject.Instantiate(BuildingSO.Value.Prefab, TargetLocation.Value, Quaternion.identity);
                 if (!building.TryGetComponent(out completedBuilding)
                     || completedBuilding.MainRenderer == null) return Status.Failure;
+
+                if (BuildingSO.Value != null)
+                {
+                    AIInfraBuildOrderTracker.ClearOrder(completedBuilding.Owner, BuildingSO.Value.Name);
+                }
             }
             else
             {
@@ -115,7 +121,11 @@ namespace GameDevTV.RTS.Behavior
                     completedBuilding.transform.position = rootEndWorld;
                 }
 
-                completedBuilding.enabled = true;
+                if (completedBuilding != null)
+                {
+                    completedBuilding.CompleteConstruction();
+                    completedBuilding.enabled = true;
+                }
             }
         }
 

@@ -19,5 +19,5 @@ MonoBehaviour:
   <IsSingleUnitCommand>k__BackingField: 1
   <GhostPrefab>k__BackingField: {fileID: 1101349339577557291, guid: 7885c43afd3ae924ba4b74125f91e0e4, type: 3}
   <Restrictions>k__BackingField:
-  - {fileID: 11400000, guid: b6eeea93eeb39144483d38976939b89c, type: 2}
+  - {fileID: 11400000, guid: 53c5065ad71f6fa408146554ec5eebba, type: 2}
   <Building>k__BackingField: {fileID: 11400000, guid: db600b37f92b2674c9747b612f7048ae, type: 2}

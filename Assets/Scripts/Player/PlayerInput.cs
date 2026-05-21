@@ -4,6 +4,7 @@ using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Minimap;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Commands;
+using GameDevTV.RTS.Utilities;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -41,7 +42,6 @@ namespace GameDevTV.RTS.Player
         private MaterialPropertyBlock ghostPlacementMpb;
         private static readonly int ShaderIdBaseColor = Shader.PropertyToID("_BaseColor");
         private static readonly int ShaderIdColor = Shader.PropertyToID("_Color");
-        private readonly Collider[] placementObstacleOverlapBuffer = new Collider[24];
         private bool placementGhostPinnedToWorld;
         private Vector3 placementGhostPinnedPosition;
         private BaseCommand pinnedPlacementRestrictionsCommand;
@@ -416,48 +416,7 @@ namespace GameDevTV.RTS.Player
         private bool EvaluateGhostPlacementValid(Vector3 worldPoint, BaseCommand commandForRestrictions = null)
         {
             BaseCommand cmd = commandForRestrictions != null ? commandForRestrictions : activeCommand;
-            if (cmd == null || !cmd.AllRestrictionsPass(worldPoint))
-            {
-                return false;
-            }
-
-            if (placementNavMeshObstacleProbeRadius > 0f
-                && HasBlockingNavMeshObstacleNear(worldPoint, placementNavMeshObstacleProbeRadius, placementNavMeshObstacleProbeLayers))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Mục tiêu: Phát hiện vật cản carving NavMesh (hoặc chặn vật lý) gần điểm đặt nhà.
-        /// Cách hoạt động: OverlapSphereNonAlloc; với mỗi collider, kiểm tra component <see cref="NavMeshObstacle"/> phía trên còn enabled.
-        /// </summary>
-        private bool HasBlockingNavMeshObstacleNear(Vector3 worldPoint, float radius, LayerMask mask)
-        {
-            int count = Physics.OverlapSphereNonAlloc(
-                worldPoint,
-                radius,
-                placementObstacleOverlapBuffer,
-                mask,
-                QueryTriggerInteraction.Collide);
-            for (int i = 0; i < count; i++)
-            {
-                Collider c = placementObstacleOverlapBuffer[i];
-                if (c == null || !c.enabled)
-                {
-                    continue;
-                }
-
-                NavMeshObstacle obstacle = c.GetComponentInParent<NavMeshObstacle>();
-                if (obstacle != null && obstacle.enabled && obstacle.gameObject.activeInHierarchy)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return cmd != null && cmd.AllRestrictionsPass(worldPoint);
         }
 
         /// <summary>

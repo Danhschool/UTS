@@ -1,6 +1,10 @@
-using UnityEngine;
+using System.Collections.Generic;
 using System.Linq;
 using GameDevTV.RTS.Player;
+using GameDevTV.RTS.TechTree;
+using GameDevTV.RTS.Units;
+using GameDevTV.RTS.Utilities;
+using UnityEngine;
 
 namespace GameDevTV.RTS.Commands
 {
@@ -32,8 +36,15 @@ namespace GameDevTV.RTS.Commands
         /// <returns></returns>
         public virtual bool IsAvailable(CommandContext context) => true;
 
-        public bool AllRestrictionsPass(Vector3 point) =>
-            Restrictions.Length == 0 || Restrictions.All(restriction => restriction.CanPlace(point));
+        public bool AllRestrictionsPass(Vector3 point)
+        {
+            if (Restrictions == null || Restrictions.Length == 0)
+            {
+                return true;
+            }
+
+            return Restrictions.All(restriction => restriction.CanPlace(point));
+        }
 
         public bool IsHitColliderVisible(CommandContext context) => context.Hit.collider != null
             && context.Hit.collider.TryGetComponent(out IHideable hideable) && hideable.IsVisible;

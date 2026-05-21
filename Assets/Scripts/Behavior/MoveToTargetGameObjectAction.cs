@@ -18,7 +18,8 @@ namespace GameDevTV.RTS.Behavior
 
         private NavMeshAgent agent;
         private Animator animator;
-        private Vector3 lastPosition;
+        private Vector3 lockedDestination;
+        private bool hasLockedDestination;
 
         /// <summary>Kiểm tra agent đã tới gần điểm đích trong không gian thế giới (tránh Success sớm chỉ dựa vào remainingDistance).</summary>
         /// <remarks>Dùng max(stoppingDistance, MoveThreshold) làm ngưỡng slack; phù hợp khi stoppingDistance NavMesh rất nhỏ hoặc remainingDistance báo sai lúc path pending.</remarks>
@@ -45,8 +46,38 @@ namespace GameDevTV.RTS.Behavior
             return IsWithinArrivalSlack(goalWorld);
         }
 
+        /// <summary>
+        /// Mục tiêu: Khóa một điểm đích duy nhất lúc bắt đầu node — tránh ClosestPoint trượt theo rìa target mỗi frame.
+        /// Cách hoạt động: GameObject → ClosestPoint một lần; không có GO → TargetLocation trên blackboard.
+        /// </summary>
+        private bool TryLockDestinationAtStart()
+        {
+            hasLockedDestination = false;
+
+            if (TargetGameObject.Value != null)
+            {
+                lockedDestination = CombatTargetGeometryUtility.GetClosestPointOnTarget(
+                    agent.transform.position,
+                    TargetGameObject.Value);
+                hasLockedDestination = true;
+                return true;
+            }
+
+            if (Agent.Value.TryGetComponent(out BehaviorGraphAgent graphAgent)
+                && graphAgent.GetVariable("TargetLocation", out BlackboardVariable<Vector3> targetLocation))
+            {
+                lockedDestination = targetLocation.Value;
+                hasLockedDestination = true;
+                return true;
+            }
+
+            return false;
+        }
+
         protected override Status OnStart()
         {
+            hasLockedDestination = false;
+
             if (!Agent.Value.TryGetComponent(out agent))
             {
                 return Status.Failure;
@@ -54,71 +85,33 @@ namespace GameDevTV.RTS.Behavior
 
             Agent.Value.TryGetComponent(out animator);
 
-            if (TargetGameObject.Value == null)
+            if (!TryLockDestinationAtStart())
             {
-                if (Agent.Value.TryGetComponent(out BehaviorGraphAgent graphAgent)
-                    && graphAgent.GetVariable("TargetLocation", out BlackboardVariable<Vector3> targetLocation))
-                {
-                    agent.SetDestination(targetLocation.Value);
-                    lastPosition = targetLocation.Value;
-                    return Status.Running;
-                }
                 return Status.Failure;
             }
 
-            Vector3 targetPosition = GetTargetPosition();
-
-            if (IsWithinArrivalSlack(targetPosition))
+            if (IsWithinArrivalSlack(lockedDestination))
             {
                 return Status.Success;
             }
 
-            agent.SetDestination(targetPosition);
-            lastPosition = targetPosition;
+            agent.SetDestination(lockedDestination);
             return Status.Running;
         }
 
         protected override Status OnUpdate()
         {
-            if (animator != null)
+            if (!hasLockedDestination)
             {
-                //animator.SetFloat(AnimationConstants.IS_MOVING, agent.velocity.magnitude);
-                animator.SetBool(AnimationConstants.IS_MOVING, true);
-            }
-
-            if (TargetGameObject.Value == null)
-            {
-                if (Agent.Value != null
-                    && Agent.Value.TryGetComponent(out BehaviorGraphAgent graphAgent)
-                    && graphAgent.GetVariable("TargetLocation", out BlackboardVariable<Vector3> targetLocation))
-                {
-                    float threshold = MoveThreshold != null ? MoveThreshold.Value : 0.25f;
-                    if (Vector3.Distance(targetLocation.Value, lastPosition) >= threshold)
-                    {
-                        agent.SetDestination(targetLocation.Value);
-                        lastPosition = targetLocation.Value;
-                    }
-
-                    if (HasArrivedAt(targetLocation.Value))
-                    {
-                        return Status.Success;
-                    }
-
-                    return Status.Running;
-                }
                 return Status.Failure;
             }
 
-            Vector3 targetPosition = GetTargetPosition();
-            float moveThreshold = MoveThreshold != null ? MoveThreshold.Value : 0.25f;
-            if (Vector3.Distance(targetPosition, lastPosition) >= moveThreshold)
+            if (animator != null)
             {
-                agent.SetDestination(targetPosition);
-                lastPosition = agent.destination;
-                return Status.Running;
+                animator.SetBool(AnimationConstants.IS_MOVING, true);
             }
 
-            if (HasArrivedAt(targetPosition))
+            if (HasArrivedAt(lockedDestination))
             {
                 return Status.Success;
             }
@@ -128,22 +121,12 @@ namespace GameDevTV.RTS.Behavior
 
         protected override void OnEnd()
         {
+            hasLockedDestination = false;
+
             if (animator != null)
             {
                 animator.SetBool(AnimationConstants.IS_MOVING, false);
             }
-        }
-
-        private Vector3 GetTargetPosition()
-        {
-            if (TargetGameObject.Value == null)
-            {
-                return lastPosition;
-            }
-
-            return CombatTargetGeometryUtility.GetClosestPointOnTarget(
-                agent.transform.position,
-                TargetGameObject.Value);
         }
     }
 }

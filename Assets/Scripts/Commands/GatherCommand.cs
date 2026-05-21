@@ -24,22 +24,34 @@ namespace GameDevTV.RTS.Commands
         public override void Handle(CommandContext context)
         {
             Worker worker = context.Commandable as Worker;
-            if (!IsHitColliderVisible(context))
+            Collider collider = context.Hit.collider;
+            if (collider == null)
             {
-                worker.MoveTo(context.Hit.collider.gameObject.transform.position);
+                return;
             }
-            else if (context.Hit.collider.TryGetComponent(out GatherableSupply supply))
+
+            if (IsSupplyDepositBuilding(collider) && worker.HasSupplies)
             {
-                worker.Gather(supply);
+                worker.ReturnSupplies(collider.gameObject);
+                return;
             }
-            else if (IsSupplyDepositBuilding(context.Hit.collider) && worker.HasSupplies)
+
+            GatherableSupply supply = collider.GetComponentInParent<GatherableSupply>();
+            if (supply != null && supply.Amount > 0)
             {
-                worker.ReturnSupplies(context.Hit.collider.gameObject);
+                if (IsHitColliderVisible(context))
+                {
+                    worker.Gather(supply);
+                }
+                else
+                {
+                    worker.MoveTo(supply.transform.position);
+                }
+
+                return;
             }
-            else
-            {
-                worker.MoveTo(context.Hit.collider.gameObject.transform.position);
-            }
+
+            worker.MoveTo(collider.gameObject.transform.position);
         }
 
         public override bool IsLocked(CommandContext context) => false;

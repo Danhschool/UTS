@@ -50,9 +50,9 @@ namespace GameDevTV.RTS.Player
 
             foreach (Owner owner in Enum.GetValues(typeof(Owner)))
             {
-                Stone.Add(owner, 0);
-                Wood.Add(owner, 0);
-                Food.Add(owner, 0);
+                Stone.Add(owner, 100);
+                Wood.Add(owner, 100);
+                Food.Add(owner, 100);
                 Population.Add(owner, 0);
                 PopulationLimit.Add(owner, 0);
             }
