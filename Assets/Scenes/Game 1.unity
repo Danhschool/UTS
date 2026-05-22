@@ -5632,19 +5632,19 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 0589fb23c36cfbb4aaac712b8ff6df10, type: 3}
     - target: {fileID: 4938689618282082378, guid: 0936b32362a985347954ffd9c72b4fd5, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.92286
+      value: 0.939494
       objectReference: {fileID: 0}
     - target: {fileID: 4938689618282082378, guid: 0936b32362a985347954ffd9c72b4fd5, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.03536213
+      value: 0.07283366
       objectReference: {fileID: 0}
     - target: {fileID: 4938689618282082378, guid: 0936b32362a985347954ffd9c72b4fd5, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.3832274
+      value: 0.3337319
       objectReference: {fileID: 0}
     - target: {fileID: 4938689618282082378, guid: 0936b32362a985347954ffd9c72b4fd5, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.014684496
+      value: -0.025872344
       objectReference: {fileID: 0}
     - target: {fileID: 8830349002926275231, guid: 0936b32362a985347954ffd9c72b4fd5, type: 3}
       propertyPath: <Owner>k__BackingField
@@ -8460,7 +8460,7 @@ MonoBehaviour:
     AngularDampingMode: 0
     RotationDamping: {x: 0, y: 0, z: 0}
     QuaternionDamping: 1
-  FollowOffset: {x: 0, y: 45, z: -45}
+  FollowOffset: {x: 0, y: 100, z: -100}
 --- !u!114 &184842335
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8512,8 +8512,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 184842332}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.38268343, y: 0.00000029718393, z: -0.0000001230976, w: 0.92387956}
-  m_LocalPosition: {x: -161, y: 46, z: -200}
+  m_LocalRotation: {x: 0.38268343, y: 0.000000031226126, z: -0.000000012934285, w: 0.92387956}
+  m_LocalPosition: {x: -181.2, y: 101, z: -308.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -15905,8 +15905,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.38268346, y: 0.00000029718393, z: -0.00000012309762, w: 0.92387956}
-  m_LocalPosition: {x: -161, y: 46, z: -200}
+  m_LocalRotation: {x: 0.38268346, y: 0.000000031226126, z: -0.0000000129342865, w: 0.92387956}
+  m_LocalPosition: {x: -181.2, y: 101, z: -308.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -21245,19 +21245,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4148682348628663783, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.4454311
+      value: 0.9367662
       objectReference: {fileID: 0}
     - target: {fileID: 4148682348628663783, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.22599337
+      value: 0.34990215
       objectReference: {fileID: 0}
     - target: {fileID: 4148682348628663783, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.7725768
+      value: 0.005740932
       objectReference: {fileID: 0}
     - target: {fileID: 4148682348628663783, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.39197358
+      value: -0.0021443607
       objectReference: {fileID: 0}
     - target: {fileID: 4774175999237473787, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
       propertyPath: m_LocalPosition.x
@@ -21928,19 +21928,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2944421706488561004, guid: a4619e2f6c84b7542a0ee8ee2f7cf491, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9267927
+      value: 0.9423238
       objectReference: {fileID: 0}
     - target: {fileID: 2944421706488561004, guid: a4619e2f6c84b7542a0ee8ee2f7cf491, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.036358282
+      value: 0.07358397
       objectReference: {fileID: 0}
     - target: {fileID: 2944421706488561004, guid: a4619e2f6c84b7542a0ee8ee2f7cf491, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.37352204
+      value: 0.32552284
       objectReference: {fileID: 0}
     - target: {fileID: 2944421706488561004, guid: a4619e2f6c84b7542a0ee8ee2f7cf491, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.014653349
+      value: -0.025419353
       objectReference: {fileID: 0}
     - target: {fileID: 3567533239586714384, guid: a4619e2f6c84b7542a0ee8ee2f7cf491, type: 3}
       propertyPath: <Owner>k__BackingField
@@ -25541,19 +25541,19 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7355343
+      value: 0.9422373
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.3402627
+      value: 0.3303844
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.5317043
+      value: -0.05198712
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.24596971
+      value: 0.018228669
       objectReference: {fileID: 0}
     - target: {fileID: 4078631732461238711, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalPosition.x
@@ -28705,6 +28705,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.UI.GameEventLog.PlayerGameEventLogListener
   listenOwner: 1
   logSupplyChanges: 1
+  logSupplyGains: 0
   logCombatLosses: 1
   logBuildings: 1
   logUpgrades: 1
@@ -39150,19 +39151,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2944421706488561004, guid: a4619e2f6c84b7542a0ee8ee2f7cf491, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.83462834
+      value: 0.94406146
       objectReference: {fileID: 0}
     - target: {fileID: 2944421706488561004, guid: a4619e2f6c84b7542a0ee8ee2f7cf491, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.4244402
+      value: 0.295892
       objectReference: {fileID: 0}
     - target: {fileID: 2944421706488561004, guid: a4619e2f6c84b7542a0ee8ee2f7cf491, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.3129254
+      value: 0.13892457
       objectReference: {fileID: 0}
     - target: {fileID: 2944421706488561004, guid: a4619e2f6c84b7542a0ee8ee2f7cf491, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.15913445
+      value: -0.04354237
       objectReference: {fileID: 0}
     - target: {fileID: 3567533239586714384, guid: a4619e2f6c84b7542a0ee8ee2f7cf491, type: 3}
       propertyPath: <Owner>k__BackingField
@@ -40298,19 +40299,19 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.93445754
+      value: 0.94809574
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.03898618
+      value: 0.07648387
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.35362625
+      value: 0.30765042
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.014753522
+      value: -0.024818484
       objectReference: {fileID: 0}
     - target: {fileID: 3843308947485064242, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: <Owner>k__BackingField
@@ -40364,6 +40365,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: -137.75
       objectReference: {fileID: 0}
+    - target: {fileID: 6454970245577939181, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: dbe8a222fa3b2304e863730884ca0bc3, type: 3}
     - target: {fileID: 6510919576379171628, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_Name
       value: Worker 1 (2)
@@ -41075,19 +41080,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1164060030727717072, guid: abb7dca6f342d6541b157aac3aab8db5, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9265239
+      value: 0.94236535
       objectReference: {fileID: 0}
     - target: {fileID: 1164060030727717072, guid: abb7dca6f342d6541b157aac3aab8db5, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.03615462
+      value: 0.074042805
       objectReference: {fileID: 0}
     - target: {fileID: 1164060030727717072, guid: abb7dca6f342d6541b157aac3aab8db5, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.3742099
+      value: 0.32528767
       objectReference: {fileID: 0}
     - target: {fileID: 1164060030727717072, guid: abb7dca6f342d6541b157aac3aab8db5, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.01460234
+      value: -0.02555825
       objectReference: {fileID: 0}
     - target: {fileID: 5145964858117390661, guid: abb7dca6f342d6541b157aac3aab8db5, type: 3}
       propertyPath: m_Type
@@ -49687,13 +49692,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.AI.AIController
   aiOwner: 2
+  difficultyProfile: {fileID: 0}
   tickInterval: 1.5
   logTickSummary: 0
+  postAiStatusToGameEvent: 1
+  postAiStatusOnlyOnChange: 1
   economySettings:
     stoneSupply: {fileID: 11400000, guid: 7d796433841096a47826454e08f211d8, type: 2}
     woodSupply: {fileID: 11400000, guid: 1095511bff25e6c4ba9f593164fb4f32, type: 2}
     foodSupply: {fileID: 11400000, guid: 73650d5f9b2a2fd498fffaa64ae2021c, type: 2}
     storeBuildCommand: {fileID: 11400000, guid: 634ac0705574b374daae7bb2d6c490f9, type: 2}
+    gatherBalanceCheckIntervalTicks: 20
+    gatherImbalanceMaxRatio: 3
+    enableWorkerGatherRefresh: 1
+    workerGatherRefreshIntervalTicks: 10
+    enableExtraCorralWhenFoodLow: 1
+    foodLowAmountForExtraCorral: 80
+    maxCorralsForFoodEconomy: 4
+    extraCorralAttemptIntervalTicks: 40
+    enableStoneWoodOnlyWhenNoFoodMines: 1
+    stoneWoodMajorShare: 0.7
+    stoneWoodMinMajorSlots: 7
+    enableWildFoodHunt: 1
+    foodHuntBelowAmount: 80
+    wildFoodHuntMaxDistance: 120
+    maxWildFoodHuntersPerTick: 3
   baseSettings:
     trainWorkerCommand: {fileID: 11400000, guid: 59f03620499325a4788473c1b6eb08aa, type: 2}
     buildCorralCommand: {fileID: 11400000, guid: cd97a927bb22cb24482d50fab99422a6, type: 2}
@@ -49714,13 +49737,15 @@ MonoBehaviour:
       serializedVersion: 2
       m_Bits: 4294967295
     requireBackboneBeforeBarrackAndTower: 0
+    minWorkersDuringMilitaryExpansion: 5
   militarySettings:
     enemyOwner: 1
     workerArmyRatio: 0.3
     minArmyBeforeAttack: 6
     minArmyOnHostileContact: 1
     rallyFractionWhileExploring: 0.8
-    rallyRegroupRetreatDistance: 100
+    rallyRegroupStagingRadiusFromCc: 48
+    rallyRegroupMaxThreatDistanceFraction: 0.28
     rallyRegroupGatherRadius: 18
     rallyRegroupRequiredFraction: 0.7
     attackPowerThreshold: 1.2
@@ -49747,6 +49772,35 @@ MonoBehaviour:
     squadMergeRadius: 14
     squadMergeHoldSeconds: 2.5
     minSquadMembers: 2
+    minStoneBeforeMilitaryExpansion: 120
+    minWoodBeforeMilitaryExpansion: 120
+    earlyGameTargetBarrackCount: 2
+    earlyGameTargetDefenseTowerCount: 3
+    militaryExpansionArmyThreshold: 10
+    expansionAttackSquadSize: 10
+    unifiedArmySquadSize: 0
+    requireArmyAssemblyBeforePatrol: 1
+    minUnitsToBeginStagingAssembly: 1
+    armyAssemblyStagingRadiusFromCc: 22
+    armyAssemblyGatherRadius: 20
+    armyAssemblyRequiredFraction: 0.55
+    useFullArmyUnifiedAttack: 1
+    disableSoloPatrolWhenUnifiedArmy: 1
+    enablePostContactBufferedOffense: 1
+    postContactExploreBuildSeconds: 120
+    enableDefenseRingExpansion: 1
+    defenseRingInnerRadius: 100
+    defenseRingSpacing: 100
+    operationalLeashBeyondOuterRing: 100
+    defenseRingMaxRings: 5
+    towersPerRing: 8
+    towerExpansionIntervalSeconds: 300
+    maxTowersPerExpansionPulse: 1
+    militarySpawnedPerTowerTier: 5
+    ringPlacementRadiusExpansionStep: 20
+    resourceShortageThresholdForEconomyBoost: 3
+    economyBoostExtraWorkerCap: 4
+    requireEnemyCcInLeashForUnifiedAttack: 1
   dispatchEconomyIntents: 1
   dispatchBaseIntents: 1
   dispatchMilitaryIntents: 1
@@ -49784,19 +49838,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4148682348628663783, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.35109314
+      value: 0.30833155
       objectReference: {fileID: 0}
     - target: {fileID: 4148682348628663783, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.009860459
+      value: 0.02065718
       objectReference: {fileID: 0}
     - target: {fileID: 4148682348628663783, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.9359196
+      value: -0.9489274
       objectReference: {fileID: 0}
     - target: {fileID: 4148682348628663783, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.026285324
+      value: 0.06357496
       objectReference: {fileID: 0}
     - target: {fileID: 4774175999237473787, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
       propertyPath: m_LocalPosition.x
@@ -52106,7 +52160,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Game.GameSpeedController
   normalSpeed: 1
-  fastSpeed: 2
+  fastSpeed: 4
   maxSpeed: 4
   enableKeyboardToggle: 1
   toggleFastSpeedKey: 95
@@ -61703,13 +61757,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.AI.AIController
   aiOwner: 1
+  difficultyProfile: {fileID: 11400000, guid: a8cd3f1e6debdc7498897e64f43f1416, type: 2}
   tickInterval: 1.5
   logTickSummary: 0
+  postAiStatusToGameEvent: 0
+  postAiStatusOnlyOnChange: 1
   economySettings:
     stoneSupply: {fileID: 11400000, guid: 7d796433841096a47826454e08f211d8, type: 2}
     woodSupply: {fileID: 11400000, guid: 1095511bff25e6c4ba9f593164fb4f32, type: 2}
     foodSupply: {fileID: 11400000, guid: 73650d5f9b2a2fd498fffaa64ae2021c, type: 2}
     storeBuildCommand: {fileID: 11400000, guid: 634ac0705574b374daae7bb2d6c490f9, type: 2}
+    gatherBalanceCheckIntervalTicks: 20
+    gatherImbalanceMaxRatio: 3
+    enableWorkerGatherRefresh: 1
+    workerGatherRefreshIntervalTicks: 10
+    enableExtraCorralWhenFoodLow: 1
+    foodLowAmountForExtraCorral: 80
+    maxCorralsForFoodEconomy: 4
+    extraCorralAttemptIntervalTicks: 40
+    enableStoneWoodOnlyWhenNoFoodMines: 1
+    stoneWoodMajorShare: 0.7
+    stoneWoodMinMajorSlots: 7
+    enableWildFoodHunt: 1
+    foodHuntBelowAmount: 80
+    wildFoodHuntMaxDistance: 120
+    maxWildFoodHuntersPerTick: 3
   baseSettings:
     trainWorkerCommand: {fileID: 11400000, guid: 59f03620499325a4788473c1b6eb08aa, type: 2}
     buildCorralCommand: {fileID: 11400000, guid: cd97a927bb22cb24482d50fab99422a6, type: 2}
@@ -61725,19 +61797,21 @@ MonoBehaviour:
     reserveStoneBeforeTrain: 0
     reserveWoodBeforeTrain: 0
     reserveFoodBeforeTrain: 0
-    placementNavMeshObstacleProbeRadius: 0
+    placementNavMeshObstacleProbeRadius: 50
     placementNavMeshObstacleProbeLayers:
       serializedVersion: 2
       m_Bits: 4294967295
-    requireBackboneBeforeBarrackAndTower: 0
+    requireBackboneBeforeBarrackAndTower: 1
+    minWorkersDuringMilitaryExpansion: 5
   militarySettings:
     enemyOwner: 2
-    workerArmyRatio: 0.3
+    workerArmyRatio: 0.15
     minArmyBeforeAttack: 6
-    minArmyOnHostileContact: 1
+    minArmyOnHostileContact: 25
     rallyFractionWhileExploring: 0.8
-    rallyRegroupRetreatDistance: 100
-    rallyRegroupGatherRadius: 18
+    rallyRegroupStagingRadiusFromCc: 100
+    rallyRegroupMaxThreatDistanceFraction: 0.28
+    rallyRegroupGatherRadius: 80
     rallyRegroupRequiredFraction: 0.7
     attackPowerThreshold: 1.2
     defenseRadius: 100
@@ -61756,13 +61830,42 @@ MonoBehaviour:
       spawnWeight: 30
     enableIdlePatrol: 1
     patrolMinRadius: 50
-    patrolMaxRadius: 0
+    patrolMaxRadius: 80
     patrolRingStep: 30
     maxPatrolAssignmentsPerTick: 16
     mapExplorationCompleteCoverage: 0.92
     squadMergeRadius: 14
     squadMergeHoldSeconds: 2.5
     minSquadMembers: 2
+    minStoneBeforeMilitaryExpansion: 120
+    minWoodBeforeMilitaryExpansion: 120
+    earlyGameTargetBarrackCount: 2
+    earlyGameTargetDefenseTowerCount: 3
+    militaryExpansionArmyThreshold: 10
+    expansionAttackSquadSize: 10
+    unifiedArmySquadSize: 0
+    requireArmyAssemblyBeforePatrol: 1
+    minUnitsToBeginStagingAssembly: 1
+    armyAssemblyStagingRadiusFromCc: 22
+    armyAssemblyGatherRadius: 20
+    armyAssemblyRequiredFraction: 0.55
+    useFullArmyUnifiedAttack: 1
+    disableSoloPatrolWhenUnifiedArmy: 1
+    enablePostContactBufferedOffense: 1
+    postContactExploreBuildSeconds: 120
+    enableDefenseRingExpansion: 1
+    defenseRingInnerRadius: 100
+    defenseRingSpacing: 100
+    operationalLeashBeyondOuterRing: 100
+    defenseRingMaxRings: 5
+    towersPerRing: 8
+    towerExpansionIntervalSeconds: 300
+    maxTowersPerExpansionPulse: 1
+    militarySpawnedPerTowerTier: 5
+    ringPlacementRadiusExpansionStep: 20
+    resourceShortageThresholdForEconomyBoost: 3
+    economyBoostExtraWorkerCap: 4
+    requireEnemyCcInLeashForUnifiedAttack: 1
   dispatchEconomyIntents: 1
   dispatchBaseIntents: 1
   dispatchMilitaryIntents: 1
@@ -69799,7 +69902,7 @@ Transform:
   m_GameObject: {fileID: 1546859729}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -161, y: 1, z: -155}
+  m_LocalPosition: {x: -181.2, y: 1, z: -208.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -75268,19 +75371,19 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7674832
+      value: 0.945295
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.37459648
+      value: 0.3243776
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.46752155
+      value: -0.03271919
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.22818993
+      value: 0.011227579
       objectReference: {fileID: 0}
     - target: {fileID: 4078631732461238711, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalPosition.x
@@ -84547,19 +84650,19 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9341219
+      value: 0.94775015
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.038511436
+      value: 0.075721666
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.3545695
+      value: 0.3089122
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.014617984
+      value: -0.02468092
       objectReference: {fileID: 0}
     - target: {fileID: 3843308947485064242, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: <Owner>k__BackingField
@@ -84613,6 +84716,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: -137.75
       objectReference: {fileID: 0}
+    - target: {fileID: 6454970245577939181, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: dbe8a222fa3b2304e863730884ca0bc3, type: 3}
     - target: {fileID: 6510919576379171628, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_Name
       value: Worker 1 (3)
@@ -85594,19 +85701,19 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.77235323
+      value: 0.9454706
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.34122244
+      value: 0.3209029
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.4900633
+      value: -0.052781347
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.21650793
+      value: 0.01791456
       objectReference: {fileID: 0}
     - target: {fileID: 4078631732461238711, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalPosition.x
@@ -93353,19 +93460,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1164060030727717072, guid: abb7dca6f342d6541b157aac3aab8db5, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7923763
+      value: 0.9418367
       objectReference: {fileID: 0}
     - target: {fileID: 1164060030727717072, guid: abb7dca6f342d6541b157aac3aab8db5, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.4946017
+      value: 0.30979222
       objectReference: {fileID: 0}
     - target: {fileID: 1164060030727717072, guid: abb7dca6f342d6541b157aac3aab8db5, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.30291542
+      value: 0.12375557
       objectReference: {fileID: 0}
     - target: {fileID: 1164060030727717072, guid: abb7dca6f342d6541b157aac3aab8db5, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.18907997
+      value: -0.040706113
       objectReference: {fileID: 0}
     - target: {fileID: 5145964858117390661, guid: abb7dca6f342d6541b157aac3aab8db5, type: 3}
       propertyPath: m_Type
@@ -94749,19 +94856,19 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9358343
+      value: 0.9490412
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.038785376
+      value: 0.07609628
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.3499992
+      value: 0.30484867
       objectReference: {fileID: 0}
     - target: {fileID: 1069913415194581368, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.014505612
+      value: -0.024443455
       objectReference: {fileID: 0}
     - target: {fileID: 3843308947485064242, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: <Owner>k__BackingField
@@ -94815,6 +94922,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: -137.75
       objectReference: {fileID: 0}
+    - target: {fileID: 6454970245577939181, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: dbe8a222fa3b2304e863730884ca0bc3, type: 3}
     - target: {fileID: 6510919576379171628, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
       propertyPath: m_Name
       value: Worker 1 (1)
@@ -98877,19 +98988,19 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 0589fb23c36cfbb4aaac712b8ff6df10, type: 3}
     - target: {fileID: 4938689618282082378, guid: 0936b32362a985347954ffd9c72b4fd5, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7675701
+      value: 0.9366241
       objectReference: {fileID: 0}
     - target: {fileID: 4938689618282082378, guid: 0936b32362a985347954ffd9c72b4fd5, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.380956
+      value: 0.3008315
       objectReference: {fileID: 0}
     - target: {fileID: 4938689618282082378, guid: 0936b32362a985347954ffd9c72b4fd5, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.4617286
+      value: 0.17094205
       objectReference: {fileID: 0}
     - target: {fileID: 4938689618282082378, guid: 0936b32362a985347954ffd9c72b4fd5, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.2291625
+      value: -0.054904364
       objectReference: {fileID: 0}
     - target: {fileID: 8830349002926275231, guid: 0936b32362a985347954ffd9c72b4fd5, type: 3}
       propertyPath: <Owner>k__BackingField
@@ -100261,8 +100372,24 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5857415663090868739, guid: 390ec8cc14f9504488d7163e8ef121da, type: 3}
+      propertyPath: m_ClearFlags
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5857415663090868739, guid: 390ec8cc14f9504488d7163e8ef121da, type: 3}
       propertyPath: orthographic size
       value: 500
+      objectReference: {fileID: 0}
+    - target: {fileID: 5857415663090868739, guid: 390ec8cc14f9504488d7163e8ef121da, type: 3}
+      propertyPath: m_BackGroundColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5857415663090868739, guid: 390ec8cc14f9504488d7163e8ef121da, type: 3}
+      propertyPath: m_BackGroundColor.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5857415663090868739, guid: 390ec8cc14f9504488d7163e8ef121da, type: 3}
+      propertyPath: m_BackGroundColor.r
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7101987398331931205, guid: 390ec8cc14f9504488d7163e8ef121da, type: 3}
       propertyPath: orthographic size

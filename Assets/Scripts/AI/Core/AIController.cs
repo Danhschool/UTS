@@ -63,7 +63,7 @@ namespace GameDevTV.RTS.AI
             priorityQueue = new AIPriorityQueue();
             influenceMap = new AIInfluenceMap();
             economyManager = new AIEconomyManager(economySettings);
-            baseManager = new AIBaseManager(baseSettings);
+            baseManager = new AIBaseManager(baseSettings, militarySettings);
             militaryManager = new AIMilitaryManager(militarySettings, baseSettings, fogSystemReference);
         }
 
@@ -136,6 +136,22 @@ namespace GameDevTV.RTS.AI
         }
 
         /// <summary>
+        /// Mục tiêu: Mỏ hết nhưng Command vẫn Gather — reset trước khi planner gán lệnh mới.
+        /// </summary>
+        private static void RecoverWorkersFromStaleGather(AIWorldStateSnapshot snapshot)
+        {
+            if (snapshot?.Workers == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < snapshot.Workers.Count; i++)
+            {
+                snapshot.Workers[i]?.RecoverFromStaleGatherStateIfNeeded();
+            }
+        }
+
+        /// <summary>
         /// Mục tiêu: Enqueue economy + base intents rồi dispatch theo priority chung.
         /// Cách hoạt động: Clear queue → managers enqueue → pop đến hết; unit/building qua dispatcher.
         /// </summary>
@@ -144,6 +160,7 @@ namespace GameDevTV.RTS.AI
             priorityQueue.Clear();
             plannerTickIndex++;
             AIInfraBuildOrderTracker.SyncWithWorld(snapshot);
+            RecoverWorkersFromStaleGather(snapshot);
 
             AIDifficultyRuntimeOverlay difficulty = new(difficultyProfile);
             AIBaseRuntimeConfig baseConfig = AIBaseConfigResolver.Resolve(snapshot, baseSettings, difficulty);
@@ -354,7 +371,7 @@ namespace GameDevTV.RTS.AI
             aiOwner = owner;
             commandDispatcher = new AICommandDispatcher(aiOwner);
             economyManager = new AIEconomyManager(economySettings);
-            baseManager = new AIBaseManager(baseSettings);
+            baseManager = new AIBaseManager(baseSettings, militarySettings);
             militaryManager = new AIMilitaryManager(militarySettings, baseSettings, fogSystemReference);
 
             if (isActiveAndEnabled)

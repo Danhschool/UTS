@@ -3,7 +3,6 @@ using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Minimap;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
-using GameDevTV.RTS.Units.Formation;
 using GameDevTV.RTS.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
@@ -16,7 +15,6 @@ namespace GameDevTV.RTS.AI
     public sealed class AIMilitaryManager
     {
         private const int MaxDefenseAssignmentsPerTick = 16;
-        private const int MaxAttackWaveAssignmentsPerTick = 24;
         private const int TowerLineSlotCount = 8;
 
         private readonly AIMilitarySettings manualOverrides;
@@ -28,13 +26,9 @@ namespace GameDevTV.RTS.AI
         private readonly List<AbstractUnit> militaryScratch = new(48);
         private readonly List<Vector3> threatPositionScratch = new(32);
         private readonly HashSet<int> assignedMilitaryThisTick = new(64);
-        private readonly AIMilitarySquadTracker squadTracker = new();
-        private readonly List<AbstractUnit> patrolCandidatesScratch = new(32);
-        private readonly List<List<AbstractUnit>> patrolSquadsScratch = new(8);
-        private readonly List<AbstractUnit> patrolSolosScratch = new(32);
         private readonly List<AbstractUnit> rallyArmyScratch = new(48);
-        private readonly List<AbstractUnit> attackWaveMoveScratch = new(48);
         private readonly List<AbstractUnit> rallyMoveFallbackScratch = new(48);
+        private readonly List<AbstractUnit> unifiedArmyScratch = new(48);
         private int patrolPhase;
 
         public AIMilitaryManager(
@@ -96,30 +90,218 @@ namespace GameDevTV.RTS.AI
                     threatPositionScratch);
             }
 
+            bool hasRallyTarget = AIMilitaryRallyPlanner.TryResolveRallyAttackTarget(
+                snapshot.Owner,
+                config.EnemyOwner,
+                config.RequireVisibleTargets,
+                ccPosition,
+                out _,
+                out _);
+            bool rallySessionActive = AIMilitaryRallySessionTracker.GetPhase(snapshot.Owner)
+                != AIMilitaryRallySessionTracker.RallyPhase.Idle;
+
+            if (manualOverrides.EnablePostContactBufferedOffense)
+            {
+                AIMilitaryPostContactOffensePlanner.SyncPostContactState(
+                    snapshot.Owner,
+                    manualOverrides.PostContactExploreBuildSeconds,
+                    hasRallyTarget,
+                    rallySessionActive,
+                    threatCount > 0);
+            }
+
+            bool inExploreBuildBuffer = manualOverrides.EnablePostContactBufferedOffense
+                && AIMilitaryPostContactOffensePlanner.IsInExploreBuildBuffer(snapshot.Owner);
+            bool postBufferOffenseReady = manualOverrides.EnablePostContactBufferedOffense
+                && AIMilitaryPostContactOffensePlanner.ShouldExecutePostBufferOffensive(snapshot.Owner);
+
+            bool defenseRingMode = manualOverrides.EnableDefenseRingExpansion;
+            float operationalRadius = AIMilitaryOperationalLeash.GetOperationalRadius(
+                manualOverrides,
+                snapshot.Owner);
+            AIBaseRuntimeConfig baseRuntimeConfig = AIBaseConfigResolver.Resolve(
+                snapshot,
+                baseSettings,
+                difficulty);
+
+            if (defenseRingMode)
+            {
+                AIMilitaryDefenseRingBuildCoordinator.EnqueueEconomyRecoveryIfNeeded(
+                    snapshot,
+                    queue,
+                    baseRuntimeConfig,
+                    baseSettings,
+                    manualOverrides,
+                    ccPosition);
+            }
+
             bool armyRalliedOnContact = false;
             bool ralliedFullArmy = true;
-            if (threatCount > 0)
+            int defenseRingThreatsInLeash = 0;
+            if (defenseRingMode)
+            {
+                defenseRingThreatsInLeash = AIMilitaryHostileScanner.CollectThreatsNearCivilCentral(
+                    snapshot.Owner,
+                    ccPosition,
+                    operationalRadius,
+                    config.RequireVisibleTargets,
+                    threatScratch);
+                if (defenseRingThreatsInLeash > 0)
+                {
+                    AIMilitaryDefenseRingCombatUtility.EnqueueAttacksWithinOperationalZone(
+                        snapshot,
+                        queue,
+                        snapshot.Owner,
+                        ccPosition,
+                        operationalRadius,
+                        config.RequireVisibleTargets,
+                        militaryScratch,
+                        assignedMilitaryThisTick,
+                        MaxDefenseAssignmentsPerTick);
+                }
+            }
+            else if (threatCount > 0)
             {
                 EnqueueDefenseIntents(snapshot, queue, config, ccPosition);
             }
-            else if (TryEnqueueArmyRallyOnHostileContact(snapshot, config, ccPosition, out ralliedFullArmy))
+
+            if (!armyRalliedOnContact
+                && !inExploreBuildBuffer
+                && TryEnqueueArmyRallyOnHostileContact(
+                    snapshot,
+                    config,
+                    ccPosition,
+                    defenseRingMode,
+                    operationalRadius,
+                    out ralliedFullArmy))
             {
                 armyRalliedOnContact = true;
             }
+            else if (postBufferOffenseReady
+                     && (!defenseRingMode
+                         || !manualOverrides.RequireEnemyCcInLeashForUnifiedAttack
+                         || AIMilitaryOperationalLeash.IsEnemyCivilCentralInOperationalZone(
+                             config.EnemyOwner,
+                             ccPosition,
+                             operationalRadius,
+                             config.RequireVisibleTargets))
+                     && TryEnqueuePostContactFullOffensive(snapshot, config, ccPosition))
+            {
+                ralliedFullArmy = true;
+            }
+            else if (!inExploreBuildBuffer)
+            {
+                EnqueueTowerBuildBeforeBarrackTraining(
+                    snapshot,
+                    queue,
+                    config,
+                    ccPosition,
+                    influence,
+                    defenseRingMode);
+
+                if (!ShouldDeferBarrackTrainingForTower(snapshot, defenseRingMode))
+                {
+                    EnqueueBarrackTrainIfNeeded(snapshot, queue, config);
+                }
+
+                if (ShouldEnqueueUnifiedArmyOffense(
+                        snapshot,
+                        config,
+                        ccPosition,
+                        operationalRadius,
+                        defenseRingMode))
+                {
+                    EnqueueUnifiedArmyOffense(snapshot, config, ccPosition);
+                }
+            }
             else
             {
-                EnqueueBarrackTrainIfNeeded(snapshot, queue, config);
-                EnqueueTowerLineIfNeeded(snapshot, queue, config, ccPosition, influence);
-                if (config.EnableAttack)
+                EnqueueTowerBuildBeforeBarrackTraining(
+                    snapshot,
+                    queue,
+                    config,
+                    ccPosition,
+                    influence,
+                    defenseRingMode);
+
+                if (!ShouldDeferBarrackTrainingForTower(snapshot, defenseRingMode))
                 {
-                    EnqueueAttackWaveIfReady(snapshot, queue, config);
+                    EnqueueBarrackTrainIfNeeded(snapshot, queue, config);
                 }
             }
 
-            if (!armyRalliedOnContact || !ralliedFullArmy)
+            if (defenseRingMode)
             {
-                EnqueueIdlePatrolIntents(snapshot, queue, ccPosition);
+                AIMilitaryDefenseRingCombatUtility.EnqueueStopForUnitsOutsideOperationalZone(
+                    snapshot,
+                    queue,
+                    ccPosition,
+                    operationalRadius,
+                    militaryScratch,
+                    assignedMilitaryThisTick);
             }
+
+            if (ShouldEnqueueLoosePatrol(
+                    defenseRingMode,
+                    defenseRingThreatsInLeash,
+                    armyRalliedOnContact,
+                    ralliedFullArmy,
+                    inExploreBuildBuffer))
+            {
+                EnqueueLoosePatrol(snapshot, queue, ccPosition, operationalRadius, defenseRingMode);
+            }
+        }
+
+        private static bool ShouldEnqueueLoosePatrol(
+            bool defenseRingMode,
+            int defenseRingThreatsInLeash,
+            bool armyRalliedOnContact,
+            bool ralliedFullArmy,
+            bool inExploreBuildBuffer)
+        {
+            if (inExploreBuildBuffer)
+            {
+                return false;
+            }
+
+            if (defenseRingMode)
+            {
+                return defenseRingThreatsInLeash <= 0;
+            }
+
+            return !armyRalliedOnContact || !ralliedFullArmy;
+        }
+
+        private bool ShouldEnqueueUnifiedArmyOffense(
+            AIWorldStateSnapshot snapshot,
+            AIMilitaryRuntimeConfig config,
+            Vector3 ccPosition,
+            float operationalRadius,
+            bool defenseRingMode)
+        {
+            if (!config.EnableAttack)
+            {
+                return false;
+            }
+
+            bool hasArmy = AIMilitaryOperationalLeash.CountAliveMilitary(snapshot) >= config.MinArmyBeforeAttack
+                || AIMilitaryExpansionPlanner.IsExpansionPhase(snapshot, manualOverrides);
+            if (!hasArmy)
+            {
+                return false;
+            }
+
+            if (defenseRingMode && manualOverrides.RequireEnemyCcInLeashForUnifiedAttack)
+            {
+                return AIMilitaryOperationalLeash.IsEnemyCivilCentralInOperationalZone(
+                    config.EnemyOwner,
+                    ccPosition,
+                    operationalRadius,
+                    config.RequireVisibleTargets);
+            }
+
+            return AIMilitaryExpansionPlanner.IsExpansionPhase(snapshot, manualOverrides)
+                || snapshot.MilitaryUnits.Count >= config.MinArmyBeforeAttack;
         }
 
         /// <summary>
@@ -130,9 +312,17 @@ namespace GameDevTV.RTS.AI
             AIWorldStateSnapshot snapshot,
             AIMilitaryRuntimeConfig config,
             Vector3 ccPosition,
+            bool defenseRingMode,
+            float operationalRadius,
             out bool ralliedFullArmy)
         {
             ralliedFullArmy = true;
+            if (manualOverrides.EnablePostContactBufferedOffense
+                && AIMilitaryPostContactOffensePlanner.IsInExploreBuildBuffer(snapshot.Owner))
+            {
+                return false;
+            }
+
             if (!AIMilitaryRallyPlanner.TryResolveRallyAttackTarget(
                     snapshot.Owner,
                     config.EnemyOwner,
@@ -146,6 +336,15 @@ namespace GameDevTV.RTS.AI
                     AIMilitaryRallySessionTracker.Clear(snapshot.Owner);
                 }
 
+                return false;
+            }
+
+            if (defenseRingMode
+                && !AIMilitaryOperationalLeash.IsWithinOperationalZone(
+                    attackPoint,
+                    ccPosition,
+                    operationalRadius))
+            {
                 return false;
             }
 
@@ -169,14 +368,23 @@ namespace GameDevTV.RTS.AI
                 patrolPhase,
                 manualOverrides.PatrolMinRadius,
                 manualOverrides.PatrolMaxRadius,
+                manualOverrides.PatrolRingStep,
                 manualOverrides.MapExplorationCompleteCoverage,
                 ccPosition,
                 fogSystemReference);
 
-            CollectRallyArmy(rallyArmyScratch, mapExplorationComplete, minArmy);
+            CollectUnifiedRallyArmy(rallyArmyScratch, mapExplorationComplete, minArmy);
             ralliedFullArmy = mapExplorationComplete
                 || rallyArmyScratch.Count >= militaryScratch.Count;
             if (rallyArmyScratch.Count < minArmy)
+            {
+                return false;
+            }
+
+            int squadSize = manualOverrides.UnifiedArmySquadSize;
+            if (!mapExplorationComplete
+                && rallyArmyScratch.Count < squadSize
+                && militaryScratch.Count >= squadSize)
             {
                 return false;
             }
@@ -199,7 +407,8 @@ namespace GameDevTV.RTS.AI
                         rallyArmyScratch,
                         regroupDestination,
                         manualOverrides.RallyRegroupGatherRadius,
-                        manualOverrides.RallyRegroupRequiredFraction))
+                        manualOverrides.RallyRegroupRequiredFraction,
+                        move))
                 {
                     AIMilitaryRallySessionTracker.AdvanceToAttackPhase(snapshot.Owner);
                     rallyPhase = AIMilitaryRallySessionTracker.RallyPhase.Attacking;
@@ -207,7 +416,11 @@ namespace GameDevTV.RTS.AI
                 else
                 {
                     RaycastHit regroupHit = AIHitUtility.AtPoint(regroupDestination);
-                    if (!GroupFormationMoveUtility.TryApplyMoveIfNeeded(rallyArmyScratch, regroupHit, move, 24f))
+                    if (!AIMilitaryArmySquadExecutor.TryFormationAssemble(
+                            rallyArmyScratch,
+                            regroupDestination,
+                            move,
+                            24f))
                     {
                         return false;
                     }
@@ -223,15 +436,16 @@ namespace GameDevTV.RTS.AI
                 return false;
             }
 
-            if (!AIMilitaryRallyCombatPlanner.TryExecuteAttackPhase(
-                    rallyArmyScratch,
-                    snapshot.Owner,
+            if (!AIMilitaryArmySquadExecutor.TryExecuteSquadAttackAndAdvance(
+                    snapshot,
                     config.EnemyOwner,
                     config.RequireVisibleTargets,
+                    rallyArmyScratch,
                     attackPoint,
                     trigger,
                     move,
-                    rallyMoveFallbackScratch))
+                    rallyMoveFallbackScratch,
+                    32f))
             {
                 return false;
             }
@@ -253,30 +467,36 @@ namespace GameDevTV.RTS.AI
         }
 
         /// <summary>
-        /// Mục tiêu: Chọn lính đi rally — 100% nếu map đã explore hết, không thì ~80% (phần sau list giữ scout).
-        /// Cách hoạt động: Giữ floor(N × (1 − fraction)) lính cuối danh sách không rally.
+        /// Mục tiêu: Rally = một đội thống nhất (10 lính hoặc toàn bộ quân khi map đã mở hết).
+        /// Cách hoạt động: CollectArmy — patrol lẻ tách riêng qua <see cref="AIMilitaryLoosePatrolPlanner"/>.
         /// </summary>
-        private void CollectRallyArmy(List<AbstractUnit> output, bool mapExplorationComplete, int minRequired)
+        private void CollectUnifiedRallyArmy(
+            List<AbstractUnit> output,
+            bool mapExplorationComplete,
+            int minRequired)
         {
-            output.Clear();
-            int total = militaryScratch.Count;
-            int rallyCount = total;
+            bool useEntireArmy = mapExplorationComplete
+                || militaryScratch.Count <= manualOverrides.UnifiedArmySquadSize;
+            int cap = useEntireArmy
+                ? militaryScratch.Count
+                : manualOverrides.UnifiedArmySquadSize;
 
-            if (!mapExplorationComplete && total > 0)
-            {
-                float fraction = Mathf.Clamp01(manualOverrides.RallyFractionWhileExploring);
-                int keepExploring = Mathf.FloorToInt(total * (1f - fraction));
-                rallyCount = total - keepExploring;
-                rallyCount = Mathf.Clamp(rallyCount, minRequired, total);
-            }
+            AIMilitaryArmySquadExecutor.CollectArmy(
+                militaryScratch,
+                assignedMilitaryThisTick,
+                cap,
+                useEntireArmy,
+                output);
 
-            for (int i = 0; i < rallyCount; i++)
+            if (output.Count < minRequired && militaryScratch.Count >= minRequired)
             {
-                AbstractUnit unit = militaryScratch[i];
-                if (unit != null && unit.CurrentHealth > 0)
-                {
-                    output.Add(unit);
-                }
+                output.Clear();
+                AIMilitaryArmySquadExecutor.CollectArmy(
+                    militaryScratch,
+                    assignedMilitaryThisTick,
+                    militaryScratch.Count,
+                    useEntireArmy: true,
+                    output);
             }
         }
 
@@ -308,6 +528,8 @@ namespace GameDevTV.RTS.AI
 
                 if (!AIMilitaryHostileScanner.TryPickClosestThreat(
                         unit.transform.position,
+                        snapshot.Owner,
+                        requireVisible: true,
                         threatScratch,
                         out IDamageable unitThreat)
                     || !TryCreateHostileHit(unitThreat, out RaycastHit hit))
@@ -329,13 +551,14 @@ namespace GameDevTV.RTS.AI
         }
 
         /// <summary>
-        /// Mục tiêu: Quân rảnh patrol ngẫu nhiên; nhóm gần đủ lâu → formation move như multi-select.
-        /// Cách hoạt động: Gom squad → GroupFormationMoveUtility; lẻ → enqueue Move (giới hạn/tick).
+        /// Mục tiêu: Tuần tra lẻ trong vòng bán kính hiện tại +100m (operational leash), không formation.
         /// </summary>
-        private void EnqueueIdlePatrolIntents(
+        private void EnqueueLoosePatrol(
             AIWorldStateSnapshot snapshot,
             AIPriorityQueue queue,
-            Vector3 ccPosition)
+            Vector3 ccPosition,
+            float operationalRadius,
+            bool defenseRingMode)
         {
             if (!manualOverrides.EnableIdlePatrol)
             {
@@ -343,155 +566,78 @@ namespace GameDevTV.RTS.AI
             }
 
             patrolPhase++;
-            int cap = Mathf.Max(1, manualOverrides.MaxPatrolAssignmentsPerTick);
-            CollectPatrolCandidates(cap);
+            float patrolMin = manualOverrides.PatrolMinRadius;
+            float patrolMax = manualOverrides.PatrolMaxRadius;
+            if (defenseRingMode && operationalRadius < float.MaxValue * 0.5f)
+            {
+                patrolMin = Mathf.Min(patrolMin, Mathf.Max(8f, operationalRadius * 0.08f));
+                patrolMax = operationalRadius;
+            }
 
-            squadTracker.PartitionIdleUnits(
-                patrolCandidatesScratch,
-                manualOverrides.SquadMergeRadius,
-                manualOverrides.SquadMergeHoldSeconds,
-                manualOverrides.MinSquadMembers,
-                patrolSquadsScratch,
-                patrolSolosScratch);
+            int patrolCap = Mathf.Max(
+                manualOverrides.MaxPatrolAssignmentsPerTick,
+                Mathf.Min(militaryScratch.Count, 48));
 
-            int assigned = 0;
-            assigned += EnqueueSquadPatrolMoves(snapshot, ccPosition);
-            assigned += EnqueueSoloPatrolIntents(snapshot, queue, ccPosition, cap - assigned);
+            AIMilitaryLoosePatrolPlanner.EnqueueLoosePatrolIntents(
+                snapshot,
+                queue,
+                militaryScratch,
+                assignedMilitaryThisTick,
+                patrolPhase,
+                ccPosition,
+                patrolMin,
+                patrolMax,
+                operationalRadius,
+                patrolCap,
+                ResolveMoveCommand);
         }
 
-        private void CollectPatrolCandidates(int cap)
+        private void MarkArmyAssigned(IReadOnlyList<AbstractUnit> army)
         {
-            patrolCandidatesScratch.Clear();
-            for (int i = 0; i < militaryScratch.Count && patrolCandidatesScratch.Count < cap; i++)
+            for (int i = 0; i < army.Count; i++)
             {
-                AbstractUnit unit = militaryScratch[i];
-                if (assignedMilitaryThisTick.Contains(unit.GetInstanceID())
-                    || !AIMilitaryPatrolUtility.IsEligibleForPatrol(unit))
+                AbstractUnit unit = army[i];
+                if (unit != null)
                 {
-                    continue;
+                    assignedMilitaryThisTick.Add(unit.GetInstanceID());
                 }
-
-                patrolCandidatesScratch.Add(unit);
             }
         }
 
-        private int EnqueueSquadPatrolMoves(AIWorldStateSnapshot snapshot, Vector3 ccPosition)
-        {
-            int assigned = 0;
-            for (int s = 0; s < patrolSquadsScratch.Count; s++)
-            {
-                List<AbstractUnit> squad = patrolSquadsScratch[s];
-                if (squad == null || squad.Count < manualOverrides.MinSquadMembers)
-                {
-                    continue;
-                }
+        private bool ShouldDeferBarrackTrainingForTower(
+            AIWorldStateSnapshot snapshot,
+            bool defenseRingMode) =>
+            AIMilitaryDefenseRingTowerArmyGate.ShouldDeferBarrackTrainingForTower(
+                snapshot,
+                manualOverrides,
+                defenseRingMode);
 
-                if (!AIMilitaryPatrolUtility.TryGetRandomPatrolDestination(
-                        ccPosition,
-                        patrolPhase,
-                        manualOverrides.PatrolMinRadius,
-                        manualOverrides.PatrolMaxRadius,
-                        out Vector3 patrolPoint))
-                {
-                    continue;
-                }
-
-                MoveCommand move = ResolveMoveCommand(squad[0]);
-                if (move == null)
-                {
-                    continue;
-                }
-
-                RaycastHit hit = AIHitUtility.AtPoint(patrolPoint);
-                if (!GroupFormationMoveUtility.TryApplyMoveIfNeeded(squad, hit, move, 20f))
-                {
-                    continue;
-                }
-
-                for (int i = 0; i < squad.Count; i++)
-                {
-                    if (squad[i] != null)
-                    {
-                        assignedMilitaryThisTick.Add(squad[i].GetInstanceID());
-                        assigned++;
-                    }
-                }
-            }
-
-            return assigned;
-        }
-
-        private int EnqueueSoloPatrolIntents(
+        /// <summary>
+        /// Mục tiêu: Queue tháp (vòng hoặc tower line) trước train Barrack — priority cao hơn TrainBarrack.
+        /// </summary>
+        private void EnqueueTowerBuildBeforeBarrackTraining(
             AIWorldStateSnapshot snapshot,
             AIPriorityQueue queue,
+            AIMilitaryRuntimeConfig config,
             Vector3 ccPosition,
-            int remainingCap)
+            in AIInfluenceMapTickContext influence,
+            bool defenseRingMode)
         {
-            if (remainingCap <= 0)
+            if (defenseRingMode)
             {
-                return 0;
+                AIMilitaryDefenseRingBuildCoordinator.EnqueueDefenseRingIntents(
+                    snapshot,
+                    queue,
+                    config,
+                    baseSettings,
+                    manualOverrides,
+                    ccPosition,
+                    influence,
+                    maxTowerAttemptsPerTick: manualOverrides.MaxTowersPerExpansionPulse);
+                return;
             }
 
-            int assigned = 0;
-            for (int i = 0; i < patrolSolosScratch.Count && assigned < remainingCap; i++)
-            {
-                AbstractUnit unit = patrolSolosScratch[i];
-                if (unit == null || assignedMilitaryThisTick.Contains(unit.GetInstanceID()))
-                {
-                    continue;
-                }
-
-                if (!AIMilitaryPatrolUtility.TryGetRandomPatrolDestination(
-                        ccPosition,
-                        patrolPhase,
-                        manualOverrides.PatrolMinRadius,
-                        manualOverrides.PatrolMaxRadius,
-                        out Vector3 patrolPoint))
-                {
-                    continue;
-                }
-
-                if (!TryEnqueuePatrolMove(snapshot, queue, unit, patrolPoint, assigned))
-                {
-                    continue;
-                }
-
-                assignedMilitaryThisTick.Add(unit.GetInstanceID());
-                assigned++;
-            }
-
-            return assigned;
-        }
-
-        private bool TryEnqueuePatrolMove(
-            AIWorldStateSnapshot snapshot,
-            AIPriorityQueue queue,
-            AbstractUnit unit,
-            Vector3 patrolPoint,
-            int orderIndex)
-        {
-            MoveCommand move = ResolveMoveCommand(unit);
-            if (move == null)
-            {
-                return false;
-            }
-
-            RaycastHit hit = AIHitUtility.AtPoint(patrolPoint);
-            CommandContext probe = new(snapshot.Owner, unit, hit, orderIndex, MouseButton.Right);
-            if (!move.CanHandle(probe))
-            {
-                return false;
-            }
-
-            queue.Enqueue(new AICommandIntent(
-                AIMilitaryPriority.PatrolExpandMap - orderIndex,
-                AIManagerIds.Military,
-                unit,
-                move,
-                hit,
-                orderIndex,
-                MouseButton.Right));
-            return true;
+            EnqueueTowerLineIfNeeded(snapshot, queue, config, ccPosition, influence);
         }
 
         private void EnqueueBarrackTrainIfNeeded(
@@ -499,6 +645,11 @@ namespace GameDevTV.RTS.AI
             AIPriorityQueue queue,
             AIMilitaryRuntimeConfig config)
         {
+            if (!AIMilitaryExpansionPlanner.ShouldAllowBarrackTraining(snapshot, manualOverrides))
+            {
+                return;
+            }
+
             if (snapshot.MilitaryUnits.Count >= config.TargetArmyCount)
             {
                 return;
@@ -575,14 +726,19 @@ namespace GameDevTV.RTS.AI
         {
             BuildBuildingCommand towerCommand = config.DefenseTowerBuildCommand;
             if (towerCommand == null
-                || !AIInfraBuildUtility.HasInfraPresent(snapshot, AIInfraBuildUtility.BarrackDisplayName))
+                || AIInfraBuildUtility.CountInfraBuildings(snapshot, AIInfraBuildUtility.BarrackDisplayName) < 1)
             {
                 return;
             }
 
-            int towerCount = CountCompletedDefenseTowers(snapshot);
-            if (towerCount >= config.MaxTowersInLine
-                || AIInfraBuildOrderTracker.HasOrderedBuild(snapshot.Owner, AIInfraBuildUtility.DefenseTowerDisplayName))
+            int towerCount = AIInfraBuildUtility.CountInfraBuildings(
+                snapshot,
+                AIInfraBuildUtility.DefenseTowerDisplayName);
+            int towerCap = ResolveDefenseTowerBuildCap(snapshot);
+            if (towerCount >= towerCap
+                || AIInfraBuildUtility.HasPendingInfraBuild(
+                    snapshot,
+                    AIInfraBuildUtility.DefenseTowerDisplayName))
             {
                 return;
             }
@@ -613,6 +769,9 @@ namespace GameDevTV.RTS.AI
                 return;
             }
 
+            PlacementFieldGridContext fieldGrid = PlacementFieldSelectionRegistry.ResolveGrid(ccPosition, influence);
+            PlacementFieldSelectionRegistry.RegisterSelectedPlacement(snapshot.Owner, placement, fieldGrid);
+
             if (!AIInfraBuildUtility.TryPickBuilderWorker(snapshot, ccPosition, out Worker builder, out bool mustStopGather))
             {
                 return;
@@ -640,37 +799,84 @@ namespace GameDevTV.RTS.AI
         }
 
         /// <summary>
-        /// Mục tiêu: Gửi wave tấn công Civil Central địch khi đủ quân và biết vị trí mục tiêu.
-        /// Cách hoạt động: So army với ngưỡng; Attack CC nếu visible; Move formation tới memory.
+        /// Mục tiêu: Hết buffer 2 phút — toàn quân đánh mục tiêu địch gần nhất rồi tiến formation về CC địch.
+        /// Cách hoạt động: Resolve entry + CC địch → CollectArmy full → PostContactOffensive.
         /// </summary>
-        private void EnqueueAttackWaveIfReady(
+        private bool TryEnqueuePostContactFullOffensive(
             AIWorldStateSnapshot snapshot,
-            AIPriorityQueue queue,
-            AIMilitaryRuntimeConfig config)
+            AIMilitaryRuntimeConfig config,
+            Vector3 ccPosition)
+        {
+            if (snapshot.MilitaryUnits.Count < config.MinArmyBeforeAttack)
+            {
+                return false;
+            }
+
+            if (!AIMilitaryRallyPlanner.TryResolvePostBufferOffensiveTargets(
+                    snapshot.Owner,
+                    config.EnemyOwner,
+                    ccPosition,
+                    config.RequireVisibleTargets,
+                    out _,
+                    out Vector3 enemyCcPoint,
+                    out _))
+            {
+                return false;
+            }
+
+            AIMilitaryArmySquadExecutor.CollectArmy(
+                militaryScratch,
+                assignedMilitaryThisTick,
+                militaryScratch.Count,
+                useEntireArmy: true,
+                unifiedArmyScratch);
+
+            if (unifiedArmyScratch.Count < config.MinArmyBeforeAttack)
+            {
+                return false;
+            }
+
+            MoveCommand move = ResolveMoveCommand(unifiedArmyScratch[0]);
+            if (move == null)
+            {
+                return false;
+            }
+
+            if (!AIMilitaryArmySquadExecutor.TryExecutePostContactOffensive(
+                    snapshot.Owner,
+                    config.EnemyOwner,
+                    config.RequireVisibleTargets,
+                    ccPosition,
+                    enemyCcPoint,
+                    unifiedArmyScratch,
+                    move,
+                    rallyMoveFallbackScratch,
+                    40f))
+            {
+                return false;
+            }
+
+            AIMilitaryPostContactOffensePlanner.MarkPostBufferOffensiveLaunched(snapshot.Owner);
+            AIMilitaryRallySessionTracker.Clear(snapshot.Owner);
+            MarkArmyAssigned(unifiedArmyScratch);
+            return true;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Tấn công tổng — một đội thống nhất (toàn bộ quân): Attack cả nhóm + formation tiến.
+        /// </summary>
+        private void EnqueueUnifiedArmyOffense(
+            AIWorldStateSnapshot snapshot,
+            AIMilitaryRuntimeConfig config,
+            Vector3 ccPosition)
         {
             int armyCount = snapshot.MilitaryUnits.Count;
-            if (armyCount < config.MinArmyBeforeAttack || armyCount < config.TargetArmyCount)
+            if (armyCount < config.MinArmyBeforeAttack)
             {
                 return;
             }
 
-            bool hasVisibleEnemyCc = AIMilitaryHostileScanner.TryFindEnemyCivilCentral(
-                config.EnemyOwner,
-                out BaseBuilding visibleEnemyCc);
-            if (hasVisibleEnemyCc)
-            {
-                AIMilitaryEnemyTracker.RememberVisibleEnemyCivilCentral(snapshot.Owner, visibleEnemyCc);
-            }
-
-            Vector3 attackPoint;
-            if (hasVisibleEnemyCc)
-            {
-                attackPoint = visibleEnemyCc.transform.position;
-            }
-            else if (!AIMilitaryEnemyTracker.TryGetLastKnownEnemyCcPosition(
-                         snapshot.Owner,
-                         config.EnemyOwner,
-                         out attackPoint))
+            if (!TryResolveUnifiedAttackPoint(snapshot, config, out Vector3 attackPoint))
             {
                 return;
             }
@@ -685,95 +891,118 @@ namespace GameDevTV.RTS.AI
                 return;
             }
 
-            attackWaveMoveScratch.Clear();
-            int attackOrders = 0;
-            for (int i = 0; i < militaryScratch.Count && attackOrders < MaxAttackWaveAssignmentsPerTick; i++)
+            bool useEntireArmy = manualOverrides.UseFullArmyUnifiedAttack
+                || AIMilitaryExpansionPlanner.IsExpansionPhase(snapshot, manualOverrides)
+                || armyCount >= manualOverrides.UnifiedArmySquadSize;
+            int squadSize = manualOverrides.UnifiedArmySquadSize;
+            if (useEntireArmy)
             {
-                AbstractUnit unit = militaryScratch[i];
-                if (assignedMilitaryThisTick.Contains(unit.GetInstanceID()))
-                {
-                    continue;
-                }
-
-                if (hasVisibleEnemyCc
-                    && visibleEnemyCc.IsVisible
-                    && TryEnqueueAttackOnEnemyCivilCentral(snapshot, queue, unit, visibleEnemyCc, attackOrders))
-                {
-                    assignedMilitaryThisTick.Add(unit.GetInstanceID());
-                    attackOrders++;
-                    continue;
-                }
-
-                attackWaveMoveScratch.Add(unit);
+                AIMilitaryArmySquadExecutor.CollectArmy(
+                    militaryScratch,
+                    assignedMilitaryThisTick,
+                    armyCount,
+                    useEntireArmy: true,
+                    unifiedArmyScratch);
+            }
+            else if (!AIMilitaryArmySquadExecutor.TryCollectStagingSquad(
+                         militaryScratch,
+                         assignedMilitaryThisTick,
+                         squadSize,
+                         unifiedArmyScratch))
+            {
+                return;
             }
 
-            if (attackWaveMoveScratch.Count > 0)
+            if (unifiedArmyScratch.Count < manualOverrides.MinUnitsToBeginStagingAssembly)
             {
-                TryApplyAttackWaveFormationMove(attackWaveMoveScratch, attackPoint);
+                return;
             }
-        }
 
-        /// <summary>
-        /// Mục tiêu: Wave tiến gần CC địch theo formation — không gửi mọi unit tới cùng một điểm.
-        /// </summary>
-        private void TryApplyAttackWaveFormationMove(List<AbstractUnit> units, Vector3 attackPoint)
-        {
-            MoveCommand move = ResolveMoveCommand(units[0]);
+            MoveCommand move = ResolveMoveCommand(unifiedArmyScratch[0]);
             if (move == null)
             {
                 return;
             }
 
-            RaycastHit hit = AIHitUtility.AtPoint(attackPoint);
-            if (!GroupFormationMoveUtility.TryApplyMoveIfNeeded(units, hit, move, 26f))
+            bool forceFormationRefresh = AIMilitaryArmyAssemblyTracker.ConsumeFormationRefreshForGrowingArmy(
+                snapshot.Owner,
+                unifiedArmyScratch.Count);
+
+            AIMilitaryArmyAssemblyTracker.ArmyAssemblyPhase phase =
+                AIMilitaryArmyAssemblyTracker.Sync(
+                    snapshot.Owner,
+                    ccPosition,
+                    unifiedArmyScratch,
+                    armyCount,
+                    manualOverrides,
+                    move);
+
+            if (phase == AIMilitaryArmyAssemblyTracker.ArmyAssemblyPhase.Forming
+                && AIMilitaryArmyAssemblyTracker.TryGetStagingPoint(
+                    snapshot.Owner,
+                    ccPosition,
+                    manualOverrides,
+                    out Vector3 staging))
+            {
+                staging = AIMilitaryStagingPlacementUtility.AvoidActiveConstructionSites(snapshot, staging);
+                if (AIMilitaryArmySquadExecutor.TryFormationAssemble(
+                        unifiedArmyScratch,
+                        staging,
+                        move,
+                        manualOverrides.ArmyAssemblyGatherRadius,
+                        forceFormationRefresh))
+                {
+                    MarkArmyAssigned(unifiedArmyScratch);
+                }
+
+                return;
+            }
+
+            if (!useEntireArmy && unifiedArmyScratch.Count < squadSize)
             {
                 return;
             }
 
-            for (int i = 0; i < units.Count; i++)
+            if (useEntireArmy && unifiedArmyScratch.Count < config.MinArmyBeforeAttack)
             {
-                AbstractUnit unit = units[i];
-                if (unit != null)
-                {
-                    assignedMilitaryThisTick.Add(unit.GetInstanceID());
-                }
+                return;
+            }
+
+            if (AIMilitaryArmySquadExecutor.TryExecuteSquadAttackAndAdvance(
+                    snapshot,
+                    config.EnemyOwner,
+                    config.RequireVisibleTargets,
+                    unifiedArmyScratch,
+                    attackPoint,
+                    AIMilitaryRallyPlanner.RallyTrigger.VisibleEnemyCivilCentral,
+                    move,
+                    rallyMoveFallbackScratch,
+                    36f))
+            {
+                MarkArmyAssigned(unifiedArmyScratch);
             }
         }
 
-        private bool TryEnqueueAttackOnEnemyCivilCentral(
+        private bool TryResolveUnifiedAttackPoint(
             AIWorldStateSnapshot snapshot,
-            AIPriorityQueue queue,
-            AbstractUnit unit,
-            BaseBuilding enemyCc,
-            int orderIndex)
+            AIMilitaryRuntimeConfig config,
+            out Vector3 attackPoint)
         {
-            AttackCommand attack = ResolveAttackCommand(unit);
-            if (attack == null)
+            attackPoint = default;
+            if (AIMilitaryHostileScanner.TryFindVisibleEnemyCivilCentral(
+                    config.EnemyOwner,
+                    config.RequireVisibleTargets,
+                    out BaseBuilding enemyCc))
             {
-                return false;
+                AIMilitaryEnemyTracker.RememberVisibleEnemyCivilCentral(snapshot.Owner, enemyCc);
+                attackPoint = enemyCc.transform.position;
+                return true;
             }
 
-            Collider collider = enemyCc.GetComponent<Collider>()
-                ?? enemyCc.GetComponentInChildren<Collider>();
-            if (collider == null || !AIHitUtility.TryCreateHit(collider, out RaycastHit hit))
-            {
-                return false;
-            }
-
-            CommandContext probe = new(snapshot.Owner, unit, hit, mouseButton: MouseButton.Right);
-            if (!attack.CanHandle(probe))
-            {
-                return false;
-            }
-
-            queue.Enqueue(new AICommandIntent(
-                AIMilitaryPriority.AttackEnemyCivilCentral - orderIndex,
-                AIManagerIds.Military,
-                unit,
-                attack,
-                hit,
-                mouseButton: MouseButton.Right));
-            return true;
+            return AIMilitaryEnemyTracker.TryGetLastKnownEnemyCcPosition(
+                snapshot.Owner,
+                config.EnemyOwner,
+                out attackPoint);
         }
 
         private bool TryPickTowerLinePlacement(
@@ -786,6 +1015,7 @@ namespace GameDevTV.RTS.AI
             out Vector3 placement)
         {
             placement = default;
+            PlacementFieldGridContext fieldGrid = PlacementFieldSelectionRegistry.ResolveGrid(ccPosition, influence);
             int startSlot = existingTowerCount % TowerLineSlotCount;
             float bestThreatScore = float.MinValue;
             Vector3 bestCandidate = default;
@@ -810,6 +1040,8 @@ namespace GameDevTV.RTS.AI
                         config.PlacementSearchRings,
                         config.PlacementSearchStep,
                         expandSearch: offset > 3,
+                        snapshot.Owner,
+                        fieldGrid,
                         out Vector3 candidate))
                 {
                     continue;
@@ -819,12 +1051,21 @@ namespace GameDevTV.RTS.AI
                 if (influence.IsValid
                     && influence.Map.TryGetBestCell(anchor, preferNearAnchorWeight: 0.05f, out Vector3 influencePoint, out float safeScore))
                 {
-                    if (towerCommand.AllRestrictionsPass(influencePoint))
+                    if (towerCommand.AllRestrictionsPass(influencePoint)
+                        && PlacementFieldSelectionRegistry.CanAcceptPlacement(
+                            snapshot.Owner,
+                            influencePoint,
+                            fieldGrid))
                     {
                         candidate = influencePoint;
                     }
 
                     combined += safeScore * 0.25f;
+                }
+
+                if (!PlacementFieldSelectionRegistry.CanAcceptPlacement(snapshot.Owner, candidate, fieldGrid))
+                {
+                    continue;
                 }
 
                 if (combined <= bestThreatScore)
@@ -909,23 +1150,17 @@ namespace GameDevTV.RTS.AI
             return false;
         }
 
-        private static int CountCompletedDefenseTowers(AIWorldStateSnapshot snapshot)
+        /// <summary>
+        /// Mục tiêu: Giới hạn tháp — XP đầu theo EarlyGameTarget; sau đó theo MaxTowersInLine.
+        /// </summary>
+        private int ResolveDefenseTowerBuildCap(AIWorldStateSnapshot snapshot)
         {
-            int count = 0;
-            for (int i = 0; i < snapshot.Buildings.Count; i++)
+            if (!AIMilitaryExpansionPlanner.HasMetEarlyMilitaryInfraTargets(snapshot, manualOverrides))
             {
-                BaseBuilding building = snapshot.Buildings[i];
-                if (building?.BuildingSO == null
-                    || building.BuildingSO.Name != AIInfraBuildUtility.DefenseTowerDisplayName
-                    || building.Progress.State != BuildingProgress.BuildingState.Completed)
-                {
-                    continue;
-                }
-
-                count++;
+                return manualOverrides.EarlyGameTargetDefenseTowerCount;
             }
 
-            return count;
+            return manualOverrides.MaxTowersInLine;
         }
 
         private static void CollectMilitaryUnits(AIWorldStateSnapshot snapshot, List<AbstractUnit> output)

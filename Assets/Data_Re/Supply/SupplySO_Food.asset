@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccd25207726c4fe459f60ef3cb237aa3, type: 3}
   m_Name: SupplySO_Food
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Environment.SupplySO
-  <MaxAmount>k__BackingField: 1500
+  <MaxAmount>k__BackingField: 500
   <AmountPerGather>k__BackingField: 25
   <BaseGatherTime>k__BackingField: 2
   <Icon>k__BackingField: {fileID: 21300000, guid: 4bdf85425c813674c8b1530b2382117c, type: 3}

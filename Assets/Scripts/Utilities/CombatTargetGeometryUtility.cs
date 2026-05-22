@@ -35,6 +35,12 @@ namespace GameDevTV.RTS.Utilities
         public static float GetDistanceToTargetSurface(Vector3 fromWorld, GameObject target) =>
             Vector3.Distance(fromWorld, GetClosestPointOnTarget(fromWorld, target));
 
+        /// <summary>
+        /// Mục tiêu: Bounds world của mục tiêu — dùng cho deposit ring / attack range.
+        /// </summary>
+        public static bool TryGetTargetBounds(GameObject target, out Bounds combined) =>
+            TryGetCombinedTargetBounds(target, out combined);
+
         private static bool TryGetCombinedTargetBounds(GameObject target, out Bounds combined)
         {
             combined = default;

@@ -6,7 +6,6 @@ using Action = Unity.Behavior.Action;
 using Unity.Properties;
 using UnityEngine.AI;
 using System.Collections.Generic;
-using System.Linq;
 using GameDevTV.RTS.Utilities;
 
 namespace GameDevTV.RTS.Behavior
@@ -44,6 +43,12 @@ namespace GameDevTV.RTS.Behavior
             }
 
             lockedGatherSupply = Supply.Value;
+            supplySO = lockedGatherSupply != null ? lockedGatherSupply.Supply : null;
+            if (supplySO == null)
+            {
+                return Status.Failure;
+            }
+
             agent.TryGetComponent(out animator);
 
             Vector3 targetPosition = GetTargetPosition();
@@ -97,7 +102,13 @@ namespace GameDevTV.RTS.Behavior
             {
                 Array.Sort(colliders, new ClosestColliderComparer(agent.transform.position));
 
-                Supply.Value = colliders[0].GetComponent<GatherableSupply>();
+                if (!TryResolveGatherableFromCollider(colliders[0], out GatherableSupply nearby))
+                {
+                    return Status.Failure;
+                }
+
+                Supply.Value = nearby;
+                lockedGatherSupply = nearby;
                 agent.SetDestination(GetTargetPosition());
                 return Status.Running;
             }
@@ -132,7 +143,13 @@ namespace GameDevTV.RTS.Behavior
                 if (colliders.Length > 0)
                 {
                     Array.Sort(colliders, new ClosestColliderComparer(agent.transform.position));
-                    Supply.Value = colliders[0].GetComponent<GatherableSupply>();
+                    if (!TryResolveGatherableFromCollider(colliders[0], out GatherableSupply nearby))
+                    {
+                        return false;
+                    }
+
+                    Supply.Value = nearby;
+                    supplySO = nearby.Supply;
                 }
                 else
                 {
@@ -140,24 +157,66 @@ namespace GameDevTV.RTS.Behavior
                 }
             }
 
-            return true;
+            return supplySO != null;
         }
 
-        /// <summary>Tìm các supply cùng loại <see cref="SupplySO"/> trong bán kính (nhiều worker có thể cùng khai thác).</summary>
+        /// <summary>
+        /// Tìm mỏ cùng loại còn tài nguyên trong bán kính — dùng supplySO cache, tránh null khi mỏ cạn/hủy.
+        /// </summary>
         private Collider[] FindNearbySuppliesMatchingType()
         {
-            return Physics.OverlapSphere(
-                agent.transform.position,
-                SearchRadius,
-                suppliesMask
-            ).Where(collider =>
-                    collider.TryGetComponent(out GatherableSupply supply)
-                    && supply.Supply.Equals(Supply.Value.Supply)
-            ).ToArray();
+            if (agent == null || supplySO == null)
+            {
+                return Array.Empty<Collider>();
+            }
+
+            float radius = SearchRadius != null ? SearchRadius.Value : 7f;
+            Collider[] hits = Physics.OverlapSphere(agent.transform.position, radius, suppliesMask);
+            if (hits == null || hits.Length == 0)
+            {
+                return Array.Empty<Collider>();
+            }
+
+            List<Collider> matches = new(hits.Length);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                Collider collider = hits[i];
+                if (collider == null || !TryResolveGatherableFromCollider(collider, out GatherableSupply supply))
+                {
+                    continue;
+                }
+
+                if (supply.Supply == null || !supply.Supply.Equals(supplySO) || supply.Amount <= 0)
+                {
+                    continue;
+                }
+
+                matches.Add(collider);
+            }
+
+            return matches.ToArray();
+        }
+
+        private static bool TryResolveGatherableFromCollider(Collider collider, out GatherableSupply supply)
+        {
+            supply = null;
+            if (collider == null)
+            {
+                return false;
+            }
+
+            supply = collider.GetComponent<GatherableSupply>()
+                ?? collider.GetComponentInParent<GatherableSupply>();
+            return supply != null;
         }
 
         private Vector3 GetTargetPosition()
         {
+            if (Supply.Value == null)
+            {
+                return agent.transform.position;
+            }
+
             Vector3 targetPosition;
             if (Supply.Value.TryGetComponent(out Collider collider))
             {

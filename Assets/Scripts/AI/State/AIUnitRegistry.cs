@@ -17,8 +17,10 @@ namespace GameDevTV.RTS.AI
         private readonly HashSet<GatherableSupply> gatherableSupplies = new(48);
         private Owner owner;
         private bool isSubscribed;
+        private int lifetimeMilitarySpawnCount;
 
         public IReadOnlyCollection<AbstractUnit> Units => units;
+        public int LifetimeMilitarySpawnCount => lifetimeMilitarySpawnCount;
         public IReadOnlyCollection<BaseBuilding> Buildings => buildings;
         public IReadOnlyCollection<GatherableSupply> GatherableSupplies => gatherableSupplies;
 
@@ -37,6 +39,7 @@ namespace GameDevTV.RTS.AI
             units.Clear();
             buildings.Clear();
             gatherableSupplies.Clear();
+            lifetimeMilitarySpawnCount = 0;
 
             RegisterExistingInScene();
             Subscribe();
@@ -115,7 +118,10 @@ namespace GameDevTV.RTS.AI
 
             // Không lọc CurrentHealth ở đây: building gọi NotifySpawned() trước Start() (máu vẫn 0).
             // UnitDeathEvent sẽ gỡ unit chết khỏi cache.
-            units.Add(unit);
+            if (units.Add(unit) && unit is not Worker)
+            {
+                lifetimeMilitarySpawnCount++;
+            }
         }
 
         private void TryRemoveUnit(AbstractUnit unit)

@@ -11,7 +11,7 @@ using UnityEngine.InputSystem.LowLevel;
 namespace GameDevTV.RTS.AI
 {
     /// <summary>
-    /// SRP: Worker gather, cân Stone/Wood/Food, đề xuất Store gần cụm mỏ xa Civil Central.
+    /// SRP: Worker gather 40/40/20 hoặc 60% thiếu; hết mỏ food → 70/30 đá-gỗ; thiếu food → thêm Corral; Store xa CC.
     /// Mỗi worker: <see cref="GatherCommand"/> → BT Gather Sub Graph tự loop + tự return khi đầy (Petra: không spam ReturnSupplies).
     /// Chỉ mỏ <see cref="GatherableSupply.IsVisible"/>; khóa gather trên <see cref="Worker.ShouldIssueGatherTo"/>.
     /// </summary>
@@ -57,25 +57,52 @@ namespace GameDevTV.RTS.AI
             {
                 AIWorkerGatherRefreshPlanner.EnqueueRefreshIntents(snapshot, queue);
             }
-            else
-            {
-                EnqueueWorkerGatherAndReturn(snapshot, queue, config, ref gatherCommand);
-            }
+
+            EnqueueWorkerGatherAndReturn(snapshot, queue, config, plannerTickIndex, ref gatherCommand);
+
+            AIEconomyCorralPlanner.TryEnqueueExtraCorral(
+                snapshot,
+                queue,
+                config,
+                manualOverrides,
+                influence,
+                plannerTickIndex);
 
             EnqueueRemoteStoreBuildIfNeeded(snapshot, queue, config, influence, ref storeBuildCommand);
+
+            bool hasFoodMines = AIEconomyFoodGatherUtility.HasVisibleFoodGatherNode(snapshot, config);
+            if (!ShouldSkipWildFoodWhenNoMines(hasFoodMines))
+            {
+                AIEconomyWildFoodPlanner.EnqueueHuntIntents(
+                    snapshot,
+                    queue,
+                    config,
+                    manualOverrides,
+                    GetEconomyAnchor(snapshot));
+            }
         }
+
+        private bool ShouldSkipWildFoodWhenNoMines(bool hasFoodMines) =>
+            manualOverrides.EnableStoneWoodOnlyWhenNoFoodMines && !hasFoodMines;
 
         private void EnqueueWorkerGatherAndReturn(
             AIWorldStateSnapshot snapshot,
             AIPriorityQueue queue,
             AIEconomyRuntimeConfig config,
+            int plannerTickIndex,
             ref GatherCommand gatherCommandCache)
         {
             Vector3 anchor = GetEconomyAnchor(snapshot);
             int gatherCapable = CountGatherCapableWorkers(snapshot);
+            bool hasVisibleFoodMines = AIEconomyFoodGatherUtility.HasVisibleFoodGatherNode(snapshot, config);
 
-            ComputeGatherSlotTargets(
+            AIWorkerGatherSlotPlanner.ComputeGatherSlotTargets(
+                snapshot.Owner,
+                plannerTickIndex,
+                snapshot,
+                manualOverrides,
                 gatherCapable,
+                hasVisibleFoodMines,
                 out int stoneSlots,
                 out int woodSlots,
                 out int foodSlots);
@@ -108,6 +135,11 @@ namespace GameDevTV.RTS.AI
                     continue;
                 }
 
+                if (worker.HasStaleGatherCommand)
+                {
+                    worker.InterruptGatherWorkCycle();
+                }
+
                 SupplyKind preferredKind = PickGatherKindForDeficit(
                     stoneSlots,
                     woodSlots,
@@ -122,6 +154,7 @@ namespace GameDevTV.RTS.AI
                         worker,
                         preferredKind,
                         anchor,
+                        hasVisibleFoodMines,
                         stoneSlots,
                         woodSlots,
                         foodSlots,
@@ -241,7 +274,7 @@ namespace GameDevTV.RTS.AI
         }
 
         /// <summary>
-        /// Mục tiêu: Gán worker rảnh vào loại mỏ còn thiếu slot (không theo InstanceID cố định).
+        /// Mục tiêu: Gán worker rảnh vào loại mỏ còn thiếu slot (40/40/20 hoặc 60% thiếu + 20% mỗi loại kia).
         /// Cách hoạt động: deficit = slot − (active + pending); ưu tiên Food → Wood → Stone khi hòa.
         /// </summary>
         private static SupplyKind PickGatherKindForDeficit(
@@ -256,7 +289,10 @@ namespace GameDevTV.RTS.AI
             int woodDeficit = woodSlots - woodCount;
             int foodDeficit = foodSlots - foodCount;
 
-            if (foodDeficit > 0 && foodDeficit >= woodDeficit && foodDeficit >= stoneDeficit)
+            if (foodSlots > 0
+                && foodDeficit > 0
+                && foodDeficit >= woodDeficit
+                && foodDeficit >= stoneDeficit)
             {
                 return SupplyKind.Food;
             }
@@ -274,7 +310,7 @@ namespace GameDevTV.RTS.AI
             int stoneOver = stoneCount - stoneSlots;
             int woodOver = woodCount - woodSlots;
             int foodOver = foodCount - foodSlots;
-            if (foodOver <= woodOver && foodOver <= stoneOver)
+            if (foodSlots > 0 && foodOver <= woodOver && foodOver <= stoneOver)
             {
                 return SupplyKind.Food;
             }
@@ -307,43 +343,13 @@ namespace GameDevTV.RTS.AI
             }
         }
 
-        /// <summary>
-        /// Mục tiêu: Chia slot gather 1:1:1; phần dư ưu tiên Stone rồi Wood, Food cuối.
-        /// Cách hoạt động: n/3 mỗi loại; remainder +1 Stone, +1 Wood (nếu có), không cộng Food trước khi đủ đá/gỗ.
-        /// </summary>
-        private static void ComputeGatherSlotTargets(
-            int gatherWorkerCount,
-            out int stoneSlots,
-            out int woodSlots,
-            out int foodSlots)
-        {
-            if (gatherWorkerCount <= 0)
-            {
-                stoneSlots = woodSlots = foodSlots = 0;
-                return;
-            }
-
-            stoneSlots = gatherWorkerCount / 3;
-            woodSlots = gatherWorkerCount / 3;
-            foodSlots = gatherWorkerCount / 3;
-            int remainder = gatherWorkerCount % 3;
-            if (remainder >= 1)
-            {
-                stoneSlots++;
-            }
-
-            if (remainder >= 2)
-            {
-                woodSlots++;
-            }
-        }
-
         private bool TryPickGatherTarget(
             AIWorldStateSnapshot snapshot,
             AIEconomyRuntimeConfig config,
             Worker worker,
             SupplyKind preferredKind,
             Vector3 anchor,
+            bool hasVisibleFoodMines,
             int stoneSlots,
             int woodSlots,
             int foodSlots,
@@ -364,6 +370,7 @@ namespace GameDevTV.RTS.AI
                     worker,
                     preferredKind,
                     anchor,
+                    hasVisibleFoodMines,
                     stoneSlots,
                     woodSlots,
                     foodSlots,
@@ -376,9 +383,33 @@ namespace GameDevTV.RTS.AI
                 return true;
             }
 
-            bestSupply = null;
-            bestCollider = null;
-            return false;
+            return TryPickAnyVisibleStoneOrWood(
+                snapshot,
+                config,
+                worker,
+                anchor,
+                out bestSupply,
+                out bestCollider);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Fallback khi quota/loại ưu tiên không tìm được mỏ — vẫn khai thác đá/gỗ visible.
+        /// Cách hoạt động: Thử Stone rồi Wood, bỏ qua slot deficit.
+        /// </summary>
+        private bool TryPickAnyVisibleStoneOrWood(
+            AIWorldStateSnapshot snapshot,
+            AIEconomyRuntimeConfig config,
+            Worker worker,
+            Vector3 anchor,
+            out GatherableSupply bestSupply,
+            out Collider bestCollider)
+        {
+            if (TryPickGatherTargetForKind(snapshot, config, worker, SupplyKind.Stone, anchor, out bestSupply, out bestCollider))
+            {
+                return true;
+            }
+
+            return TryPickGatherTargetForKind(snapshot, config, worker, SupplyKind.Wood, anchor, out bestSupply, out bestCollider);
         }
 
         /// <summary>
@@ -391,6 +422,7 @@ namespace GameDevTV.RTS.AI
             Worker worker,
             SupplyKind preferredKind,
             Vector3 anchor,
+            bool hasVisibleFoodMines,
             int stoneSlots,
             int woodSlots,
             int foodSlots,
@@ -400,7 +432,8 @@ namespace GameDevTV.RTS.AI
             out GatherableSupply bestSupply,
             out Collider bestCollider)
         {
-            if (preferredKind != SupplyKind.Food
+            if (hasVisibleFoodMines
+                && preferredKind != SupplyKind.Food
                 && foodSlots - foodCount > 0
                 && TryPickGatherTargetForKind(snapshot, config, worker, SupplyKind.Food, anchor, out bestSupply, out bestCollider))
             {
@@ -547,16 +580,21 @@ namespace GameDevTV.RTS.AI
                 return;
             }
 
+            Vector3 ccPosition = snapshot.CivilCentral.transform.position;
             if (!TryFindStorePlacement(
                     config,
                     storeBuildCommandCache,
                     clusterCenter,
-                    snapshot.CivilCentral.transform.position,
+                    ccPosition,
+                    snapshot.Owner,
                     influence,
                     out Vector3 placement))
             {
                 return;
             }
+
+            PlacementFieldGridContext fieldGrid = PlacementFieldSelectionRegistry.ResolveGrid(ccPosition, influence);
+            PlacementFieldSelectionRegistry.RegisterSelectedPlacement(snapshot.Owner, placement, fieldGrid);
 
             RaycastHit hit = AIHitUtility.AtPoint(placement);
             queue.Enqueue(new AICommandIntent(
@@ -629,9 +667,14 @@ namespace GameDevTV.RTS.AI
             BuildBuildingCommand storeCommand,
             Vector3 clusterCenter,
             Vector3 civilCentralPosition,
+            Owner placementOwner,
             in AIInfluenceMapTickContext influence,
             out Vector3 placement)
         {
+            PlacementFieldGridContext fieldGrid = PlacementFieldSelectionRegistry.ResolveGrid(
+                civilCentralPosition,
+                influence);
+
             Vector3 towardBase = civilCentralPosition - clusterCenter;
             towardBase.y = 0f;
             if (towardBase.sqrMagnitude < 0.01f)
@@ -648,6 +691,8 @@ namespace GameDevTV.RTS.AI
                     config.PlacementSearchStep,
                     expandSearch: false,
                     preferNearAnchor: false,
+                    placementOwner,
+                    fieldGrid,
                     influence,
                     out placement))
             {
@@ -661,6 +706,8 @@ namespace GameDevTV.RTS.AI
                 config.PlacementSearchStep,
                 expandSearch: true,
                 preferNearAnchor: true,
+                placementOwner,
+                fieldGrid,
                 influence,
                 out placement);
         }
@@ -752,20 +799,6 @@ namespace GameDevTV.RTS.AI
             return null;
         }
 
-        private static StopCommand ResolveStopCommand(Worker worker)
-        {
-            List<BaseCommand> commands = AvailableCommandsResolver.GetFlattened(worker);
-            for (int i = 0; i < commands.Count; i++)
-            {
-                if (commands[i] is StopCommand stop)
-                {
-                    return stop;
-                }
-            }
-
-            return null;
-        }
-
         private enum SupplyKind
         {
             Unknown,
@@ -790,18 +823,60 @@ namespace GameDevTV.RTS.AI
         [Tooltip("Để trống = tự tìm Build Store trên worker.")]
         [SerializeField] private BuildBuildingCommand storeBuildCommand;
 
+        [Header("Gather — chia worker & cân kho")]
+        [Tooltip("Mỗi N tick planner mới đọc Stone/Wood/Food và quyết định cân bằng hay 60% sang loại thiếu.")]
+        [SerializeField] private int gatherBalanceCheckIntervalTicks = 20;
+        [Tooltip("Lệch tối đa giữa loại nhiều nhất và ít nhất (≥3 = mất cân bằng).")]
+        [SerializeField] private float gatherImbalanceMaxRatio = 3f;
+
         [Header("Gather refresh (mỗi N tick planner)")]
         [Tooltip("Bật: tick 10, 20, … gửi Stop + Move ngắn cho worker đang gather; tick đó không gán mỏ mới.")]
         [SerializeField] private bool enableWorkerGatherRefresh = true;
         [Tooltip("Số tick AI giữa mỗi lần reset gather (AIController tick, không phải frame).")]
         [SerializeField] private int workerGatherRefreshIntervalTicks = 10;
 
+        [Header("Food — Corral bổ sung")]
+        [Tooltip("Bật: kho food thấp → economy enqueue thêm Corral (vẫn ưu tiên gather mỏ food nếu còn).")]
+        [SerializeField] private bool enableExtraCorralWhenFoodLow = true;
+        [SerializeField] private int foodLowAmountForExtraCorral = 80;
+        [Tooltip("Tổng số Corral tối đa (gồm Corral đầu từ build order).")]
+        [SerializeField] private int maxCorralsForFoodEconomy = 4;
+        [Tooltip("Tối thiểu số tick planner giữa hai lần thử xây Corral bổ sung.")]
+        [SerializeField] private int extraCorralAttemptIntervalTicks = 40;
+
+        [Header("Food — hết mỏ gather")]
+        [Tooltip("Bật: không còn mỏ food visible → chỉ đá/gỗ 7:3, không săn thú.")]
+        [SerializeField] private bool enableStoneWoodOnlyWhenNoFoodMines = true;
+        [SerializeField, Range(0.51f, 0.95f)] private float stoneWoodMajorShare = 0.7f;
+        [SerializeField, Min(1)] private int stoneWoodMinMajorSlots = 7;
+
+        [Header("Food — không có mỏ (săn thú)")]
+        [Tooltip("Bật: kho food thấp và không thấy mỏ food → worker Attack WildAnimal.")]
+        [SerializeField] private bool enableWildFoodHunt = true;
+        [SerializeField] private int foodHuntBelowAmount = 80;
+        [Tooltip("0 = không giới hạn khoảng cách săn.")]
+        [SerializeField] private float wildFoodHuntMaxDistance = 120f;
+        [SerializeField] private int maxWildFoodHuntersPerTick = 3;
+
         public SupplySO StoneSupply => stoneSupply;
         public SupplySO WoodSupply => woodSupply;
         public SupplySO FoodSupply => foodSupply;
         public BuildBuildingCommand StoreBuildCommand => storeBuildCommand;
+        public int GatherBalanceCheckIntervalTicks => Mathf.Max(1, gatherBalanceCheckIntervalTicks);
+        public float GatherImbalanceMaxRatio => Mathf.Max(1.1f, gatherImbalanceMaxRatio);
         public bool EnableWorkerGatherRefresh => enableWorkerGatherRefresh;
         public int WorkerGatherRefreshIntervalTicks => Mathf.Max(1, workerGatherRefreshIntervalTicks);
+        public bool EnableExtraCorralWhenFoodLow => enableExtraCorralWhenFoodLow;
+        public int FoodLowAmountForExtraCorral => Mathf.Max(0, foodLowAmountForExtraCorral);
+        public int MaxCorralsForFoodEconomy => Mathf.Max(1, maxCorralsForFoodEconomy);
+        public int ExtraCorralAttemptIntervalTicks => Mathf.Max(1, extraCorralAttemptIntervalTicks);
+        public bool EnableStoneWoodOnlyWhenNoFoodMines => enableStoneWoodOnlyWhenNoFoodMines;
+        public float StoneWoodMajorShare => Mathf.Clamp(stoneWoodMajorShare, 0.51f, 0.95f);
+        public int StoneWoodMinMajorSlots => Mathf.Max(1, stoneWoodMinMajorSlots);
+        public bool EnableWildFoodHunt => enableWildFoodHunt;
+        public int FoodHuntBelowAmount => Mathf.Max(0, foodHuntBelowAmount);
+        public float WildFoodHuntMaxDistance => Mathf.Max(0f, wildFoodHuntMaxDistance);
+        public int MaxWildFoodHuntersPerTick => Mathf.Max(1, maxWildFoodHuntersPerTick);
 
         public static AIEconomySettings Default => new();
     }

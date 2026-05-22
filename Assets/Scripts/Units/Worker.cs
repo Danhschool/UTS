@@ -23,14 +23,24 @@ namespace GameDevTV.RTS.Units
             IsBuilding || TryGetActiveConstructionSite(out _);
 
         /// <summary>
-        /// Mục tiêu: Cho AI biết worker đang gather hoặc đang mang tài nguyên về kho — không gán lệnh macro mới.
-        /// Cách hoạt động: Đọc blackboard Command; true khi Gather hoặc ReturnSupplies.
+        /// Mục tiêu: Command Gather nhưng mỏ hết/bị phá — BT kẹt, AI không gán lệnh được.
+        /// Cách hoạt động: Gather + không HasSupplies + không còn node Amount &gt; 0 trên blackboard.
+        /// </summary>
+        public bool HasStaleGatherCommand =>
+            IsGathering
+            && !HasSupplies
+            && !TryGetCommittedGatherSupply(out _);
+
+        /// <summary>
+        /// Mục tiêu: Cho AI biết worker đang gather/return thật — không tính Gather “mồ chết”.
+        /// Cách hoạt động: ReturnSupplies; hoặc Gather kèm mỏ còn tài nguyên / đang mang hàng.
         /// </summary>
         public bool IsGatheringOrReturning =>
             graphAgent != null
             && graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> commandVariable)
-            && (commandVariable.Value == UnitCommands.Gather
-                || commandVariable.Value == UnitCommands.ReturnSupplies);
+            && (commandVariable.Value == UnitCommands.ReturnSupplies
+                || (commandVariable.Value == UnitCommands.Gather
+                    && (HasSupplies || TryGetCommittedGatherSupply(out _))));
 
         /// <summary>
         /// Mục tiêu: Chỉ đang khai thác mỏ (không phải đang về kho).
@@ -86,10 +96,10 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         public bool IsInGatherWorkCycle =>
             HasSupplies
-            || IsGatheringOrReturning
-            || (TryGetCommittedGatherSupply(out GatherableSupply supply)
-                && supply != null
-                && supply.Amount > 0);
+            || (graphAgent != null
+                && graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> commandVariable)
+                && commandVariable.Value == UnitCommands.ReturnSupplies)
+            || TryGetCommittedGatherSupply(out _);
 
         /// <summary>
         /// Mục tiêu: AI/planner có nên gửi Gather tới node này (không phụ thuộc blackboard Supply còn hay bị xóa).
@@ -162,6 +172,29 @@ namespace GameDevTV.RTS.Units
             {
                 buildingEventChannelVariable.Value.Event += HandleBuildingEvent;
             }
+
+            Bus<SupplyDepletedEvent>.OnEvent[Owner] += HandleSupplyDepleted;
+        }
+
+        protected override void OnDestroy()
+        {
+            Bus<SupplyDepletedEvent>.OnEvent[Owner] -= HandleSupplyDepleted;
+            base.OnDestroy();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Thoát gather kẹt khi mỏ hết — reset blackboard + Stop để AI gán mỏ mới.
+        /// Cách hoạt động: HasStaleGatherCommand → InterruptGatherWorkCycle + Command Stop.
+        /// </summary>
+        public void RecoverFromStaleGatherStateIfNeeded()
+        {
+            gatherAssignmentLock.RefreshStaleLock();
+            if (!HasStaleGatherCommand)
+            {
+                return;
+            }
+
+            Stop();
         }
 
         public void LoadInto(ITransporter transporter)
@@ -276,6 +309,15 @@ namespace GameDevTV.RTS.Units
             PauseActiveConstructionIfNeeded();
             DisposeMovementDestinationCursor();
             graphAgent.SetVariableValue("CommandPost", commandPost);
+            if (commandPost != null)
+            {
+                Vector3 approach = GameDevTV.RTS.Utilities.SupplyDepositApproachUtility.ResolveApproachPosition(
+                    transform.position,
+                    commandPost,
+                    GetInstanceID());
+                graphAgent.SetVariableValue("TargetLocation", approach);
+            }
+
             graphAgent.SetVariableValue("Command", UnitCommands.ReturnSupplies);
         }
 
@@ -422,6 +464,46 @@ namespace GameDevTV.RTS.Units
             }
 
             Bus<UnitDeselectedEvent>.Raise(Owner, new UnitDeselectedEvent(this));
+        }
+
+        private void HandleSupplyDepleted(SupplyDepletedEvent evt)
+        {
+            if (evt.Supply == null || !IsTargetingDepletedSupply(evt.Supply))
+            {
+                return;
+            }
+
+            RecoverFromStaleGatherStateIfNeeded();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Worker đang gather đúng node vừa bị Destroy/Amount=0.
+        /// </summary>
+        private bool IsTargetingDepletedSupply(GatherableSupply depleted)
+        {
+            if (depleted == null)
+            {
+                return false;
+            }
+
+            int depletedId = depleted.gameObject.GetInstanceID();
+            if (graphAgent != null
+                && graphAgent.GetVariable("Supply", out BlackboardVariable<GatherableSupply> supplyVariable)
+                && supplyVariable.Value != null
+                && supplyVariable.Value.gameObject.GetInstanceID() == depletedId)
+            {
+                return true;
+            }
+
+            if (graphAgent != null
+                && graphAgent.GetVariable("TargetGameObject", out BlackboardVariable<GameObject> targetVariable)
+                && targetVariable.Value != null
+                && targetVariable.Value.GetInstanceID() == depletedId)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private void HandleGatherSupplies(GameObject self, int amount, SupplySO supply)

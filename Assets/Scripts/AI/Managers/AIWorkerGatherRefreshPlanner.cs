@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.LowLevel;
 namespace GameDevTV.RTS.AI
 {
     /// <summary>
-    /// SRP: Mỗi N tick AI — Stop rồi Move ngắn để worker thoát gather cũ, tick sau nhận mỏ mới.
+    /// SRP: Mỗi N tick AI — Stop rồi Move ngắn để worker thoát gather cũ; economy vẫn gán mỏ cho worker rảnh cùng tick.
     /// </summary>
     public static class AIWorkerGatherRefreshPlanner
     {
@@ -58,7 +58,7 @@ namespace GameDevTV.RTS.AI
                     worker,
                     stop,
                     AIHitUtility.AtPoint(position),
-                    mouseButton: MouseButton.Right));
+                    mouseButton: MouseButton.Left));
 
                 Vector3 moveTarget = GetRefreshMoveTarget(worker);
                 queue.Enqueue(new AICommandIntent(
@@ -75,7 +75,7 @@ namespace GameDevTV.RTS.AI
             worker != null
             && !worker.IsCommittedToConstructionWork
             && !worker.HasSupplies
-            && worker.IsGatheringOrReturning;
+            && (worker.HasStaleGatherCommand || worker.IsGatheringOrReturning);
 
         private static Vector3 GetRefreshMoveTarget(Worker worker)
         {

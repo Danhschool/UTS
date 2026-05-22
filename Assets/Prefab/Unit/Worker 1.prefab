@@ -112,6 +112,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6ad2276b264dcb84e9ea2f32d944240b, type: 2}
   - {fileID: 11400000, guid: de6013e80ff244c49831aa4c5b3e4aec, type: 2}
   - {fileID: 11400000, guid: ed3aefcbdfec5494ebe14a2091e8704d, type: 2}
+  - {fileID: 11400000, guid: 4297cb2c23ea8c84c9bd0206f9d297c8, type: 2}
   <UnitSO>k__BackingField: {fileID: 11400000, guid: b3a52b4c84453094d9ce598d151af20e, type: 2}
   decalProjector: {fileID: 502642769604517157}
   VisionTransform: {fileID: 7021267853508300106}

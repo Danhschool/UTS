@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
+using GameDevTV.RTS.Units.Formation;
 using UnityEngine;
 
 namespace GameDevTV.RTS.AI
@@ -58,13 +60,6 @@ namespace GameDevTV.RTS.AI
             if (RegroupCompletedOwners.Contains(key))
             {
                 session.Phase = RallyPhase.Attacking;
-                return session.Phase;
-            }
-
-            if (session.Phase == RallyPhase.Regrouping && session.RegroupMoveIssued)
-            {
-                session.Phase = RallyPhase.Attacking;
-                RegroupCompletedOwners.Add(key);
                 return session.Phase;
             }
 
@@ -136,11 +131,27 @@ namespace GameDevTV.RTS.AI
             IReadOnlyList<AbstractUnit> ralliedUnits,
             Vector3 regroupPoint,
             float gatherRadius,
-            float requiredFraction)
+            float requiredFraction,
+            MoveCommand moveCommand = null)
         {
             if (ralliedUnits == null || ralliedUnits.Count == 0)
             {
                 return false;
+            }
+
+            float fraction = Mathf.Clamp01(requiredFraction);
+            if (moveCommand != null && ralliedUnits.Count > 1)
+            {
+                float slotRadius = Mathf.Max(4f, gatherRadius * 0.45f);
+                if (GroupFormationMoveUtility.IsGatheredAtFormation(
+                        ralliedUnits,
+                        regroupPoint,
+                        moveCommand.FormationSpacingMultiplier,
+                        slotRadius,
+                        fraction))
+                {
+                    return true;
+                }
             }
 
             int nearRegroup = 0;
@@ -159,7 +170,7 @@ namespace GameDevTV.RTS.AI
                 }
             }
 
-            int required = Mathf.Max(1, Mathf.CeilToInt(ralliedUnits.Count * Mathf.Clamp01(requiredFraction)));
+            int required = Mathf.Max(1, Mathf.CeilToInt(ralliedUnits.Count * fraction));
             return nearRegroup >= required;
         }
 

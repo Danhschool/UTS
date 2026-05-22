@@ -988,9 +988,21 @@ PrefabInstance:
       propertyPath: m_Name
       value: Decal Projector
       objectReference: {fileID: 0}
+    - target: {fileID: 4586221074893334914, guid: f0adf9c9ef5c04146848f0831151a72f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7631353001431451983, guid: f0adf9c9ef5c04146848f0831151a72f, type: 3}
+      propertyPath: m_Size.x
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 7631353001431451983, guid: f0adf9c9ef5c04146848f0831151a72f, type: 3}
+      propertyPath: m_Size.y
+      value: 30
+      objectReference: {fileID: 0}
     - target: {fileID: 8330270643038821334, guid: f0adf9c9ef5c04146848f0831151a72f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.84024
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8330270643038821334, guid: f0adf9c9ef5c04146848f0831151a72f, type: 3}
       propertyPath: m_LocalPosition.y
@@ -998,7 +1010,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8330270643038821334, guid: f0adf9c9ef5c04146848f0831151a72f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 5.02449
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8330270643038821334, guid: f0adf9c9ef5c04146848f0831151a72f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1063,7 +1075,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2618936292559565899, guid: 2e70b3b9842809646980ebc22c5f8b36, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.84024
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2618936292559565899, guid: 2e70b3b9842809646980ebc22c5f8b36, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1071,7 +1083,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2618936292559565899, guid: 2e70b3b9842809646980ebc22c5f8b36, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 5.02449
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2618936292559565899, guid: 2e70b3b9842809646980ebc22c5f8b36, type: 3}
       propertyPath: m_LocalRotation.w

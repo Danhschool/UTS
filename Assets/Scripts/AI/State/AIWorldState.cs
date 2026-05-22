@@ -23,6 +23,8 @@ namespace GameDevTV.RTS.AI
         public int Food { get; }
         public int Population { get; }
         public int PopulationLimit { get; }
+        /// <summary>Tổng lính (không Worker) đã spawn — không giảm khi chết.</summary>
+        public int LifetimeMilitarySpawnCount { get; }
 
         internal AIWorldStateSnapshot(
             Owner owner,
@@ -36,7 +38,8 @@ namespace GameDevTV.RTS.AI
             int wood,
             int food,
             int population,
-            int populationLimit)
+            int populationLimit,
+            int lifetimeMilitarySpawnCount)
         {
             Owner = owner;
             Units = units;
@@ -50,6 +53,7 @@ namespace GameDevTV.RTS.AI
             Food = food;
             Population = population;
             PopulationLimit = populationLimit;
+            LifetimeMilitarySpawnCount = lifetimeMilitarySpawnCount;
         }
     }
 
@@ -138,7 +142,8 @@ namespace GameDevTV.RTS.AI
                 wood,
                 food,
                 population,
-                populationLimit);
+                populationLimit,
+                registry.LifetimeMilitarySpawnCount);
 
             return LastSnapshot;
         }

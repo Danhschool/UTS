@@ -11,7 +11,7 @@ namespace GameDevTV.RTS.TechTree
 
         public override void Apply(AbstractUnitSO unit)
         {
-            Debug.Log($"{Name} is applying {Amount} to {PropertyPath}.");
+            //Debug.Log($"{Name} is applying {Amount} to {PropertyPath}.");
 
             try
             {

@@ -43,8 +43,9 @@ namespace GameDevTV.RTS.Behavior
                 MainBuilding != null ? MainBuilding.Value : null,
                 configuredDepositTypes);
 
+            Vector3 fromPosition = Unit.Value.transform.position;
             if (!SupplyDepositLocator.TryFindClosest(
-                    Unit.Value.transform.position,
+                    fromPosition,
                     SearchRadius.Value,
                     workerUnit.Owner,
                     configuredDepositTypes,
@@ -54,6 +55,17 @@ namespace GameDevTV.RTS.Behavior
             }
 
             CommandPost.Value = closest.gameObject;
+
+            Vector3 approach = SupplyDepositApproachUtility.ResolveApproachPosition(
+                fromPosition,
+                closest.gameObject,
+                Unit.Value.GetInstanceID());
+
+            if (Unit.Value.TryGetComponent(out BehaviorGraphAgent graphAgent))
+            {
+                graphAgent.SetVariableValue("TargetLocation", approach);
+            }
+
             return Status.Success;
         }
     }

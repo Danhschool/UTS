@@ -16,11 +16,13 @@ namespace GameDevTV.RTS.AI
         private const int MaxBuildingQueueSize = 5;
 
         private readonly AIBaseSettings manualOverrides;
+        private readonly AIMilitarySettings militarySettings;
         private readonly List<ResearchUpgradeCommand> researchRoundScratch = new(8);
 
-        public AIBaseManager(AIBaseSettings manualOverrides = null)
+        public AIBaseManager(AIBaseSettings manualOverrides = null, AIMilitarySettings militaryOverrides = null)
         {
             this.manualOverrides = manualOverrides ?? AIBaseSettings.Default;
+            militarySettings = militaryOverrides ?? AIMilitarySettings.Default;
         }
 
         /// <summary>
@@ -57,12 +59,36 @@ namespace GameDevTV.RTS.AI
             Vector3 ccPosition,
             in AIInfluenceMapTickContext influence)
         {
-            if (!AIInfraBuildUtility.TryGetNextScheduledBuild(
+            bool militaryInfraFocus = AIMilitaryExpansionPlanner.ShouldPrioritizeMilitaryInfra(
+                snapshot,
+                manualOverrides,
+                militarySettings);
+            bool found;
+            BuildBuildingCommand buildCommand;
+            int priority;
+            bool preferNearCivilCentral;
+            if (militaryInfraFocus)
+            {
+                found = AIInfraBuildUtility.TryGetNextMilitaryInfraBuild(
                     snapshot,
                     manualOverrides,
-                    out BuildBuildingCommand buildCommand,
-                    out int priority,
-                    out bool preferNearCivilCentral))
+                    militarySettings,
+                    out buildCommand,
+                    out priority,
+                    out preferNearCivilCentral);
+            }
+            else
+            {
+                found = AIInfraBuildUtility.TryGetNextScheduledBuild(
+                    snapshot,
+                    manualOverrides,
+                    militarySettings,
+                    out buildCommand,
+                    out priority,
+                    out preferNearCivilCentral);
+            }
+
+            if (!found)
             {
                 return;
             }
@@ -90,6 +116,11 @@ namespace GameDevTV.RTS.AI
             }
 
             if (snapshot.Workers.Count >= config.TargetWorkerCount)
+            {
+                return;
+            }
+
+            if (AIMilitaryExpansionPlanner.ShouldThrottleWorkerTraining(snapshot, manualOverrides, militarySettings))
             {
                 return;
             }
@@ -232,11 +263,19 @@ namespace GameDevTV.RTS.AI
                 return false;
             }
 
+            string buildingName = buildCommand.Building != null ? buildCommand.Building.Name : null;
+            if (!string.IsNullOrEmpty(buildingName)
+                && AIInfraBuildUtility.HasPendingInfraBuild(snapshot, buildingName))
+            {
+                return false;
+            }
+
             if (!TryFindPlacementFromCivilCentral(
                     buildCommand,
                     ccPosition,
                     config,
                     preferNearCivilCentral,
+                    snapshot.Owner,
                     influence,
                     expandSearch: false,
                     out Vector3 placement)
@@ -245,12 +284,16 @@ namespace GameDevTV.RTS.AI
                     ccPosition,
                     config,
                     preferNearCivilCentral,
+                    snapshot.Owner,
                     influence,
                     expandSearch: true,
                     out placement))
             {
                 return false;
             }
+
+            PlacementFieldGridContext fieldGrid = PlacementFieldSelectionRegistry.ResolveGrid(ccPosition, influence);
+            PlacementFieldSelectionRegistry.RegisterSelectedPlacement(snapshot.Owner, placement, fieldGrid);
 
             return TryEnqueueInfraBuildWithPlacement(
                 snapshot,
@@ -339,18 +382,26 @@ namespace GameDevTV.RTS.AI
             Vector3 civilCentralPosition,
             AIBaseRuntimeConfig config,
             bool preferNearCivilCentral,
+            Owner placementOwner,
             in AIInfluenceMapTickContext influence,
             bool expandSearch,
-            out Vector3 placement) =>
-            AIInfluencePlacementUtility.TryFindPlacement(
+            out Vector3 placement)
+        {
+            PlacementFieldGridContext fieldGrid = PlacementFieldSelectionRegistry.ResolveGrid(
+                civilCentralPosition,
+                influence);
+            return AIInfluencePlacementUtility.TryFindPlacement(
                 buildCommand,
                 civilCentralPosition,
                 config.PlacementSearchRings,
                 config.PlacementSearchStep,
                 expandSearch,
                 preferNearCivilCentral,
+                placementOwner,
+                fieldGrid,
                 influence,
                 out placement);
+        }
 
         private static StopCommand ResolveStopCommand(Worker worker)
         {

@@ -322,6 +322,7 @@ namespace GameDevTV.RTS.AI
         [SerializeField] private float patrolMinRadius = 22f;
         [Tooltip("0 = không giới hạn bán kính — vòng patrol mở rộng dần theo thời gian.")]
         [SerializeField] private float patrolMaxRadius;
+        [Tooltip("Mỗi vòng scout: bán kính tăng thêm bấy nhiêu mét quanh Civil Central ta.")]
         [SerializeField] private float patrolRingStep = 16f;
         [Tooltip("Tối đa lính nhận lệnh patrol mỗi tick AI (tránh spam queue).")]
         [SerializeField] private int maxPatrolAssignmentsPerTick = 16;
@@ -332,6 +333,61 @@ namespace GameDevTV.RTS.AI
         [Tooltip("Đứng gần nhau bao lâu (giây) trước khi gộp squad.")]
         [SerializeField] private float squadMergeHoldSeconds = 2.5f;
         [SerializeField] private int minSquadMembers = 2;
+
+        [Header("XP đầu — hạ tầng quân sự (trước train lính)")]
+        [Tooltip("Dự trữ tối thiểu Stone trước train lính Barrack (không chặn xây Barrack/Tháp).")]
+        [SerializeField] private int minStoneBeforeMilitaryExpansion = 120;
+        [Tooltip("Dự trữ tối thiểu Wood trước train lính Barrack (không chặn xây Barrack/Tháp).")]
+        [SerializeField] private int minWoodBeforeMilitaryExpansion = 120;
+        [Tooltip("Số Barrack mục tiêu trước khi AI train lính tại Barrack.")]
+        [SerializeField] private int earlyGameTargetBarrackCount = 1;
+        [Tooltip("Số Defense Tower mục tiêu XP đầu (xây song song; không chặn train Barrack).")]
+        [SerializeField] private int earlyGameTargetDefenseTowerCount = 2;
+
+        [Header("Phase mở rộng quân")]
+        [Tooltip("Số lính để chuyển ưu tiên Barrack/Tower + train + squad formation tấn công.")]
+        [SerializeField] private int militaryExpansionArmyThreshold = 10;
+        [Tooltip("Số lính gom một nhóm formation khi expansion (≈10 như multi-select).")]
+        [SerializeField] private int expansionAttackSquadSize = 10;
+        [Tooltip("Kích thước đội thống nhất (tập hợp + scout chunk). 0 = dùng Expansion Attack Squad Size.")]
+        [SerializeField] private int unifiedArmySquadSize;
+        [Tooltip("Bật: phải gom đủ đội formation gần CC trước khi scout.")]
+        [SerializeField] private bool requireArmyAssemblyBeforePatrol = true;
+        [Tooltip("Ít nhất bao nhiêu lính thì được formation Move tới điểm tập hợp (chưa đủ 10).")]
+        [SerializeField] private int minUnitsToBeginStagingAssembly = 1;
+        [SerializeField] private float armyAssemblyStagingRadiusFromCc = 48f;
+        [SerializeField] private float armyAssemblyGatherRadius = 20f;
+        [SerializeField] [Range(0.4f, 1f)] private float armyAssemblyRequiredFraction = 0.55f;
+        [Tooltip("Tấn công tổng / expansion: dùng toàn bộ quân một đội (Attack + formation).")]
+        [SerializeField] private bool useFullArmyUnifiedAttack = true;
+        [Tooltip("Scout: không patrol lẻ — chỉ chunk đội formation.")]
+        [SerializeField] private bool disableSoloPatrolWhenUnifiedArmy = true;
+
+        [Header("Sau khi địch tan tập (scout)")]
+        [Tooltip("Bật: mất contact → khám phá + xây thêm N giây rồi tổng tấn công từ địch gần nhất về CC địch.")]
+        [SerializeField] private bool enablePostContactBufferedOffense = true;
+        [Tooltip("Thời gian (giây) tiếp tục scout/build trước tổng tấn công sau khi không còn thấy địch tụ.")]
+        [SerializeField] private float postContactExploreBuildSeconds = 120f;
+
+        [Header("Vòng tháp phòng thủ quanh CC")]
+        [SerializeField] private bool enableDefenseRingExpansion = true;
+        [SerializeField] private float defenseRingInnerRadius = 100f;
+        [SerializeField] private float defenseRingSpacing = 100f;
+        [SerializeField] private float operationalLeashBeyondOuterRing = 100f;
+        [SerializeField] private int defenseRingMaxRings = 5;
+        [SerializeField] private int towersPerRing = 8;
+        [Tooltip("Mỗi N giây mở khóa thêm một vòng bán kính (không phải cửa sổ đặt tháp).")]
+        [SerializeField] private float towerExpansionIntervalSeconds = 300f;
+        [Tooltip("Số lần thử đặt tháp tối đa mỗi tick AI (thường 1).")]
+        [SerializeField] private int maxTowersPerExpansionPulse = 1;
+        [Tooltip("Lính mỗi bậc tháp (tổng spawn kể cả chết): tháp tiếp theo cần tier×(số tháp hiện có+1).")]
+        [SerializeField] private int militarySpawnedPerTowerTier = 5;
+        [Tooltip("Không đặt được đúng vòng: thử thêm bán kính mỗi bước (m).")]
+        [SerializeField] private float ringPlacementRadiusExpansionStep = 20f;
+        [SerializeField] private int resourceShortageThresholdForEconomyBoost = 3;
+        [SerializeField] private int economyBoostExtraWorkerCap = 4;
+        [Tooltip("Tắt tấn công tổng trừ khi CC địch trong vùng hoạt động.")]
+        [SerializeField] private bool requireEnemyCcInLeashForUnifiedAttack = true;
 
         public Owner EnemyOwner => enemyOwner;
         public float WorkerArmyRatio => workerArmyRatio;
@@ -360,6 +416,36 @@ namespace GameDevTV.RTS.AI
         public float SquadMergeRadius => squadMergeRadius;
         public float SquadMergeHoldSeconds => squadMergeHoldSeconds;
         public int MinSquadMembers => minSquadMembers;
+        public int MinStoneBeforeMilitaryExpansion => Mathf.Max(0, minStoneBeforeMilitaryExpansion);
+        public int MinWoodBeforeMilitaryExpansion => Mathf.Max(0, minWoodBeforeMilitaryExpansion);
+        public int EarlyGameTargetBarrackCount => Mathf.Max(1, earlyGameTargetBarrackCount);
+        public int EarlyGameTargetDefenseTowerCount => Mathf.Max(0, earlyGameTargetDefenseTowerCount);
+        public int MilitaryExpansionArmyThreshold => Mathf.Max(1, militaryExpansionArmyThreshold);
+        public int ExpansionAttackSquadSize => Mathf.Max(2, expansionAttackSquadSize);
+        public int UnifiedArmySquadSize =>
+            unifiedArmySquadSize > 0 ? unifiedArmySquadSize : ExpansionAttackSquadSize;
+        public bool RequireArmyAssemblyBeforePatrol => requireArmyAssemblyBeforePatrol;
+        public int MinUnitsToBeginStagingAssembly => Mathf.Max(1, minUnitsToBeginStagingAssembly);
+        public float ArmyAssemblyStagingRadiusFromCc => Mathf.Max(8f, armyAssemblyStagingRadiusFromCc);
+        public float ArmyAssemblyGatherRadius => Mathf.Max(8f, armyAssemblyGatherRadius);
+        public float ArmyAssemblyRequiredFraction => armyAssemblyRequiredFraction;
+        public bool UseFullArmyUnifiedAttack => useFullArmyUnifiedAttack;
+        public bool DisableSoloPatrolWhenUnifiedArmy => disableSoloPatrolWhenUnifiedArmy;
+        public bool EnablePostContactBufferedOffense => enablePostContactBufferedOffense;
+        public float PostContactExploreBuildSeconds => Mathf.Max(0f, postContactExploreBuildSeconds);
+        public bool EnableDefenseRingExpansion => enableDefenseRingExpansion;
+        public float DefenseRingInnerRadius => Mathf.Max(20f, defenseRingInnerRadius);
+        public float DefenseRingSpacing => Mathf.Max(20f, defenseRingSpacing);
+        public float OperationalLeashBeyondOuterRing => Mathf.Max(0f, operationalLeashBeyondOuterRing);
+        public int DefenseRingMaxRings => Mathf.Clamp(defenseRingMaxRings, 1, 12);
+        public int TowersPerRing => Mathf.Max(4, towersPerRing);
+        public float TowerExpansionIntervalSeconds => Mathf.Max(60f, towerExpansionIntervalSeconds);
+        public int MaxTowersPerExpansionPulse => Mathf.Max(1, maxTowersPerExpansionPulse);
+        public int MilitarySpawnedPerTowerTier => Mathf.Max(1, militarySpawnedPerTowerTier);
+        public float RingPlacementRadiusExpansionStep => Mathf.Max(5f, ringPlacementRadiusExpansionStep);
+        public int ResourceShortageThresholdForEconomyBoost => Mathf.Max(2, resourceShortageThresholdForEconomyBoost);
+        public int EconomyBoostExtraWorkerCap => Mathf.Max(1, economyBoostExtraWorkerCap);
+        public bool RequireEnemyCcInLeashForUnifiedAttack => requireEnemyCcInLeashForUnifiedAttack;
 
         public static AIMilitarySettings Default => new();
     }

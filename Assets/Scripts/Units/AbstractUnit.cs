@@ -5,6 +5,7 @@ using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using GameDevTV.RTS.TechTree;
 using GameDevTV.RTS.Units.Visualization;
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Utilities;
 using Unity.Behavior;
 using UnityEngine;
@@ -91,6 +92,8 @@ namespace GameDevTV.RTS.Units
             graphAgent.SetVariableValue("AttackConfig", unitSO.AttackConfig);
             SyncMoveSpeedFromUnitSo();
             RefreshVisionFromSightConfig();
+
+            Supplies.RegisterPlayerUnit(this);
         }
 
         /// <summary>
@@ -154,6 +157,11 @@ namespace GameDevTV.RTS.Units
         {
             DisposeMovementDestinationCursor();
             SetCommandOverrides(null);
+            if (TryGetComponent(out Combat.UnitAreaRampageController rampage))
+            {
+                rampage.EndRampage();
+            }
+
             graphAgent.SetVariableValue("Command", UnitCommands.Stop);
         }
 
@@ -183,6 +191,28 @@ namespace GameDevTV.RTS.Units
                 UnitCommands.Move => HasArrivedAtMovementGoal(ResolveMovementGoalFromBlackboard()),
                 _ => false
             };
+        }
+
+        /// <summary>
+        /// Mục tiêu: Tuần tra lỏng — Stop hoặc Move (kể cả đang đi) để AI gán điểm mới trong leash.
+        /// </summary>
+        public bool IsEligibleForLoosePatrolMovement()
+        {
+            if (!plannerBlackboardReady
+                || graphAgent == null
+                || CurrentHealth <= 0
+                || Agent == null
+                || !Agent.isOnNavMesh)
+            {
+                return false;
+            }
+
+            if (!graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> commandVariable))
+            {
+                return false;
+            }
+
+            return commandVariable.Value is UnitCommands.Stop or UnitCommands.Move;
         }
 
         /// <summary>
@@ -236,7 +266,7 @@ namespace GameDevTV.RTS.Units
             graphAgent.SetVariableValue("Command", UnitCommands.Attack);
         }
 
-        protected List<GameObject> UpdateNearbyEnemiesBlackboard()
+        protected virtual List<GameObject> UpdateNearbyEnemiesBlackboard()
         {
             List<GameObject> nearbyEnemies = new();
 
@@ -355,7 +385,17 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         protected bool HasLockedAttackTarget()
         {
-            return TryGetLockedAttackTarget(out _, out IDamageable damageable)
+            return TryGetLiveAttackTarget(out _);
+        }
+
+        /// <summary>
+        /// Mục tiêu: API công khai cho rampage/combat helper — target Attack còn sống.
+        /// </summary>
+        public bool TryGetLiveAttackTarget(out IDamageable damageable)
+        {
+            damageable = null;
+            return TryGetLockedAttackTarget(out _, out damageable)
+                && damageable != null
                 && damageable.CurrentHealth > 0;
         }
 

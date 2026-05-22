@@ -54,6 +54,15 @@ namespace GameDevTV.RTS.Behavior
         {
             hasLockedDestination = false;
 
+            if (TargetGameObject.Value != null
+                && Agent.Value.TryGetComponent(out BehaviorGraphAgent graphAgent)
+                && graphAgent.GetVariable("TargetLocation", out BlackboardVariable<Vector3> targetLocation)
+                && targetLocation.Value.sqrMagnitude > 0.04f
+                && TryUsePlannedApproachLocation(targetLocation.Value, TargetGameObject.Value))
+            {
+                return true;
+            }
+
             if (TargetGameObject.Value != null)
             {
                 lockedDestination = CombatTargetGeometryUtility.GetClosestPointOnTarget(
@@ -63,15 +72,46 @@ namespace GameDevTV.RTS.Behavior
                 return true;
             }
 
-            if (Agent.Value.TryGetComponent(out BehaviorGraphAgent graphAgent)
-                && graphAgent.GetVariable("TargetLocation", out BlackboardVariable<Vector3> targetLocation))
+            if (Agent.Value.TryGetComponent(out BehaviorGraphAgent fallbackGraph)
+                && fallbackGraph.GetVariable("TargetLocation", out BlackboardVariable<Vector3> fallbackLocation))
             {
-                lockedDestination = targetLocation.Value;
+                lockedDestination = fallbackLocation.Value;
                 hasLockedDestination = true;
                 return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Dùng TargetLocation do FindClosestCommandPost gán — mỗi worker một ô deposit.
+        /// Cách hoạt động: Chỉ khi điểm nằm gần building target; sample NavMesh một lần.
+        /// </summary>
+        private bool TryUsePlannedApproachLocation(Vector3 plannedLocation, GameObject target)
+        {
+            Vector3 anchor = target.transform.position;
+            float maxSqr = 64f * 64f;
+            if (CombatTargetGeometryUtility.TryGetTargetBounds(target, out Bounds bounds))
+            {
+                float extent = Mathf.Max(bounds.extents.x, bounds.extents.z) + 8f;
+                maxSqr = extent * extent;
+            }
+
+            Vector3 delta = plannedLocation - anchor;
+            delta.y = 0f;
+            if (delta.sqrMagnitude > maxSqr)
+            {
+                return false;
+            }
+
+            lockedDestination = plannedLocation;
+            if (NavMesh.SamplePosition(plannedLocation, out NavMeshHit hit, 4f, NavMesh.AllAreas))
+            {
+                lockedDestination = hit.position;
+            }
+
+            hasLockedDestination = true;
+            return true;
         }
 
         protected override Status OnStart()

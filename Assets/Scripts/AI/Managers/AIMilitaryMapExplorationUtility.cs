@@ -18,6 +18,7 @@ namespace GameDevTV.RTS.AI
             int patrolPhase,
             float patrolMinRadius,
             float patrolMaxRadius,
+            float patrolRingStep,
             float exploredCoverageThreshold,
             Vector3 civilCentralPosition,
             MinimapFogSystemReference fogSystem)
@@ -25,7 +26,8 @@ namespace GameDevTV.RTS.AI
             float upperRadius = AIMilitaryPatrolUtility.GetCurrentPatrolUpperRadius(
                 patrolPhase,
                 patrolMinRadius,
-                patrolMaxRadius);
+                patrolMaxRadius,
+                patrolRingStep);
 
             if (patrolMaxRadius > patrolMinRadius
                 && upperRadius >= patrolMaxRadius - 0.5f)

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
+using GameDevTV.RTS.Units.Combat;
 using GameDevTV.RTS.Utilities;
 using UnityEngine;
 
@@ -148,8 +149,24 @@ namespace GameDevTV.RTS.AI
         {
             output.Clear();
             float radiusSqr = radius * radius;
-            AbstractUnit[] allUnits = Object.FindObjectsByType<AbstractUnit>(FindObjectsSortMode.None);
 
+            BaseBuilding[] allBuildings = Object.FindObjectsByType<BaseBuilding>(FindObjectsSortMode.None);
+            for (int i = 0; i < allBuildings.Length; i++)
+            {
+                BaseBuilding building = allBuildings[i];
+                if (!IsHostileBuildingIncludingCivilCentral(building, friendlyOwner, requireVisible))
+                {
+                    continue;
+                }
+
+                float sqr = (building.transform.position - civilCentralPosition).sqrMagnitude;
+                if (sqr <= radiusSqr)
+                {
+                    output.Add(building);
+                }
+            }
+
+            AbstractUnit[] allUnits = Object.FindObjectsByType<AbstractUnit>(FindObjectsSortMode.None);
             for (int i = 0; i < allUnits.Length; i++)
             {
                 AbstractUnit unit = allUnits[i];
@@ -202,37 +219,26 @@ namespace GameDevTV.RTS.AI
         }
 
         /// <summary>
-        /// Mục tiêu: Chọn mục tiêu địch gần CC nhất để AttackCommand.
-        /// Cách hoạt động: Duyệt threat list đã collect; bỏ tự hủy / invisible.
+        /// Mục tiêu: Chọn mục tiêu trong vùng — ưu tiên lính địch, rồi công trình gần nhất.
         /// </summary>
         public static bool TryPickClosestThreat(
             Vector3 fromPosition,
             IReadOnlyList<IDamageable> threats,
-            out IDamageable closest)
-        {
-            closest = null;
-            float bestSqr = float.MaxValue;
+            out IDamageable closest) =>
+            TryPickClosestThreat(fromPosition, Owner.Invalid, requireVisible: false, threats, out closest);
 
-            for (int i = 0; i < threats.Count; i++)
-            {
-                IDamageable threat = threats[i];
-                if (threat?.Transform == null || threat.CurrentHealth <= 0)
-                {
-                    continue;
-                }
-
-                float sqr = (threat.Transform.position - fromPosition).sqrMagnitude;
-                if (sqr >= bestSqr)
-                {
-                    continue;
-                }
-
-                bestSqr = sqr;
-                closest = threat;
-            }
-
-            return closest != null;
-        }
+        public static bool TryPickClosestThreat(
+            Vector3 fromPosition,
+            Owner friendlyOwner,
+            bool requireVisible,
+            IReadOnlyList<IDamageable> threats,
+            out IDamageable closest) =>
+            CombatTargetPriorityUtility.TryPickPreferredThreat(
+                fromPosition,
+                friendlyOwner,
+                requireVisible,
+                threats,
+                out closest);
 
         public static List<IDamageable> ThreatScratchList => ThreatScratch;
 
@@ -268,14 +274,20 @@ namespace GameDevTV.RTS.AI
         private static bool IsHostileBuilding(
             BaseBuilding building,
             Owner friendlyOwner,
+            bool requireVisible) =>
+            IsHostileBuildingIncludingCivilCentral(building, friendlyOwner, requireVisible)
+            && !CivilCentralUtility.IsCivilCentral(building);
+
+        private static bool IsHostileBuildingIncludingCivilCentral(
+            BaseBuilding building,
+            Owner friendlyOwner,
             bool requireVisible)
         {
             if (building == null
                 || building.Owner == friendlyOwner
                 || building.Owner == Owner.Unowned
                 || building.Owner == Owner.Invalid
-                || building.CurrentHealth <= 0
-                || CivilCentralUtility.IsCivilCentral(building))
+                || building.CurrentHealth <= 0)
             {
                 return false;
             }

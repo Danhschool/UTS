@@ -40,8 +40,19 @@ namespace GameDevTV.RTS.Player
 
         private readonly HashSet<AbstractUnit> playerUnitsOnField = new(128);
 
+        private static Supplies activeInstance;
+
+        /// <summary>
+        /// Mục tiêu: Đồng bộ HUD dân sau khi unit Player1 spawn xong (Start / NotifySpawned).
+        /// </summary>
+        public static void RegisterPlayerUnit(AbstractUnit unit)
+        {
+            activeInstance?.TrackPlayerUnitSpawn(unit);
+        }
+
         private void Awake()
         {
+            activeInstance = this;
             Stone = new Dictionary<Owner, int>();
             Wood = new Dictionary<Owner, int>();
             Food = new Dictionary<Owner, int>();
@@ -104,14 +115,16 @@ namespace GameDevTV.RTS.Player
             }
         }
 
-        private void HandleUnitSpawn(UnitSpawnEvent evt)
+        private void HandleUnitSpawn(UnitSpawnEvent evt) => TrackPlayerUnitSpawn(evt.Unit);
+
+        private void TrackPlayerUnitSpawn(AbstractUnit unit)
         {
-            if (evt.Unit == null || evt.Unit.Owner != Owner.Player1)
+            if (unit == null || unit.Owner != Owner.Player1)
             {
                 return;
             }
 
-            playerUnitsOnField.Add(evt.Unit);
+            playerUnitsOnField.Add(unit);
             RefreshPlayer1PopulationHud();
         }
 
@@ -132,9 +145,16 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         private void RefreshPlayer1PopulationHud()
         {
-            playerUnitsOnField.RemoveWhere(unit => unit == null || unit.CurrentHealth <= 0);
+            playerUnitsOnField.RemoveWhere(unit => unit == null);
 
-            int aliveCount = playerUnitsOnField.Count;
+            int aliveCount = 0;
+            foreach (AbstractUnit unit in playerUnitsOnField)
+            {
+                if (unit != null && unit.CurrentHealth > 0)
+                {
+                    aliveCount++;
+                }
+            }
             Population[Owner.Player1] = aliveCount;
 
             if (populationText == null)
@@ -171,6 +191,11 @@ namespace GameDevTV.RTS.Player
 
         private void OnDestroy()
         {
+            if (activeInstance == this)
+            {
+                activeInstance = null;
+            }
+
             Bus<SupplyEvent>.UnregisterForAll(HandleSupplyEvent);
             Bus<UnitSpawnEvent>.UnregisterForAll(HandleUnitSpawn);
             Bus<UnitDeathEvent>.UnregisterForAll(HandleUnitDeath);

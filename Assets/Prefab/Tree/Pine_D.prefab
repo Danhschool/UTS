@@ -524,8 +524,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3, y: 18.560324, z: 4}
-  m_Center: {x: 0.115501404, y: 8.78016, z: -0.053380966}
+  m_Size: {x: 3, y: 7.602517, z: 4}
+  m_Center: {x: 0.115501404, y: 3.3012567, z: -0.053380966}
 --- !u!208 &7858159521992907718
 NavMeshObstacle:
   m_ObjectHideFlags: 0
@@ -556,5 +556,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Environment.GatherableSupply
   <Supply>k__BackingField: {fileID: 11400000, guid: 1095511bff25e6c4ba9f593164fb4f32, type: 2}
   <Amount>k__BackingField: 0
-  <IsBusy>k__BackingField: 0
   <IsVisible>k__BackingField: 0

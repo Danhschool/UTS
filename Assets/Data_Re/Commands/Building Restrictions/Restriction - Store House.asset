@@ -20,4 +20,4 @@ MonoBehaviour:
   <MustBeFullyOnNavmesh>k__BackingField: 1
   <NavMeshAgentTypeId>k__BackingField: 0
   <NavMeshTolerance>k__BackingField: 0.25
-  <Extents>k__BackingField: {x: 8, y: 6, z: 8}
+  <Extents>k__BackingField: {x: 12, y: 6, z: 12}

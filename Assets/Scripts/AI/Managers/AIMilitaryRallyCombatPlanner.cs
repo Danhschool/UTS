@@ -34,6 +34,7 @@ namespace GameDevTV.RTS.AI
 
             moveFallbackScratch?.Clear();
             int attackOrders = 0;
+            bool anyInMeleeRange = false;
 
             for (int i = 0; i < army.Count; i++)
             {
@@ -52,6 +53,7 @@ namespace GameDevTV.RTS.AI
                         trigger))
                 {
                     attackOrders++;
+                    anyInMeleeRange = true;
                     continue;
                 }
 
@@ -63,14 +65,15 @@ namespace GameDevTV.RTS.AI
                 && moveCommand != null)
             {
                 RaycastHit hit = AIHitUtility.AtPoint(attackPoint);
-                GroupFormationMoveUtility.TryApplyMoveIfNeeded(moveFallbackScratch, hit, moveCommand, 28f);
+                GroupFormationMoveUtility.TryApplyMoveIfNeeded(moveFallbackScratch, hit, moveCommand, 32f);
             }
 
-            return attackOrders > 0 || (moveFallbackScratch != null && moveFallbackScratch.Count > 0);
+            return anyInMeleeRange
+                || (moveFallbackScratch != null && moveFallbackScratch.Count > 0);
         }
 
         /// <summary>
-        /// Mục tiêu: Một lính nhận Attack — ưu tiên lính địch gần nhất, rồi CC/nhà visible.
+        /// Mục tiêu: Một lính nhận Attack — ưu tiên lính địch trong tầm, rồi CC/nhà.
         /// </summary>
         private static bool TryOrderUnitAttack(
             AbstractUnit unit,
@@ -123,6 +126,36 @@ namespace GameDevTV.RTS.AI
             return false;
         }
 
+        /// <summary>
+        /// Mục tiêu: Cho <see cref="AIMilitaryArmySquadExecutor"/> gửi Attack cả đội lên một damageable.
+        /// </summary>
+        public static bool TryApplyAttackOnDamageable(
+            AbstractUnit attacker,
+            Owner friendlyOwner,
+            IDamageable damageable,
+            Collider collider) =>
+            TryApplyAttackWithCommand(attacker, friendlyOwner, damageable, collider);
+
+        public static bool TryApplyAttackOnBuilding(
+            AbstractUnit attacker,
+            Owner friendlyOwner,
+            BaseBuilding building)
+        {
+            if (building == null || building.CurrentHealth <= 0)
+            {
+                return false;
+            }
+
+            Collider collider = building.GetComponent<Collider>()
+                ?? building.GetComponentInChildren<Collider>();
+            if (collider == null || !collider.TryGetComponent(out IDamageable damageable))
+            {
+                return false;
+            }
+
+            return TryApplyAttackWithCommand(attacker, friendlyOwner, damageable, collider);
+        }
+
         private static bool TryApplyAttackOnUnit(
             AbstractUnit attacker,
             Owner friendlyOwner,
@@ -135,26 +168,6 @@ namespace GameDevTV.RTS.AI
 
             Collider collider = hostile.GetComponent<Collider>()
                 ?? hostile.GetComponentInChildren<Collider>();
-            if (collider == null || !collider.TryGetComponent(out IDamageable damageable))
-            {
-                return false;
-            }
-
-            return TryApplyAttackWithCommand(attacker, friendlyOwner, damageable, collider);
-        }
-
-        private static bool TryApplyAttackOnBuilding(
-            AbstractUnit attacker,
-            Owner friendlyOwner,
-            BaseBuilding building)
-        {
-            if (building == null || building.CurrentHealth <= 0)
-            {
-                return false;
-            }
-
-            Collider collider = building.GetComponent<Collider>()
-                ?? building.GetComponentInChildren<Collider>();
             if (collider == null || !collider.TryGetComponent(out IDamageable damageable))
             {
                 return false;

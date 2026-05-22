@@ -58,10 +58,10 @@ namespace GameDevTV.RTS.UI.GameEventLog
                 return;
             }
 
-            if (GameEventLogMessageFormatter.TryFormatSupply(evt, out string message, out GameEventLogCategory category))
-            {
-                GameEventLog.Post(message, category);
-            }
+            //if (GameEventLogMessageFormatter.TryFormatSupply(evt, out string message, out GameEventLogCategory category))
+            //{
+            //    GameEventLog.Post(message, category);
+            //}
         }
 
         private void HandleBuildingSpawn(BuildingSpawnEvent evt)

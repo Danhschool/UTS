@@ -23,7 +23,7 @@ namespace GameDevTV.RTS.AI
         /// </summary>
         public static bool NeedsScheduledBuilding(AIWorldStateSnapshot snapshot, AIBaseSettings settings)
         {
-            return TryGetNextScheduledBuild(snapshot, settings, out _, out _, out _);
+            return TryGetNextScheduledBuild(snapshot, settings, null, out _, out _, out _);
         }
 
         /// <summary>
@@ -41,6 +41,7 @@ namespace GameDevTV.RTS.AI
         public static bool TryGetNextScheduledBuild(
             AIWorldStateSnapshot snapshot,
             AIBaseSettings settings,
+            AIMilitarySettings militarySettings,
             out BuildBuildingCommand buildCommand,
             out int priority,
             out bool preferNearCivilCentral)
@@ -86,17 +87,228 @@ namespace GameDevTV.RTS.AI
                 return false;
             }
 
-            if (TryScheduleIfMissing(snapshot, settings, BarrackDisplayName, AIBasePriority.BuildBarrack, false, out buildCommand, out priority, out preferNearCivilCentral))
+            return TryScheduleNextBarrackOrTower(snapshot, settings, militarySettings, out buildCommand, out priority, out preferNearCivilCentral);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Phase mở rộng quân — queue Barrack (cách cũ); Tower qua ring khi bật vòng tháp.
+        /// </summary>
+        public static bool TryGetNextMilitaryInfraBuild(
+            AIWorldStateSnapshot snapshot,
+            AIBaseSettings settings,
+            AIMilitarySettings militarySettings,
+            out BuildBuildingCommand buildCommand,
+            out int priority,
+            out bool preferNearCivilCentral)
+        {
+            buildCommand = null;
+            priority = 0;
+            preferNearCivilCentral = false;
+
+            if (snapshot == null || !HasBackboneInfraComplete(snapshot))
+            {
+                return false;
+            }
+
+            return TryScheduleNextBarrackOrTower(snapshot, settings, militarySettings, out buildCommand, out priority, out preferNearCivilCentral);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Có thể giao thêm lệnh xây loại nhà này — chưa đủ cap và chưa có bản pending.
+        /// Cách hoạt động: Đếm trên map + order tracker + worker đang cam kết build cùng tên.
+        /// </summary>
+        public static bool CanScheduleInfraBuild(
+            AIWorldStateSnapshot snapshot,
+            string buildingDisplayName,
+            int maxCount)
+        {
+            if (snapshot == null || string.IsNullOrEmpty(buildingDisplayName))
+            {
+                return false;
+            }
+
+            if (maxCount <= 0)
+            {
+                return !HasInfraPresent(snapshot, buildingDisplayName);
+            }
+
+            return CountInfraBuildings(snapshot, buildingDisplayName) < maxCount
+                && !HasPendingInfraBuild(snapshot, buildingDisplayName);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Loại nhà đang được chuẩn bị tạo (chưa cần có trên map).
+        /// Cách hoạt động: <see cref="AIInfraBuildOrderTracker"/> hoặc worker blackboard build target.
+        /// </summary>
+        public static bool HasPendingInfraBuild(AIWorldStateSnapshot snapshot, string displayName)
+        {
+            if (snapshot == null || string.IsNullOrEmpty(displayName))
+            {
+                return false;
+            }
+
+            if (AIInfraBuildOrderTracker.HasOrderedBuild(snapshot.Owner, displayName))
             {
                 return true;
             }
 
-            if (TryScheduleIfMissing(snapshot, settings, DefenseTowerDisplayName, AIBasePriority.BuildDefenseTower, false, out buildCommand, out priority, out preferNearCivilCentral))
+            for (int i = 0; i < snapshot.Workers.Count; i++)
             {
-                return true;
+                Worker worker = snapshot.Workers[i];
+                if (worker != null
+                    && worker.TryGetCommittedBuildBuildingName(out string pendingName)
+                    && pendingName == displayName)
+                {
+                    return true;
+                }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Đếm nhà loại displayName (hoàn thành hoặc đang xây, không Destroyed).
+        /// </summary>
+        public static int CountInfraBuildings(AIWorldStateSnapshot snapshot, string displayName)
+        {
+            if (snapshot == null || string.IsNullOrEmpty(displayName))
+            {
+                return 0;
+            }
+
+            int count = 0;
+            for (int i = 0; i < snapshot.Buildings.Count; i++)
+            {
+                BaseBuilding building = snapshot.Buildings[i];
+                if (building?.BuildingSO == null || building.BuildingSO.Name != displayName)
+                {
+                    continue;
+                }
+
+                if (building.Progress.State == BuildingProgress.BuildingState.Destroyed)
+                {
+                    continue;
+                }
+
+                count++;
+            }
+
+            return count;
+        }
+
+        private static bool TryScheduleNextBarrackOrTower(
+            AIWorldStateSnapshot snapshot,
+            AIBaseSettings settings,
+            AIMilitarySettings militarySettings,
+            out BuildBuildingCommand buildCommand,
+            out int priority,
+            out bool preferNearCivilCentral)
+        {
+            int maxBarracks = ResolveMaxBarracks(militarySettings);
+            int maxTowers = ResolveMaxTowersForScheduling(snapshot, militarySettings);
+
+            if (TryScheduleIfUnderCap(
+                    snapshot,
+                    settings,
+                    BarrackDisplayName,
+                    maxBarracks,
+                    AIBasePriority.BuildBarrack,
+                    false,
+                    out buildCommand,
+                    out priority,
+                    out preferNearCivilCentral))
+            {
+                return true;
+            }
+
+            if (militarySettings != null && militarySettings.EnableDefenseRingExpansion)
+            {
+                buildCommand = null;
+                priority = 0;
+                preferNearCivilCentral = false;
+                return false;
+            }
+
+            int barrackCount = CountInfraBuildings(snapshot, BarrackDisplayName);
+            if (barrackCount < 1)
+            {
+                buildCommand = null;
+                priority = 0;
+                preferNearCivilCentral = false;
+                return false;
+            }
+
+            return TryScheduleIfUnderCap(
+                snapshot,
+                settings,
+                DefenseTowerDisplayName,
+                maxTowers,
+                AIBasePriority.BuildDefenseTower,
+                false,
+                out buildCommand,
+                out priority,
+                out preferNearCivilCentral);
+        }
+
+        private static int ResolveMaxBarracks(AIMilitarySettings militarySettings) =>
+            militarySettings != null ? militarySettings.EarlyGameTargetBarrackCount : 1;
+
+        private static int ResolveMaxTowersForScheduling(
+            AIWorldStateSnapshot snapshot,
+            AIMilitarySettings militarySettings)
+        {
+            if (militarySettings == null)
+            {
+                return 1;
+            }
+
+            if (!HasMetEarlyMilitaryInfraTargetsForScheduling(snapshot, militarySettings))
+            {
+                return militarySettings.EarlyGameTargetDefenseTowerCount;
+            }
+
+            return Mathf.Max(
+                militarySettings.EarlyGameTargetDefenseTowerCount,
+                militarySettings.MaxTowersInLine);
+        }
+
+        private static bool HasMetEarlyMilitaryInfraTargetsForScheduling(
+            AIWorldStateSnapshot snapshot,
+            AIMilitarySettings militarySettings)
+        {
+            int barracks = CountInfraBuildings(snapshot, BarrackDisplayName);
+            int towers = CountInfraBuildings(snapshot, DefenseTowerDisplayName);
+            return barracks >= militarySettings.EarlyGameTargetBarrackCount
+                && towers >= militarySettings.EarlyGameTargetDefenseTowerCount;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Schedule thêm nhà cùng loại khi chưa đạt cap (XP đầu: nhiều Barrack/Tháp).
+        /// </summary>
+        private static bool TryScheduleIfUnderCap(
+            AIWorldStateSnapshot snapshot,
+            AIBaseSettings settings,
+            string buildingDisplayName,
+            int maxCount,
+            int buildPriority,
+            bool preferNearCc,
+            out BuildBuildingCommand buildCommand,
+            out int priority,
+            out bool preferNearCivilCentral)
+        {
+            buildCommand = null;
+            priority = 0;
+            preferNearCivilCentral = false;
+
+            if (!CanScheduleInfraBuild(snapshot, buildingDisplayName, maxCount))
+            {
+                return false;
+            }
+
+            buildCommand = AIBaseConfigResolver.ResolveBuildCommand(snapshot, settings, buildingDisplayName);
+            priority = buildPriority;
+            preferNearCivilCentral = preferNearCc;
+            return buildCommand != null;
         }
 
         private static bool TryScheduleIfMissing(
@@ -113,7 +325,7 @@ namespace GameDevTV.RTS.AI
             priority = buildPriority;
             preferNearCivilCentral = preferNearCc;
 
-            if (buildCommand == null || HasInfraPresent(snapshot, buildingDisplayName))
+            if (buildCommand == null || !CanScheduleInfraBuild(snapshot, buildingDisplayName, maxCount: 1))
             {
                 buildCommand = null;
                 priority = 0;
@@ -157,7 +369,7 @@ namespace GameDevTV.RTS.AI
                 return false;
             }
 
-            if (AIInfraBuildOrderTracker.HasOrderedBuild(snapshot.Owner, displayName))
+            if (HasPendingInfraBuild(snapshot, displayName))
             {
                 return true;
             }
@@ -178,17 +390,6 @@ namespace GameDevTV.RTS.AI
                 return true;
             }
 
-            for (int i = 0; i < snapshot.Workers.Count; i++)
-            {
-                Worker worker = snapshot.Workers[i];
-                if (worker != null
-                    && worker.TryGetCommittedBuildBuildingName(out string pendingName)
-                    && pendingName == displayName)
-                {
-                    return true;
-                }
-            }
-
             return false;
         }
 
@@ -196,13 +397,13 @@ namespace GameDevTV.RTS.AI
             AIWorldStateSnapshot snapshot,
             AIBaseSettings settings,
             out BuildBuildingCommand buildCommand) =>
-            TryGetNextScheduledBuild(snapshot, settings, out buildCommand, out _, out _);
+            TryGetNextScheduledBuild(snapshot, settings, null, out buildCommand, out _, out _);
 
         public static bool CanAffordAndUnlockInfraBuild(
             AIWorldStateSnapshot snapshot,
             AIBaseSettings settings)
         {
-            if (!TryGetNextScheduledBuild(snapshot, settings, out BuildBuildingCommand buildCommand, out _, out _))
+            if (!TryGetNextScheduledBuild(snapshot, settings, null, out BuildBuildingCommand buildCommand, out _, out _))
             {
                 return false;
             }

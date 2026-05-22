@@ -70,6 +70,75 @@ namespace GameDevTV.RTS.AI
             return false;
         }
 
+        /// <summary>
+        /// Mục tiêu: Sau buffer 2 phút — điểm vào = lính/nhà địch gần CC ta nhất; đích = CC địch.
+        /// Cách hoạt động: Ưu tiên unit → building; CC từ visible hoặc memory.
+        /// </summary>
+        public static bool TryResolvePostBufferOffensiveTargets(
+            Owner friendlyOwner,
+            Owner enemyOwner,
+            Vector3 friendlyCivilCentralPosition,
+            bool requireVisible,
+            out Vector3 entryPoint,
+            out Vector3 enemyCivilCentralPoint,
+            out RallyTrigger trigger)
+        {
+            entryPoint = default;
+            enemyCivilCentralPoint = default;
+            trigger = RallyTrigger.None;
+
+            bool hasEntry = false;
+            if (AIMilitaryHostileScanner.TryFindClosestVisibleHostileUnit(
+                    friendlyOwner,
+                    friendlyCivilCentralPosition,
+                    requireVisible,
+                    out AbstractUnit hostileUnit))
+            {
+                entryPoint = hostileUnit.transform.position;
+                trigger = RallyTrigger.VisibleHostileUnit;
+                hasEntry = true;
+            }
+            else if (AIMilitaryHostileScanner.TryFindClosestVisibleHostileBuilding(
+                         friendlyOwner,
+                         friendlyCivilCentralPosition,
+                         requireVisible,
+                         out BaseBuilding hostileBuilding))
+            {
+                entryPoint = hostileBuilding.transform.position;
+                trigger = RallyTrigger.VisibleHostileBuilding;
+                hasEntry = true;
+            }
+
+            if (AIMilitaryHostileScanner.TryFindVisibleEnemyCivilCentral(
+                    enemyOwner,
+                    requireVisible,
+                    out BaseBuilding enemyCc))
+            {
+                AIMilitaryEnemyTracker.RememberVisibleEnemyCivilCentral(friendlyOwner, enemyCc);
+                enemyCivilCentralPoint = enemyCc.transform.position;
+            }
+            else if (AIMilitaryEnemyTracker.TryGetLastKnownEnemyCcPosition(
+                         friendlyOwner,
+                         enemyOwner,
+                         out Vector3 rememberedCc))
+            {
+                enemyCivilCentralPoint = rememberedCc;
+            }
+            else if (hasEntry)
+            {
+                enemyCivilCentralPoint = entryPoint;
+            }
+
+            if (!hasEntry && enemyCivilCentralPoint != default)
+            {
+                entryPoint = enemyCivilCentralPoint;
+                trigger = RallyTrigger.VisibleEnemyCivilCentral;
+                return true;
+            }
+
+            return hasEntry && enemyCivilCentralPoint != default;
+        }
+
         public static int GetMinimumArmyToRally(RallyTrigger trigger, int defaultMinArmy, int minArmyOnHostileContact) =>
             trigger == RallyTrigger.None
                 ? defaultMinArmy

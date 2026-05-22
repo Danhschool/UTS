@@ -526,6 +526,10 @@ namespace GameDevTV.RTS.AI
         [Tooltip("Bật = Barrack/Tower chỉ sau Store+Corral+Forge. Tắt = dễ test Barrack/Tower sớm.")]
         [SerializeField] private bool requireBackboneBeforeBarrackAndTower;
 
+        [Header("Phase mở rộng quân (đủ lính)")]
+        [Tooltip("Khi quân ≥ ngưỡng Military: cap train worker ở mức này (vẫn giữ economy tối thiểu).")]
+        [SerializeField] private int minWorkersDuringMilitaryExpansion = 5;
+
         public BuildUnitCommand TrainWorkerCommand => trainWorkerCommand;
         public BuildBuildingCommand BuildCorralCommand => buildCorralCommand;
         public BuildBuildingCommand BuildForgeCommand => buildForgeCommand;
@@ -541,6 +545,7 @@ namespace GameDevTV.RTS.AI
         public int ReserveWoodBeforeTrain => reserveWoodBeforeTrain;
         public int ReserveFoodBeforeTrain => reserveFoodBeforeTrain;
         public bool RequireBackboneBeforeBarrackAndTower => requireBackboneBeforeBarrackAndTower;
+        public int MinWorkersDuringMilitaryExpansion => Mathf.Max(1, minWorkersDuringMilitaryExpansion);
         public float PlacementNavMeshObstacleProbeRadius => placementNavMeshObstacleProbeRadius;
         public LayerMask PlacementNavMeshObstacleProbeLayers => placementNavMeshObstacleProbeLayers;
 

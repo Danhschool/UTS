@@ -9,6 +9,7 @@ namespace GameDevTV.RTS.AI
         /// <summary>Move ngắn sau Stop — cùng tick, priority thấp hơn Stop một chút.</summary>
         public const int WorkerGatherRefreshMove = 844;
         public const int ReturnSupplies = 550;
+        public const int HuntWildAnimalForFood = 410;
         public const int GatherVisibleSupply = 400;
         public const int BuildRemoteStore = 520;
 

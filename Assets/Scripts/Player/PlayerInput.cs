@@ -632,6 +632,12 @@ namespace GameDevTV.RTS.Player
                 return true;
             }
 
+            if (commandBeingActivated is RallyAreaCommand rallyCommand
+                && RallyAreaCommand.TryApplyRally(abstractUnits[0], hit, rallyCommand))
+            {
+                return true;
+            }
+
             for (int i = 0; i < abstractUnits.Count; i++)
             {
                 BaseCommand command = commandBeingActivated;
@@ -650,6 +656,12 @@ namespace GameDevTV.RTS.Player
                         if (baseCommand is MoveCommand move
                             && abstractUnits.Count > 1
                             && GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, move))
+                        {
+                            return true;
+                        }
+
+                        if (baseCommand is RallyAreaCommand rally
+                            && RallyAreaCommand.TryApplyRally(abstractUnits[0], hit, rally))
                         {
                             return true;
                         }
@@ -674,6 +686,12 @@ namespace GameDevTV.RTS.Player
                 if (command is MoveCommand moveForGroup
                     && abstractUnits.Count > 1
                     && GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, moveForGroup))
+                {
+                    return true;
+                }
+
+                if (command is RallyAreaCommand rallyForGroup
+                    && RallyAreaCommand.TryApplyRally(abstractUnits[0], hit, rallyForGroup))
                 {
                     return true;
                 }
