@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - Home
+  - Unit
   layers:
   - Default
   - TransparentFX
@@ -21,8 +22,8 @@ TagManager:
   - World Bounds
   - Fog of War
   - Fog of War Vision
-  - 
-  - 
+  - Fog Vision AI1
+  - Fog Vision AI2
   - 
   - 
   - 
