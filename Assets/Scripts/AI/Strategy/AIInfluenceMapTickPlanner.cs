@@ -19,7 +19,8 @@ namespace GameDevTV.RTS.AI
             float remoteClusterMinDistance,
             AIInfluenceMap map,
             List<Vector3> threatScratch,
-            List<Vector3> economicScratch)
+            List<Vector3> economicScratch,
+            bool useCoarseGrid = false)
         {
             if (snapshot?.CivilCentral == null || map == null)
             {
@@ -28,6 +29,10 @@ namespace GameDevTV.RTS.AI
 
             Vector3 ccPosition = snapshot.CivilCentral.transform.position;
             AIInfluenceMapRuntimeConfig config = AIInfluenceMapConfigResolver.Resolve(snapshot, baseConfig);
+            if (useCoarseGrid)
+            {
+                config = config.WithCellSizeScale(1.85f);
+            }
 
             AIInfluenceMap.CollectThreatPositionsFromSnapshot(
                 snapshot,

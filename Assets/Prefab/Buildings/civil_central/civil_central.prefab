@@ -12,6 +12,9 @@ GameObject:
   - component: {fileID: 1517300278672641510}
   - component: {fileID: 2301040000706702207}
   - component: {fileID: 8395517768350979603}
+  - component: {fileID: 5788190384831448055}
+  - component: {fileID: 3689305159895156171}
+  - component: {fileID: 5606768149345035736}
   m_Layer: 7
   m_Name: civil_central
   m_TagString: Untagged
@@ -109,6 +112,72 @@ MonoBehaviour:
   <BuildingSO>k__BackingField: {fileID: 0}
   navMeshObstacle: {fileID: 1517300278672641510}
   unitSpawnPoint: {fileID: 0}
+--- !u!114 &5788190384831448055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2665764001411241133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 0
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &3689305159895156171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2665764001411241133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a553cb17010b2403e8523b558bffbc14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror.Components::Mirror.NetworkTransformUnreliable
+  syncDirection: 1
+  syncMode: 0
+  syncInterval: 0
+  target: {fileID: 4774175999237473787}
+  syncPosition: 1
+  syncRotation: 1
+  syncScale: 0
+  onlySyncOnChange: 1
+  compressRotation: 1
+  interpolatePosition: 1
+  interpolateRotation: 1
+  interpolateScale: 1
+  coordinateSpace: 0
+  timelineOffset: 1
+  showGizmos: 0
+  showOverlay: 0
+  overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
+  bufferResetMultiplier: 3
+  useFixedUpdate: 0
+  positionSensitivity: 0.01
+  rotationSensitivity: 0.01
+  scaleSensitivity: 0.01
+--- !u!114 &5606768149345035736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2665764001411241133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33b57de20edc31046a3f95c630f5e6dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsNetworkEntity
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
 --- !u!1 &8321338625966038123
 GameObject:
   m_ObjectHideFlags: 0
@@ -899,9 +968,21 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8011791996489159772, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: fillImage
+      value: 
+      objectReference: {fileID: 7989004438696844402}
+    - target: {fileID: 8011791996489159772, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: borderImage
+      value: 
+      objectReference: {fileID: 6510883940660996317}
+    - target: {fileID: 8011791996489159772, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: commandable
       value: 
       objectReference: {fileID: 8395517768350979603}
+    - target: {fileID: 8011791996489159772, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: worldCamera
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -912,6 +993,28 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
   m_PrefabInstance: {fileID: 7183259815295169352}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6510883940660996317 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4173533714198125461, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+  m_PrefabInstance: {fileID: 7183259815295169352}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &7989004438696844402 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 967910581917642554, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+  m_PrefabInstance: {fileID: 7183259815295169352}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &7748936087414268743
 PrefabInstance:
   m_ObjectHideFlags: 0

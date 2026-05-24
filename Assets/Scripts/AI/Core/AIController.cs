@@ -18,10 +18,21 @@ namespace GameDevTV.RTS.AI
     {
         [SerializeField] private Owner aiOwner = Owner.AI2;
         [SerializeField] private AIDifficultySO difficultyProfile;
-        [SerializeField] private float tickInterval = 0.65f;
+        [SerializeField] private float tickInterval = 1.05f;
         [SerializeField] private bool logTickSummary;
+        [Header("Performance — giảm lag mỗi tick AI")]
+        [Tooltip("Chia economy/base/military/influence giữa nhiều tick; tick chậm hơn khi có AIDifficultySO.")]
+        [SerializeField] private bool aggressivePerformanceMode = true;
+        [SerializeField] private int economyPlannerEveryNTicks = 1;
+        [SerializeField] private int basePlannerEveryNTicks = 3;
+        [SerializeField] private int militaryPlannerEveryNTicks = 3;
+        [SerializeField] private int influenceRebuildEveryNTicks = 5;
+        [SerializeField] private int configResolveEveryNTicks = 8;
+        [SerializeField] private int sightRefreshEveryNTicks = 2;
+        [SerializeField] private int staleGatherRecoverEveryNTicks = 4;
+        [SerializeField] private int sceneCacheMinFramesBetweenRefresh = 20;
         [Tooltip("Đăng trạng thái AI lên khung sự kiện (thay spam gather +X).")]
-        [SerializeField] private bool postAiStatusToGameEvent = true;
+        [SerializeField] private bool postAiStatusToGameEvent = false;
         [SerializeField] private bool postAiStatusOnlyOnChange = true;
         [Tooltip("Kéo command/supply SO vào đây; khoảng cách & placement vẫn tự tính. Để trống SO = quét map.")]
         [SerializeField] private AIEconomySettings economySettings = new();
@@ -48,6 +59,12 @@ namespace GameDevTV.RTS.AI
         private float nextTickTime;
         private int plannerTickIndex;
         private string lastPostedAiStatusLine;
+        private AIEconomyRuntimeConfig cachedEconomyConfig;
+        private AIBaseRuntimeConfig cachedBaseConfig;
+        private AIInfluenceMapTickContext cachedInfluenceContext;
+        private bool hasCachedEconomyConfig;
+        private bool hasCachedBaseConfig;
+        private bool hasCachedInfluenceContext;
 
         public Owner AiOwner => aiOwner;
         public AIDifficultySO DifficultyProfile => difficultyProfile;
@@ -83,7 +100,8 @@ namespace GameDevTV.RTS.AI
 
             registry.Initialize(aiOwner);
             ApplyDifficultyProfile(difficultyProfile);
-            float interval = difficultyProfile != null ? difficultyProfile.TickInterval : tickInterval;
+            ApplyPerformanceSceneCacheThrottle();
+            float interval = GetEffectiveTickInterval();
             float phase = (Mathf.Abs((int)aiOwner) % 97) / 97f * interval;
             nextTickTime = Time.time + phase;
             plannerTickIndex = 0;
@@ -102,8 +120,7 @@ namespace GameDevTV.RTS.AI
                 return;
             }
 
-            float interval = difficultyProfile != null ? difficultyProfile.TickInterval : tickInterval;
-            nextTickTime = Time.time + interval;
+            nextTickTime = Time.time + GetEffectiveTickInterval();
             Tick();
         }
 
@@ -113,11 +130,26 @@ namespace GameDevTV.RTS.AI
         /// </summary>
         public void Tick()
         {
-            AISceneEntityCache.EnsureFresh();
-            AIWorldStateSnapshot snapshot = worldState.BuildSnapshot(registry, aiOwner);
-            AIFactionSightQuery.RefreshFromSnapshot(snapshot);
+            plannerTickIndex++;
+            AIPlannerTickPlan plan = AIPlannerTickPlan.Build(
+                plannerTickIndex,
+                aggressivePerformanceMode,
+                economyPlannerEveryNTicks,
+                basePlannerEveryNTicks,
+                militaryPlannerEveryNTicks,
+                influenceRebuildEveryNTicks,
+                configResolveEveryNTicks,
+                sightRefreshEveryNTicks,
+                staleGatherRecoverEveryNTicks);
 
-            RunPlannerDispatch(snapshot);
+            AIWorldStateSnapshot snapshot = worldState.BuildSnapshot(registry, aiOwner);
+
+            if (plan.RefreshSight)
+            {
+                AIFactionSightQuery.RefreshFromSnapshot(snapshot);
+            }
+
+            RunPlannerDispatch(snapshot, plan);
             PostAiStatusToGameEventIfNeeded(snapshot);
 
             if (logTickSummary)
@@ -172,37 +204,80 @@ namespace GameDevTV.RTS.AI
         /// Mục tiêu: Enqueue economy + base intents rồi dispatch theo priority chung.
         /// Cách hoạt động: Clear queue → managers enqueue → pop đến hết; unit/building qua dispatcher.
         /// </summary>
-        private void RunPlannerDispatch(AIWorldStateSnapshot snapshot)
+        private void RunPlannerDispatch(AIWorldStateSnapshot snapshot, AIPlannerTickPlan plan)
         {
+            if (!plan.RunEconomy && !plan.RunBase && !plan.RunMilitary)
+            {
+                return;
+            }
+
+            if (plan.NeedsSceneEntityCache)
+            {
+                AISceneEntityCache.EnsureFresh();
+            }
+
             priorityQueue.Clear();
-            plannerTickIndex++;
-            AIInfraBuildOrderTracker.SyncWithWorld(snapshot);
-            RecoverWorkersFromStaleGather(snapshot);
+
+            if (plan.RunBase || plan.RunEconomy)
+            {
+                AIInfraBuildOrderTracker.SyncWithWorld(snapshot);
+            }
+
+            if (plan.RecoverStaleGather)
+            {
+                RecoverWorkersFromStaleGather(snapshot);
+            }
 
             AIDifficultyRuntimeOverlay difficulty = new(difficultyProfile);
-            AIBaseRuntimeConfig baseConfig = AIBaseConfigResolver.Resolve(snapshot, baseSettings, difficulty);
-            AIEconomyRuntimeConfig economyConfig = AIEconomyConfigResolver.Resolve(snapshot, economySettings);
-            AIInfluenceMapTickContext influence = AIInfluenceMapTickPlanner.Build(
-                snapshot,
-                baseConfig,
-                economyConfig.RemoteClusterMinDistance,
-                influenceMap,
-                influenceThreatScratch,
-                influenceEconomicScratch);
 
-            if (dispatchMilitaryIntents)
+            if (plan.ResolveConfigs || !hasCachedBaseConfig)
             {
-                militaryManager.EnqueueIntents(snapshot, priorityQueue, influence, influenceThreatScratch, difficulty);
+                cachedBaseConfig = AIBaseConfigResolver.Resolve(snapshot, baseSettings, difficulty);
+                hasCachedBaseConfig = true;
             }
 
-            if (dispatchBaseIntents)
+            if (plan.ResolveConfigs || !hasCachedEconomyConfig)
             {
-                baseManager.EnqueueIntents(snapshot, priorityQueue, influence, difficulty);
+                cachedEconomyConfig = AIEconomyConfigResolver.Resolve(snapshot, economySettings);
+                hasCachedEconomyConfig = true;
             }
 
-            if (dispatchEconomyIntents)
+            if (plan.RebuildInfluence || !hasCachedInfluenceContext)
             {
-                economyManager.EnqueueIntents(snapshot, priorityQueue, influence, plannerTickIndex);
+                cachedInfluenceContext = AIInfluenceMapTickPlanner.Build(
+                    snapshot,
+                    cachedBaseConfig,
+                    cachedEconomyConfig.RemoteClusterMinDistance,
+                    influenceMap,
+                    influenceThreatScratch,
+                    influenceEconomicScratch,
+                    plan.UseCoarseInfluenceGrid);
+                hasCachedInfluenceContext = cachedInfluenceContext.IsValid;
+            }
+
+            if (dispatchMilitaryIntents && plan.RunMilitary)
+            {
+                militaryManager.EnqueueIntents(
+                    snapshot,
+                    priorityQueue,
+                    cachedInfluenceContext,
+                    influenceThreatScratch,
+                    difficulty);
+            }
+
+            if (dispatchBaseIntents && plan.RunBase)
+            {
+                baseManager.EnqueueIntents(snapshot, priorityQueue, cachedInfluenceContext, difficulty);
+            }
+
+            if (dispatchEconomyIntents && plan.RunEconomy)
+            {
+                economyManager.EnqueueIntents(
+                    snapshot,
+                    priorityQueue,
+                    cachedInfluenceContext,
+                    plannerTickIndex,
+                    hasCachedEconomyConfig ? cachedEconomyConfig : null);
             }
 
             while (priorityQueue.TryPop(out AICommandIntent intent))
@@ -372,6 +447,30 @@ namespace GameDevTV.RTS.AI
             }
 
             tickInterval = profile.TickInterval;
+            ApplyPerformanceSceneCacheThrottle();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Tick AI chậm hơn khi bật performance mode (giảm spike định kỳ).
+        /// Cách hoạt động: Nhân interval SO/Inspector với hệ số khi aggressivePerformanceMode.
+        /// </summary>
+        private float GetEffectiveTickInterval()
+        {
+            float baseInterval = difficultyProfile != null ? difficultyProfile.TickInterval : tickInterval;
+            if (!aggressivePerformanceMode)
+            {
+                return baseInterval;
+            }
+
+            return Mathf.Max(0.85f, baseInterval * 1.35f);
+        }
+
+        private void ApplyPerformanceSceneCacheThrottle()
+        {
+            int frames = aggressivePerformanceMode
+                ? Mathf.Max(sceneCacheMinFramesBetweenRefresh, 12)
+                : 1;
+            AISceneEntityCache.SetMinFramesBetweenRefresh(frames);
         }
 
         /// <summary>

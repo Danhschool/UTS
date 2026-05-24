@@ -8,19 +8,38 @@ namespace GameDevTV.RTS.AI
     /// </summary>
     public static class AISceneEntityCache
     {
+        const int DefaultMinFramesBetweenRefresh = 18;
+
         static int cachedFrame = -1;
+        static int minFramesBetweenRefresh = DefaultMinFramesBetweenRefresh;
         static BaseBuilding[] buildings = System.Array.Empty<BaseBuilding>();
         static AbstractUnit[] units = System.Array.Empty<AbstractUnit>();
         static WildAnimal[] wildAnimals = System.Array.Empty<WildAnimal>();
 
         /// <summary>
-        /// Mục tiêu: Đảm bảo mảng cache đồng bộ với frame hiện tại trước planner.
-        /// Cách hoạt động: So Time.frameCount; nếu đổi frame thì FindObjectsByType một lần.
+        /// Mục tiêu: Giảm FindObjectsByType khi nhiều subsystem gọi trong vài frame liên tiếp.
+        /// Cách hoạt động: Clamp interval ≥ 1; áp dụng ngay lần EnsureFresh kế tiếp.
         /// </summary>
-        public static void EnsureFresh()
+        public static void SetMinFramesBetweenRefresh(int frames)
+        {
+            minFramesBetweenRefresh = Mathf.Max(1, frames);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Đảm bảo cache entity trước planner (military / wild food / sight fallback).
+        /// Cách hoạt động: Refresh tối đa một lần mỗi minFramesBetweenRefresh frame; force bỏ qua throttle.
+        /// </summary>
+        public static void EnsureFresh(bool force = false)
         {
             int frame = Time.frameCount;
-            if (cachedFrame == frame)
+            if (!force
+                && cachedFrame >= 0
+                && frame - cachedFrame < minFramesBetweenRefresh)
+            {
+                return;
+            }
+
+            if (!force && cachedFrame == frame)
             {
                 return;
             }

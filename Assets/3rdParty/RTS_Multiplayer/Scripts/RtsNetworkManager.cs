@@ -80,7 +80,7 @@ namespace ProjectRTS.Netplay
         {
             base.OnServerSceneChanged(sceneName);
             string active = SceneManager.GetActiveScene().name;
-            if (active != gameScene || unitPrefab == null)
+            if (active != gameScene)
                 return;
 
             RtsServerGameplayNotifier.NotifyMatchSceneLoaded();

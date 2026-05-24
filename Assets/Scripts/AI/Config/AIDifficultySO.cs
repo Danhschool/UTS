@@ -71,7 +71,7 @@ namespace GameDevTV.RTS.AI
         {
             level = AIDifficultyLevel.Easy;
             displayName = "Dễ";
-            tickInterval = 1.25f;
+            tickInterval = 1.5f;
             reactionDelay = 2f;
             attackPowerThreshold = 1.8f;
             retreatHealthRatio = 0.55f;
@@ -97,7 +97,7 @@ namespace GameDevTV.RTS.AI
         {
             level = AIDifficultyLevel.Medium;
             displayName = "Trung bình";
-            tickInterval = 0.65f;
+            tickInterval = 1.05f;
             reactionDelay = 1f;
             attackPowerThreshold = 1.2f;
             retreatHealthRatio = 0.35f;
@@ -123,7 +123,7 @@ namespace GameDevTV.RTS.AI
         {
             level = AIDifficultyLevel.Hard;
             displayName = "Khó";
-            tickInterval = 0.35f;
+            tickInterval = 0.55f;
             reactionDelay = 0.4f;
             attackPowerThreshold = 0.85f;
             retreatHealthRatio = 0.22f;

@@ -36,14 +36,16 @@ namespace GameDevTV.RTS.AI
             AIWorldStateSnapshot snapshot,
             AIPriorityQueue queue,
             in AIInfluenceMapTickContext influence = default,
-            int plannerTickIndex = 0)
+            int plannerTickIndex = 0,
+            AIEconomyRuntimeConfig? preResolvedConfig = null)
         {
             if (snapshot == null || queue == null)
             {
                 return;
             }
 
-            AIEconomyRuntimeConfig config = AIEconomyConfigResolver.Resolve(snapshot, manualOverrides);
+            AIEconomyRuntimeConfig config = preResolvedConfig
+                ?? AIEconomyConfigResolver.Resolve(snapshot, manualOverrides);
             GatherCommand gatherCommand = null;
             BuildBuildingCommand storeBuildCommand = config.StoreBuildCommand;
 
@@ -790,7 +792,7 @@ namespace GameDevTV.RTS.AI
         [Tooltip("Bật: tick 10, 20, … gửi Stop + Move ngắn cho worker đang gather; tick đó không gán mỏ mới.")]
         [SerializeField] private bool enableWorkerGatherRefresh = true;
         [Tooltip("Số tick AI giữa mỗi lần reset gather (AIController tick, không phải frame).")]
-        [SerializeField] private int workerGatherRefreshIntervalTicks = 10;
+        [SerializeField] private int workerGatherRefreshIntervalTicks = 18;
 
         [Header("Food — Corral bổ sung")]
         [Tooltip("Bật: kho food thấp → economy enqueue thêm Corral (vẫn ưu tiên gather mỏ food nếu còn).")]

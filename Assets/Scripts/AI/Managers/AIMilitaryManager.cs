@@ -14,7 +14,7 @@ namespace GameDevTV.RTS.AI
     /// </summary>
     public sealed class AIMilitaryManager
     {
-        private const int MaxDefenseAssignmentsPerTick = 16;
+        private const int MaxDefenseAssignmentsPerTick = 8;
         private const int TowerLineSlotCount = 8;
 
         private readonly AIMilitarySettings manualOverrides;

@@ -107,6 +107,11 @@ namespace GameDevTV.RTS.Player
         }
 
         /// <summary>
+        /// Mục tiêu: Scene MP load xong — refresh fog/HUD theo LocalOwner hiện tại.
+        /// </summary>
+        public void RefreshFromLocalOwner() => TryApply();
+
+        /// <summary>
         /// Mục tiêu: Client chỉ render fog/UI nhánh của human đang ngồi máy.
         /// Cách hoạt động: Enable P1 hoặc P2 presentation; bind vision camera cho updater.
         /// </summary>

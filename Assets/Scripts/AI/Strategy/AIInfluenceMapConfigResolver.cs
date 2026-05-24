@@ -112,5 +112,23 @@ namespace GameDevTV.RTS.AI
             ThreatWeight = threatWeight;
             EconomicWeight = economicWeight;
         }
+
+        /// <summary>
+        /// Mục tiêu: Lưới influence thô hơn (~4× ít cell) khi bật performance mode.
+        /// Cách hoạt động: Nhân cellSize; giữ nguyên bán kính map và weight.
+        /// </summary>
+        public AIInfluenceMapRuntimeConfig WithCellSizeScale(float scale)
+        {
+            float s = Mathf.Max(1f, scale);
+            return new AIInfluenceMapRuntimeConfig(
+                CellSize * s,
+                MapRadius,
+                DefenseRadius,
+                ThreatRadius,
+                EconomicRadius,
+                DefenseWeight,
+                ThreatWeight,
+                EconomicWeight);
+        }
     }
 }
