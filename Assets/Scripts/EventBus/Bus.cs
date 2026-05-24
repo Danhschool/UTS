@@ -10,7 +10,7 @@ namespace GameDevTV.RTS.EventBus
         public static Dictionary<Owner, Event> OnEvent = new()
         {
             { Owner.Player1, null },
-            { Owner.AI1, null },
+            { Owner.Player2, null },
             { Owner.AI2, null },
             { Owner.AI3, null },
             { Owner.AI4, null },

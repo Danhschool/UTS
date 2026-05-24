@@ -65,6 +65,7 @@ namespace GameDevTV.RTS.AI
                 }
 
                 if (!TryFindClosestWildAnimal(
+                        snapshot.Owner,
                         anchor,
                         maxRangeSqr,
                         requireVisible: true,
@@ -102,6 +103,7 @@ namespace GameDevTV.RTS.AI
             float maxRange = settings.WildFoodHuntMaxDistance;
             float maxRangeSqr = maxRange > 0f ? maxRange * maxRange : float.MaxValue;
             if (!TryFindClosestWildAnimal(
+                    snapshot.Owner,
                     worker.transform.position,
                     maxRangeSqr,
                     requireVisible: true,
@@ -130,6 +132,7 @@ namespace GameDevTV.RTS.AI
         /// Cách hoạt động: FindObjectsByType WildAnimal — một lần mỗi tick hunt (giống hostile scanner).
         /// </summary>
         public static bool TryFindClosestWildAnimal(
+            Owner viewerOwner,
             Vector3 fromPosition,
             float maxRangeSqr,
             bool requireVisible,
@@ -137,14 +140,15 @@ namespace GameDevTV.RTS.AI
         {
             closest = null;
             float bestSqr = float.MaxValue;
-            WildAnimal[] animals = Object.FindObjectsByType<WildAnimal>(FindObjectsSortMode.None);
+            AISceneEntityCache.EnsureFresh();
+            WildAnimal[] animals = AISceneEntityCache.WildAnimals;
 
             for (int i = 0; i < animals.Length; i++)
             {
                 WildAnimal animal = animals[i];
                 if (animal == null
                     || animal.CurrentHealth <= 0
-                    || requireVisible && !animal.IsVisible)
+                    || requireVisible && !FactionFogQuery.IsVisibleTo(viewerOwner, animal))
                 {
                     continue;
                 }

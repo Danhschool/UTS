@@ -1,0 +1,144 @@
+HƯỚNG DẪN TRÌNH BÀY
+BÁO CÁO THỰC TẬP CHUYÊN MÔN
+  1. Quy định bố cục báo cáo
+Số chương của một TTCM tuỳ thuộc vào từng đề tài cụ thể, bố cục gồm phần và chương sau:
+- LỜI CẢM ƠN (bắt buộc)
+- MỤC LỤC (bắt buộc)
+- DANH MỤC CÁC TỪ VIẾT TẮT (nếu trong nội dung quyển báo cáo có viết tắt)
+- DANH MỤC BẢNG BIỂU (nếu trong nội dung quyển báo cáo có bảng biểu)
+- DANH MỤC HÌNH ẢNH (nếu trong nội dung quyển báo cáo có hình ảnh)
+- MỞ ĐẦU: cần nêu bật lý do tại sao lại chọn đề tài, tóm tắt những nội dung sẽ giải giải quyết, phương pháp, cấu trúc của quyển báo cáo).
+- CHƯƠNG 1: (tuỳ theo đề tài của các lĩnh vực khác nhau)
+- CHƯƠNG 2: (tuỳ theo đề tài của các lĩnh vực khác nhau)
+- CHƯƠNG 3: (tuỳ theo đề tài của các lĩnh vực khác nhau)
+...
+- KẾT LUẬN VÀ KIẾN NGHỊ 
+- DANH MỤC TÀI LIỆU THAM KHẢO: chỉ bao gồm các tài liệu được trích dẫn, sử dụng và đề cập tới để bàn luận trong Quyển báo cáo
+- PHỤ LỤC (nếu có).
+2. Quy định trình bày 
+TTCM phải được trình bày ngắn gọn, rõ ràng, mạch lạc, không được tẩy xoá, có đánh số trang, đánh số bảng biểu, hình vẽ, đồ thị. TTCM đóng bìa mềm, (xem phụ lục 1). Trang phụ bìa (xem phụ lục 1).
+2.1. Quy định khổ giấy, căn lề, đánh số trang
+Báo cáo được soạn thỏa trong khổ giấy A4, căn lề: lề trên 2,5cm; lề dưới 2.5cm; lề trái 3 cm; lề phải 2cm, đánh số trang ở giữa, phía trên đầu mỗi trang giấy. 
+TTCM được in trên một mặt giấy trắng khổ A4 (210 x 297 mm), đóng bìa mềm.
+2.2. Quy định đánh số chương, mục và các tiểu mục
+- Số chương đánh số: 1, 2, 3,...; bắt đầu một chương phải sang trang mới, font chữ Times New Roman cỡ chữ 18pt theo chuẩn unicode, chữ đậm (Bold); Before: 0pt, After: 12pt; căn lề giữa (center).
+- Mục đánh số theo qui tắc: số_chương.x (trong đó x là số tiểu mục); ví dụ: trong chương 1 các mục đánh: 1.1, 1.2, ..., chương 2 các mục được đánh: 2.1, 2.2,...; font chữ Times New Roman cỡ chữ 16pt theo chuẩn unicode, chữ đậm (Bold); Before: 6pt, After: 6pt; căn lề trái (left), không thụt đầu dòng.
+-  Tiểu mục đánh số theo qui tắc: Số_chương.x.y (trong đó x là mục và y là tiểu mục con của mục x). Ví dụ: 1.1.1, 1.1.2, ...;  1.2.1 , 1.2.2, .... font chữ Times New Roman cỡ chữ 14pt theo chuẩn unicode, chữ đậm (Bold); Before: 6pt, After: 6pt; căn lề trái (left), không thụt đầu dòng. Lưu ý: chỉ phân chia các tiểu mục nếu trong mục có nhiều hơn 1 tiểu mục. 
+2.3. Quy định soạn thảo các đoạn văn trong quyển báo cáo
+Tất cả các đoạn văn trong báo cáo phải có cùng một format bao gồm: căn lề hai bên (Justify), dòng đầu của đoạn văn thụt vào 1cm, font chữ Times New Roman cỡ chữ 13pt theo chuẩn unicode; mật độ chữ bình thường, không được nén hoặc kéo dãn khoảng cách giữa các chữ; dãn dòng đặt chế độ 1.2 lines.
+2.4. Bảng biểu, hình vẽ, phương trình
+Việc đánh số bảng biểu, hình vẽ, phương trình phải gắn với số chương; ví dụ Hình 1.4 có nghĩa là hình thứ 4 trong Chương 1; Bảng 3.1 có nghĩa là bảng thứ 1 trong chương 3. Mọi đồ thị, bảng biểu lấy từ các nguồn khác phải được trích dẫn đầy đủ, ví dụ "Nguồn: Website abc". Nguồn được trích dẫn phải được liệt kê chính xác trong danh mục Tài liệu tham khảo. Tên của bảng biểu ghi phía trên bảng, tên của hình vẽ ghi phía dưới hình. Thông thường, những bảng ngắn và đồ thị nhỏ phải đi liền với phần nội dung đề cập tới các bảng và đồ thị này ở lần thứ nhất. Các bảng dài có thể để ở những trang riêng nhưng cũng phải tiếp theo ngay phần nội dung đề cập tời bảng này ở lần đầu tiên.
+Ví dụ:
+Bảng 3.1. Bảng nhà xuất bản.
+TT
+Tên cột
+Kiểu dữ liệu
+Mô tả
+1
+Id
+Int
+Mã nhà xuất bản
+2
+Name
+Varchar(255)
+Tên nhà xuất bản
+3
+Address
+Varchar(255)
+Đia chỉ
+4
+Slug
+Varchar(255)
+Tên gạch ngang
+5
+Image
+Varchar(255)
+Hình ảnh đại diện
+6
+Created_at
+Timestamp
+Thời gian tạo
+7
+Updated_at
+Timestamp
+Thời gian cập nhật
+Hình 3.2. Sơ đồ use case tổng quát.
+.
+2.4. Viết tắt
+Không lạm dụng việc viết tắt trong TTCM. Chỉ viết tắt những từ, cụm từ hoặc thuật ngữ được sử dụng nhiều lần trong TTCM. Không viết tắt những cụm từ dài, những mệnh đề; không viết tắt những cụm từ ít xuất hiện trong TTCM. Nếu cần viết tắt những từ, thuật ngữ, tên cơ quan, tổ chức... thì được viết tắt sau lần viết thứ nhất có kèm theo chữ viết tắt trong ngoặc đơn. Nếu TTCM có nhiều chữ viết tắt thì phải có bảng danh mục các chữ viết tắt (xếp theo thứ tự ABC) ở phần đầu quyển báo cáo.
+2.5. Phụ lục của quyển báo cáo
+Phần này bao gồm những nội dung cần thiết nhằm minh họa hoặc bổ sung cho nội dung quyển báo cáo như số liệu, mẫu biểu, tranh ảnh...  cục của quyển báo cáo qua trang Mục lục. Nên sắp cho mục lục của quyển báo cáo gọn trong một trang giấy.
+MỤC LỤC
+           Trang phụ bìa
+           Lời cam đoan
+Mục lục
+Danh mục các kỳ hiệu, các chữ viết tắt
+Danh mục các bảng
+Danh mục các hình vẽ, đồ thị
+MỞ ĐẦU
+Chương 1- 
+…
+…
+Chương 2- ….
+           2.1. …
+              2.1.1. …
+              2.1.2. …
+            2.2. ….
+             …..
+Chương 3- 
+KẾT LUẬN VÀ KIẾN NGHỊ
+TÀI LIỆU THAM KHẢO
+           PHỤ LỤC
+          
+ MẪU BÌA                     Khổ 210 x 297 mm
+TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI
+KHOA CÔNG NGHỆ THÔNG TIN
+THỰC TẬP CHUYÊN MÔN
+ĐỀ TÀI
+TÊN ĐỀ TÀI SV ĐĂNG KÝ
+Giảng viên hướng dẫn
+:     Nguyễn Trần Hiếu
+Sinh viên thực hiện
+:
+Lớp
+:
+Mã sinh viên
+:
+Hà Nội – 20..
+ 
+HƯỚNG DẪN CÁCH TRÍCH DẪN TÀI LIỆU THAM KHẢO 
+VÀ LẬP DANH MỤC TÀI LIỆU THAM KHẢO
+1. Tài liệu tham khảo
+- Tài liệu tham khảo bao gồm các tài liệu được trích dẫn, sử dụng và đề cập trong TTCM
+- Trích dẫn tham khảo có ý nghĩa quan trọng đối với TTCM (làm tăng giá trị TTCM nhờ có đối chiếu, tham khảo, so sánh,... với các nguồn tài liệu từ bên ngoài, thể hiện rõ nguồn gốc các thông tin thu thập được) và với SV (phát triển năng lực nghiên cứu: nhờ quá trình tìm kiếm và chọn lọc những thông tin có chất lượng, giúp làm tăng khả nặng tự học, tự tìm kiếm thông tin và khai thác thông tin; bồi dưỡng ý thức đạo đức nghề nghiệp, tránh hành động đạo văn...). Có hai cách trích dẫn phổ biến nhất là trích dẫn theo “tên tác giả - năm” (hệ thống Havard) và trích dẫn theo chữ số (hệ thống Vancouver) là cách hiện đang được Bộ Giáo dục và  Đào tạo Việt Nam lựa chọn. 
+- Nguồn trích dẫn phải được ghi nhận ngay khi thông tin được sử dụng. Nguồn trích dẫn có thể được đặt ở đầu, giữa hoặc cuối một câu, cuối một đoạn văn hay cuối một trích dẫn trực tiếp (ví dụ hình vẽ, sơ đồ, công thức, một đoạn nguyên văn).
+2. Các hình thức và nguyên tắc trích dẫn tài liệu tham khảo
+2.1. Hình thức trích dẫn
+- Trích dẫn trực tiếp là trích dẫn nguyên văn một phần câu, một câu, một đoạn văn, hình ảnh, sơ đồ, quy trình,… của bản gốc vào bài viết. Trích dẫn nguyên văn phải bảo đảm đúng chính xác từng câu, từng chữ, từng dấu câu được sử dụng trong bản gốc được trích dẫn. “Phần trích dẫn được đặt trong ngoặc kép”, [số TLTK] đặt trong ngoặc vuông. Không nên dùng quá nhiều cách trích dẫn này vì bài viết sẽ nặng nề và đơn điệu.
+- Trích dẫn gián tiếp là sử dụng ý tưởng, kết quả, hoặc ý của một vấn đề để diễn tả lại theo cách viết của mình nhưng phải đảm bảo đúng nội dung của bản gốc. Đây là cách trích dẫn được khuyến khích sử dụng trong nghiên cứu khoa học. Khi trích dẫn theo cách này cần cẩn trọng và chính xác để tránh diễn dịch sai, đảm bảo trung thành với nội dung của bài gốc.
+- Trích dẫn thứ cấp là khi người viết muốn trích dẫn một thông tin qua trích dẫn trong một tài liệu của tác giả khác. Ví dụ khi người viết muốn trích dẫn một thông tin có nguồn gốc từ tác giả A, nhưng không tìm được trực tiếp bản gốc tác giả A mà thông qua một tài liệu của tác giả B. Khi trích dẫn theo cách này không liệt kê tài liệu trích dẫn của tác giả A trong danh mục tài liệu tham khảo. Một tài liệu có yêu cầu khoa học càng cao thì càng hạn chế trích dẫn thứ cấp mà phải tiếp cận càng nhiều tài liệu gốc càng tốt.
+2.2. Một số nguyên tắc về trích dẫn tài liệu tham khảo 
+- Tài liệu tham khảo có thể được trích dẫn và sử dụng trong các phần đặt vấn đề, tổng quan, phương pháp nghiên cứu, bàn luận. Phần giả thiết nghiên cứu, kết quả nghiên cứu, kết luận, kiến nghị không sử dụng tài liệu tham khảo.
+- Cách ghi trích dẫn phải thống nhất trong toàn bộ TTCM và phù hợp với cách trình bày trong danh mục tài liệu tham khảo. 
+- Việc trích dẫn là theo thứ tự của tài liệu tham khảo ở danh mục Tài liệu tham khảo và được đặt trong ngoặc vuông, khi cần có cả số trang, ví dụ [15, 314-315]. Đối với phần được trích dẫn từ nhiều tài liệu khác nhau, số của từng tài liệu được đặt độc lập trong từng ngoặc vuông và theo thứ tự tăng dần, cách nhau bằng dấu phảy và không có khoảng trắng, ví dụ [19],[25],[41].
+- Việc sử dụng hoặc trích dẫn kết quả nghiên cứu của người khác, của đồng tác giả phải được dẫn nguồn đầy đủ và rõ ràng. Nếu sử dụng tài liệu của người khác (trích dẫn bảng, biểu, công thức, đồ thị cùng những tài liệu khác) mà không chú dẫn tác giả và nguồn tài liệu thì TTCM không được duyệt để bảo vệ.  
+- Không ghi học hàm, học vị, địa vị xã hội của tác giả vào thông tin trích dẫn.
+- Tài liệu được trích dẫn trong bài viết phải có trong danh mục tài liệu tham khảo.
+- Tài liệu được liệt kê trong danh mục tham khảo phải có trích dẫn trong bài viết.
+- Không trích dẫn tài liệu mà người viết chưa đọc. Chỉ trích dẫn khi người viết phải có tài liệu đó trong tay và đã đọc tài liệu đó. Không nên trích dẫn những chi tiết nhỏ, ý kiến cá nhân, kinh nghiệm chủ quan, những kiến thức đã trở nên phổ thông.
+- Khi một thông tin có nhiều người nói đến thì nên trích dẫn những nghiên cứu/ bài báo/ tác giả có tiếng trong chuyên ngành.
+3. Xây dựng và cách trình bày danh mục tài liệu tham khảo
+- Danh mục tài liệu tham khảo được sắp xếp theo trình tự sử dụng (trích dẫn) trong TTCM không phân biệt tiếng Việt, Anh, Pháp...Tài liệu tham khảo được trích dẫn theo số (đã được xác định trong danh mục tài liệu tham khảo), không theo tên tác giả và năm. Các tài liệu bằng tiếng nước ngoài phải giữ nguyên văn, không phiên âm, không dịch. Những tài liệu viết bằng tiếng nước ngoài ít người Việt biết thì có thể ghi thêm phần tiếng Việt đi kèm theo mỗi tài liệu. Không nên dùng đồ  án, quyển báo cáo, Website và hạn chế dùng sách giáo khoa làm tài liệu tham khảo. 
+3.1. Tài liệu tham khảo là bài báo trong tạp chí, tập san được trình bày như sau:
+Họ và tên tác giả được viết đầy đủ đối với tên người Việt Nam; Họ (viết đầy đủ), tên gọi và tên đệm (viết tắt) đối với tên người nước ngoài. Nếu bài báo có nhiều tác giả, cần ghi tên 3 tác giả đầu và cộng sự (et al-tiếng Anh), năm xuất bản (trong ngoặc đơn). Tên bài báo. Tên tạp chí, tập san (ghi nghiêng), tập (số, không có dấu ngăn cách, đặt trong ngoặc đơn, dấu phẩy sau ngoặc đơn), các số trang (gạch nối giữa hai số, dấu chấm kết thúc). 
+3.2. Tài liệu tham khảo là một chương (một phần) trong cuốn sách ghi như sau:
+Họ và tên tác giả hoặc cơ quan ban hành; năm xuất bản (đặt trong ngoặc đơn). Tên phần (hoặc chương), Tên sách (ghi nghiêng, dấu phẩy cuối tên), lần xuất bản (chỉ ghi mục này với lần xuất bản thứ hai trở đi), nhà xuất bản (dấu phẩy cuối tên nhà xuất bản); nơi xuất bản (ghi tên thành phố, không phải ghi tên quốc gia), tập, trang.. Nếu sách có hai tác giả thì sử dụng chữ và (hoặc chữ and) để nối tên hai tác giả. Nếu sách có 3 tác giả trở lên thì ghi tên tác giả thứ nhất và cụm từ cộng sự (hoặc et al.)..Bottom of Form
+3.3. Tài liệu tham khảo là sách ghi như sau: 
+Tên tác giả hoặc cơ quan ban hành; năm xuất bản (đặt trong ngoặc đơn). Tên sách (ghi nghiêng, dấu phẩy cuối), lần xuất bản (chỉ ghi mục này với lần xuất bản thứ hai trở đi), nhà xuất bản (dấu phẩy cuối tên nhà xuất bản); nơi xuất bản (ghi tên thành phố, không phải ghi tên quốc gia, đặt dấu chấm kết thúc). Nếu sách có hai tác giả thì sử dụng chữ và (hoặc chữ and) để nối tên hai tác giả. Nếu sách có 3 tác giả trở lên thì ghi tên tác giả thứ nhất và cụm từ cộng sự (hoặc et al.). 
+3.4. Tài liệu tham khảo là luận án, luận văn, khóa luận ghi như sau: 
+Tên tác giả, năm xuất bản (đặt trong ngoặc đơn). Tên đề tài luận án, luận văn (ghi nghiêng, dấu phẩy cuối tên quyển báo cáo), bậc học, tên chính thức của cơ sở đào tạo. 
+3.5. Tài liệu tham khảo là bài báo đăng trong các kỷ yếu của hội nghị, hội thảo, diễn đàn... ghi như sau: 
+Tên tác giả (năm). Tên bài báo. Tên kỷ yếu/tên hội nghị/diễn đàn (ghi nghiêng),  Địa điểm, thời gian tổ chức, cơ quan tổ chức, số thứ tự trang của bài báo trong kỷ yếu. 
+3.6. Tài liệu tham khảo là các giáo trình, bài giảng hay tài liệu lưu hành nội bộ: Cần cung cấp thông tin cơ bản về tên tác giả, năm xuất bản, tên giáo trình, bài giảng, nhà xuất bản (nếu có), đơn vị chủ quản. 
+3.7. Tài liệu tham khảo trích dẫn từ nguồn internet, báo mạng (hết sức hạn chế loại trích dẫn này).
+Tên tác giả (nếu có), năm (nếu có). Tên tài liệu tham khảo, <đường dẫn để tiếp cận tài liệu đó>, thời gian trích dẫn.

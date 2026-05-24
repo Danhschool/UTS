@@ -1,3 +1,5 @@
+using GameDevTV.RTS.Player;
+using GameDevTV.RTS.Units;
 using UnityEngine;
 
 namespace GameDevTV.RTS.Minimap
@@ -33,10 +35,56 @@ namespace GameDevTV.RTS.Minimap
             EnsureReferences();
         }
 
+        [SerializeField, Min(1)] private int cacheReadIntervalFrames = 2;
+        private int lastExploredReadFrame = -1;
+        private int lastVisionReadFrame = -1;
+        private bool useFactionRegistryCache;
+
         private void LateUpdate()
         {
-            RefreshExploredCache();
-            RefreshVisionCache();
+            if (useFactionRegistryCache
+                && FactionFogSystemsRegistry.TryGet(trackedFactionOwner, out IFogMapQuery query)
+                && query is FactionFogSystemReference)
+            {
+                return;
+            }
+
+            int interval = Mathf.Max(1, cacheReadIntervalFrames);
+            int frame = Time.frameCount;
+            if (lastExploredReadFrame < 0 || frame - lastExploredReadFrame >= interval)
+            {
+                RefreshExploredCache();
+                lastExploredReadFrame = frame;
+            }
+
+            if (lastVisionReadFrame < 0 || frame - lastVisionReadFrame >= interval)
+            {
+                RefreshVisionCache();
+                lastVisionReadFrame = frame;
+            }
+        }
+
+        Owner trackedFactionOwner = Owner.Player1;
+
+        /// <summary>
+        /// Mục tiêu: Minimap sample đúng RT fog nhánh P1/P2 đang active.
+        /// Cách hoạt động: Copy camera + RT từ <see cref="FactionFogSystemReference"/> đã đăng ký registry.
+        /// </summary>
+        public void BindFromFactionFog(FactionFogSystemReference factionFog)
+        {
+            if (factionFog == null)
+            {
+                useFactionRegistryCache = false;
+                return;
+            }
+
+            factionFog.EnsureReferences();
+            exploredFogCamera = factionFog.ExploredFogCamera;
+            exploredTexture = factionFog.ExploredRenderTexture;
+            visionFogCamera = factionFog.VisionFogCamera;
+            visionTexture = factionFog.VisionRenderTexture;
+            trackedFactionOwner = factionFog.FactionOwner;
+            useFactionRegistryCache = true;
         }
 
         public void EnsureReferences()
@@ -114,6 +162,12 @@ namespace GameDevTV.RTS.Minimap
         /// </summary>
         public bool IsWorldPositionExplored(Vector3 worldPosition)
         {
+            if (useFactionRegistryCache
+                && FactionFogSystemsRegistry.TryGet(trackedFactionOwner, out IFogMapQuery query))
+            {
+                return query.IsWorldExplored(worldPosition);
+            }
+
             if (exploredFogCamera == null || exploredCache == null)
             {
                 return false;
@@ -127,7 +181,32 @@ namespace GameDevTV.RTS.Minimap
             return exploredCache.GetPixelBilinear(uv.x, uv.y).r > exploredThreshold;
         }
 
-        public bool IsFogReady => exploredFogCamera != null && exploredCache != null;
+        /// <summary>
+        /// Mục tiêu: Điểm world đang trong tầm nhìn hiện tại (vision RT).
+        /// Cách hoạt động: Ưu tiên registry faction; fallback cache local.
+        /// </summary>
+        public bool IsWorldPositionVisible(Vector3 worldPosition)
+        {
+            if (useFactionRegistryCache
+                && FactionFogSystemsRegistry.TryGet(trackedFactionOwner, out IFogMapQuery query))
+            {
+                return query.IsWorldVisible(worldPosition);
+            }
+
+            if (visionFogCamera == null || visionCache == null)
+            {
+                return false;
+            }
+
+            if (!TryWorldToFogUv(visionFogCamera, worldPosition, out Vector2 uv))
+            {
+                return false;
+            }
+
+            return visionCache.GetPixelBilinear(uv.x, uv.y).r > visionThreshold;
+        }
+
+        public bool IsFogReady => exploredFogCamera != null && exploredCache != null && visionFogCamera != null && visionCache != null;
 
         public bool TryWorldToExploredUv(Vector3 worldPosition, out Vector2 uv)
         {
@@ -143,23 +222,8 @@ namespace GameDevTV.RTS.Minimap
         /// Mục tiêu: Map world XZ sang UV 0–1 của camera fog ortho nhìn từ trên.
         /// Cách hoạt động: Chiếu offset world lên right/up camera; không phụ thuộc WorldToScreenPoint.
         /// </summary>
-        public static bool TryWorldToFogUv(Camera fogCamera, Vector3 worldPosition, out Vector2 uv)
-        {
-            uv = Vector2.zero;
-            if (fogCamera == null || !fogCamera.orthographic)
-            {
-                return false;
-            }
-
-            Transform cameraTransform = fogCamera.transform;
-            Vector3 offset = worldPosition - cameraTransform.position;
-            float halfHeight = fogCamera.orthographicSize;
-            float halfWidth = halfHeight * fogCamera.aspect;
-
-            uv.x = Vector3.Dot(offset, cameraTransform.right) / (halfWidth * 2f) + 0.5f;
-            uv.y = Vector3.Dot(offset, cameraTransform.up) / (halfHeight * 2f) + 0.5f;
-            return uv.x >= 0f && uv.x <= 1f && uv.y >= 0f && uv.y <= 1f;
-        }
+        public static bool TryWorldToFogUv(Camera fogCamera, Vector3 worldPosition, out Vector2 uv) =>
+            FogOrthographicUvUtility.TryWorldToFogUv(fogCamera, worldPosition, out uv);
 
         private void OnDestroy()
         {

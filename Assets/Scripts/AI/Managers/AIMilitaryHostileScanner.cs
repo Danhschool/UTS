@@ -19,31 +19,34 @@ namespace GameDevTV.RTS.AI
         /// Cách hoạt động: FindObjectsByType BaseBuilding; lọc owner + <see cref="CivilCentralUtility"/>.
         /// </summary>
         public static bool TryFindEnemyCivilCentral(Owner enemyOwner, out BaseBuilding civilCentral) =>
-            TryFindEnemyCivilCentral(enemyOwner, requireVisible: false, out civilCentral);
+            TryFindEnemyCivilCentral(enemyOwner, requireVisible: false, Owner.Invalid, out civilCentral);
 
         /// <summary>
         /// Mục tiêu: Civil Central địch đang trong tầm nhìn (scout / fog fair).
         /// </summary>
         public static bool TryFindVisibleEnemyCivilCentral(
+            Owner friendlyOwner,
             Owner enemyOwner,
             bool requireVisible,
             out BaseBuilding civilCentral)
         {
-            if (!TryFindEnemyCivilCentral(enemyOwner, requireVisible, out civilCentral))
+            if (!TryFindEnemyCivilCentral(enemyOwner, requireVisible: false, Owner.Invalid, out civilCentral))
             {
                 return false;
             }
 
-            return !requireVisible || civilCentral.IsVisible;
+            return !requireVisible || FactionFogQuery.IsVisibleTo(friendlyOwner, civilCentral);
         }
 
         private static bool TryFindEnemyCivilCentral(
             Owner enemyOwner,
             bool requireVisible,
+            Owner friendlyOwner,
             out BaseBuilding civilCentral)
         {
             civilCentral = null;
-            BaseBuilding[] buildings = Object.FindObjectsByType<BaseBuilding>(FindObjectsSortMode.None);
+            AISceneEntityCache.EnsureFresh();
+            BaseBuilding[] buildings = AISceneEntityCache.Buildings;
 
             for (int i = 0; i < buildings.Length; i++)
             {
@@ -56,7 +59,8 @@ namespace GameDevTV.RTS.AI
                     continue;
                 }
 
-                if (requireVisible && !building.IsVisible)
+                if (requireVisible && friendlyOwner != Owner.Invalid
+                    && !FactionFogQuery.IsVisibleTo(friendlyOwner, building))
                 {
                     continue;
                 }
@@ -79,7 +83,8 @@ namespace GameDevTV.RTS.AI
         {
             closest = null;
             float bestSqr = float.MaxValue;
-            BaseBuilding[] buildings = Object.FindObjectsByType<BaseBuilding>(FindObjectsSortMode.None);
+            AISceneEntityCache.EnsureFresh();
+            BaseBuilding[] buildings = AISceneEntityCache.Buildings;
 
             for (int i = 0; i < buildings.Length; i++)
             {
@@ -113,7 +118,8 @@ namespace GameDevTV.RTS.AI
         {
             closest = null;
             float bestSqr = float.MaxValue;
-            AbstractUnit[] allUnits = Object.FindObjectsByType<AbstractUnit>(FindObjectsSortMode.None);
+            AISceneEntityCache.EnsureFresh();
+            AbstractUnit[] allUnits = AISceneEntityCache.Units;
 
             for (int i = 0; i < allUnits.Length; i++)
             {
@@ -150,7 +156,8 @@ namespace GameDevTV.RTS.AI
             output.Clear();
             float radiusSqr = radius * radius;
 
-            BaseBuilding[] allBuildings = Object.FindObjectsByType<BaseBuilding>(FindObjectsSortMode.None);
+            AISceneEntityCache.EnsureFresh();
+            BaseBuilding[] allBuildings = AISceneEntityCache.Buildings;
             for (int i = 0; i < allBuildings.Length; i++)
             {
                 BaseBuilding building = allBuildings[i];
@@ -166,7 +173,7 @@ namespace GameDevTV.RTS.AI
                 }
             }
 
-            AbstractUnit[] allUnits = Object.FindObjectsByType<AbstractUnit>(FindObjectsSortMode.None);
+            AbstractUnit[] allUnits = AISceneEntityCache.Units;
             for (int i = 0; i < allUnits.Length; i++)
             {
                 AbstractUnit unit = allUnits[i];
@@ -195,7 +202,8 @@ namespace GameDevTV.RTS.AI
         {
             int count = 0;
             float radiusSqr = radius * radius;
-            AbstractUnit[] allUnits = Object.FindObjectsByType<AbstractUnit>(FindObjectsSortMode.None);
+            AISceneEntityCache.EnsureFresh();
+            AbstractUnit[] allUnits = AISceneEntityCache.Units;
 
             for (int i = 0; i < allUnits.Length; i++)
             {
@@ -263,7 +271,7 @@ namespace GameDevTV.RTS.AI
                 return false;
             }
 
-            if (requireVisible && unit is IHideable hideable && !hideable.IsVisible)
+            if (requireVisible && !FactionFogQuery.IsVisibleTo(friendlyOwner, unit))
             {
                 return false;
             }
@@ -292,7 +300,7 @@ namespace GameDevTV.RTS.AI
                 return false;
             }
 
-            if (requireVisible && !building.IsVisible)
+            if (requireVisible && !FactionFogQuery.IsVisibleTo(friendlyOwner, building))
             {
                 return false;
             }

@@ -8,7 +8,7 @@ namespace GameDevTV.RTS.Commands
     {
         [SerializeField] private float radiusMultiplier = 3.5f;
 
-        /// <summary>Khoảng cách giữa các ô formation vuông (bội số bán kính agent).</summary>
+        /// Khoảng cách giữa các ô formation vuông (bội số bán kính agent).
         public float FormationSpacingMultiplier => radiusMultiplier;
 
         public override bool CanHandle(CommandContext context) =>
@@ -20,7 +20,7 @@ namespace GameDevTV.RTS.Commands
 
             if (context.Hit.collider != null
                 && context.Hit.collider.TryGetComponent(out AbstractCommandable commandable)
-                && commandable.IsVisible)
+                && CommandFactionVisibility.IsVisibleToCommander(context.Owner, commandable))
             {
                 unit.MoveTo(commandable.transform);
                 return;

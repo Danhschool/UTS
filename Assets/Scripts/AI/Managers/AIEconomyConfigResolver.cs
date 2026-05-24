@@ -73,16 +73,16 @@ namespace GameDevTV.RTS.AI
                     continue;
                 }
 
-                SupplyKind kind = ClassifyByName(node.Supply);
+                AIEconomySupplyKindClassifier.Kind kind = AIEconomySupplyKindClassifier.ClassifyByName(node.Supply.name);
                 switch (kind)
                 {
-                    case SupplyKind.Stone when stone == null:
+                    case AIEconomySupplyKindClassifier.Kind.Stone when stone == null:
                         stone = node.Supply;
                         break;
-                    case SupplyKind.Wood when wood == null:
+                    case AIEconomySupplyKindClassifier.Kind.Wood when wood == null:
                         wood = node.Supply;
                         break;
-                    case SupplyKind.Food when food == null:
+                    case AIEconomySupplyKindClassifier.Kind.Food when food == null:
                         food = node.Supply;
                         break;
                 }
@@ -300,34 +300,6 @@ namespace GameDevTV.RTS.AI
             return sum / values.Count;
         }
 
-        private static SupplyKind ClassifyByName(SupplySO supply)
-        {
-            string name = supply.name;
-            if (name.Contains("Stone", System.StringComparison.OrdinalIgnoreCase))
-            {
-                return SupplyKind.Stone;
-            }
-
-            if (name.Contains("Wood", System.StringComparison.OrdinalIgnoreCase))
-            {
-                return SupplyKind.Wood;
-            }
-
-            if (name.Contains("Food", System.StringComparison.OrdinalIgnoreCase))
-            {
-                return SupplyKind.Food;
-            }
-
-            return SupplyKind.Unknown;
-        }
-
-        private enum SupplyKind
-        {
-            Unknown,
-            Stone,
-            Wood,
-            Food
-        }
     }
 
     /// <summary>Thông số economy đã resolve cho một tick — read-only.</summary>

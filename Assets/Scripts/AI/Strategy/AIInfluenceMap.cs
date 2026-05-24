@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using GameDevTV.RTS.Environment;
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
 using UnityEngine;
 
@@ -168,6 +169,7 @@ namespace GameDevTV.RTS.AI
         /// </summary>
         public static void CollectRemoteEconomicPositionsFromSnapshot(
             AIWorldStateSnapshot snapshot,
+            Owner friendlyOwner,
             Vector3 civilCentralPosition,
             float remoteClusterMinDistance,
             List<Vector3> output)
@@ -182,7 +184,9 @@ namespace GameDevTV.RTS.AI
             for (int i = 0; i < snapshot.GatherableSupplies.Count; i++)
             {
                 GatherableSupply supply = snapshot.GatherableSupplies[i];
-                if (supply == null || supply.Amount <= 0 || !supply.IsVisible)
+                if (supply == null
+                    || supply.Amount <= 0
+                    || !FactionFogQuery.IsVisibleTo(friendlyOwner, supply))
                 {
                     continue;
                 }

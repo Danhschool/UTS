@@ -1,4 +1,5 @@
 using GameDevTV.RTS.Player;
+using GameDevTV.RTS.Units;
 using UnityEngine;
 
 namespace GameDevTV.RTS.Minimap
@@ -27,7 +28,9 @@ namespace GameDevTV.RTS.Minimap
         [SerializeField] private bool excludeFogVisionLayer = true;
         [SerializeField] private bool excludeUiLayer = true;
         [SerializeField] private int fogOfWarPlaneLayer = 13;
-        [SerializeField] private int fogVisionLayer = 14;
+        [SerializeField] private int fogVisionLayer = OwnerFogVisionLayers.DefaultPlayer1VisionLayer;
+        [SerializeField] private int fogVisionLayerPlayer2 = OwnerFogVisionLayers.DefaultPlayer2VisionLayer;
+        [SerializeField] private bool excludeFogVisionLayerPlayer2 = true;
         [SerializeField] private int uiLayer = 5;
 
         [Header("Follow")]
@@ -43,10 +46,30 @@ namespace GameDevTV.RTS.Minimap
 
         private void Awake()
         {
+            ResolveFogVisionLayersFromProject();
             EnsureRenderTexture();
             EnsureCamera();
             ApplyCameraSettings();
             SyncBounds();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Minimap không vẽ layer vision RT dù tên layer đổi trong Project Settings.
+        /// Cách hoạt động: Đọc layer index từ <see cref="OwnerFogVisionLayers"/> cho P1/P2.
+        /// </summary>
+        private void ResolveFogVisionLayersFromProject()
+        {
+            int player1Layer = OwnerFogVisionLayers.GetLayer(Owner.Player1);
+            if (player1Layer >= 0)
+            {
+                fogVisionLayer = player1Layer;
+            }
+
+            int player2Layer = OwnerFogVisionLayers.GetLayer(Owner.Player2);
+            if (player2Layer >= 0)
+            {
+                fogVisionLayerPlayer2 = player2Layer;
+            }
         }
 
         private void LateUpdate()
@@ -174,6 +197,11 @@ namespace GameDevTV.RTS.Minimap
             if (excludeFogVisionLayer && fogVisionLayer >= 0 && fogVisionLayer < 32)
             {
                 mask &= ~(1 << fogVisionLayer);
+            }
+
+            if (excludeFogVisionLayerPlayer2 && fogVisionLayerPlayer2 >= 0 && fogVisionLayerPlayer2 < 32)
+            {
+                mask &= ~(1 << fogVisionLayerPlayer2);
             }
 
             if (excludeUiLayer && uiLayer >= 0 && uiLayer < 32)

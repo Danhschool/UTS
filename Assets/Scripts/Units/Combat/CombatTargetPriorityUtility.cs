@@ -43,7 +43,7 @@ namespace GameDevTV.RTS.Units.Combat
                 return false;
             }
 
-            if (requireVisible && !building.IsVisible)
+            if (requireVisible && !FactionFogQuery.IsVisibleTo(friendlyOwner, building))
             {
                 building = null;
                 return false;
@@ -77,7 +77,12 @@ namespace GameDevTV.RTS.Units.Combat
                 return false;
             }
 
-            return !requireVisible || damageable is not IHideable hideable || hideable.IsVisible;
+            if (!requireVisible)
+            {
+                return true;
+            }
+
+            return damageable is IHideable hideable && FactionFogQuery.IsVisibleTo(friendlyOwner, hideable);
         }
 
         /// <summary>

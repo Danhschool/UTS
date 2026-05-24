@@ -1820,7 +1820,7 @@ MonoBehaviour:
   <IsSelected>k__BackingField: 0
   <CurrentHealth>k__BackingField: 0
   <MaxHealth>k__BackingField: 0
-  <Owner>k__BackingField: 128
+  <Owner>k__BackingField: 256
   <IsVisible>k__BackingField: 1
   <AvailableCommands>k__BackingField: []
   <UnitSO>k__BackingField: {fileID: 11400000, guid: cc6b1ac6bca6bed46a5d323fc4f79ada, type: 2}

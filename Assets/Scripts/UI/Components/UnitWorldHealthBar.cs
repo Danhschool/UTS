@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace GameDevTV.RTS.UI.Components
 {
     /// <summary>
-    /// Thanh máu world-space: fill theo HP và đổi sprite theo <see cref="Owner"/> (Player1 / AI1).
+    /// Thanh máu world-space: fill theo HP và đổi sprite theo <see cref="Owner"/> (Player1 / Player2).
     /// </summary>
     [ExecuteAlways]
     public class UnitWorldHealthBar : MonoBehaviour

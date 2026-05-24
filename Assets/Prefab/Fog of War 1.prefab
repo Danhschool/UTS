@@ -227,6 +227,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7602704936252811533}
+  - component: {fileID: 2396719772407462465}
+  - component: {fileID: 2261031102128222280}
+  - component: {fileID: 959683071662710272}
   m_Layer: 0
   m_Name: Fog of War 1
   m_TagString: Untagged
@@ -252,6 +255,56 @@ Transform:
   - {fileID: 3932488892909418280}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2396719772407462465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4668389572623803702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68215e4fda55df94b95714b049e27ffd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Player.FactionFogSystemsBootstrap
+  fogSystems:
+  - {fileID: 959683071662710272}
+--- !u!114 &2261031102128222280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4668389572623803702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b9bda309cbaf984d9f5dc81ed16ed79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Player.FactionFogPresentation
+  presentationOwner: 1
+  presentationRoot: {fileID: 4668389572623803702}
+  exploredFogCamera: {fileID: 7101987398331931205}
+  visionFogCamera: {fileID: 5857415663090868739}
+  fogSystemReference: {fileID: 959683071662710272}
+--- !u!114 &959683071662710272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4668389572623803702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 411012a494b133e428666b4296579238, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Player.FactionFogSystemReference
+  factionOwner: 1
+  exploredFogCamera: {fileID: 7101987398331931205}
+  exploredTexture: {fileID: 8400000, guid: 4a02c5810d9f4084c86767ced61de51a, type: 2}
+  visionFogCamera: {fileID: 5857415663090868739}
+  visionTexture: {fileID: 8400000, guid: 52facb0f6e8b2564ba1e7adcc0e9d299, type: 2}
+  exploredThreshold: 0.1
+  visionThreshold: 0.9
 --- !u!1 &6497495166858787723
 GameObject:
   m_ObjectHideFlags: 0
@@ -392,4 +445,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 03959e4ecd9f43c1b3ae2b22c02b7b84, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Player.FactionVisibilityUpdater
+  visionFogCamera: {fileID: 5857415663090868739}
+  localHumanOwnerService: {fileID: 0}

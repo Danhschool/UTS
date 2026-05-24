@@ -24,26 +24,58 @@ namespace GameDevTV.RTS.UI.GameEventLog
             GameEventLog.Post("Sự kiện game sẽ hiển thị tại đây.", GameEventLogCategory.Info);
         }
 
+        /// <summary>
+        /// Mục tiêu: Đổi phe lắng nghe khi LocalOwner đổi (MP / debug hotkey).
+        /// Cách hoạt động: Unsubscribe owner cũ, gán mới, subscribe lại.
+        /// </summary>
+        public void SetListenOwner(Owner owner)
+        {
+            if (listenOwner == owner)
+            {
+                return;
+            }
+
+            if (isActiveAndEnabled)
+            {
+                UnsubscribeBus(listenOwner);
+                listenOwner = owner;
+                SubscribeBus(listenOwner);
+                return;
+            }
+
+            listenOwner = owner;
+        }
+
+        void SubscribeBus(Owner owner)
+        {
+            Bus<SupplyEvent>.OnEvent[owner] += HandleSupply;
+            Bus<BuildingSpawnEvent>.OnEvent[owner] += HandleBuildingSpawn;
+            Bus<BuildingDeathEvent>.OnEvent[owner] += HandleBuildingDeath;
+            Bus<UnitDeathEvent>.OnEvent[owner] += HandleUnitDeath;
+            Bus<UpgradeResearchedEvent>.OnEvent[owner] += HandleUpgrade;
+            Bus<BuildingConstructStartedEvent>.OnEvent[owner] += HandleConstructionStarted;
+        }
+
+        void UnsubscribeBus(Owner owner)
+        {
+            Bus<SupplyEvent>.OnEvent[owner] -= HandleSupply;
+            Bus<BuildingSpawnEvent>.OnEvent[owner] -= HandleBuildingSpawn;
+            Bus<BuildingDeathEvent>.OnEvent[owner] -= HandleBuildingDeath;
+            Bus<UnitDeathEvent>.OnEvent[owner] -= HandleUnitDeath;
+            Bus<UpgradeResearchedEvent>.OnEvent[owner] -= HandleUpgrade;
+            Bus<BuildingConstructStartedEvent>.OnEvent[owner] -= HandleConstructionStarted;
+        }
+
         private void OnEnable()
         {
-            Bus<SupplyEvent>.OnEvent[listenOwner] += HandleSupply;
-            Bus<BuildingSpawnEvent>.OnEvent[listenOwner] += HandleBuildingSpawn;
-            Bus<BuildingDeathEvent>.OnEvent[listenOwner] += HandleBuildingDeath;
+            SubscribeBus(listenOwner);
             Bus<BuildingDeathEvent>.RegisterForAll(HandleCivilCentralDestroyed);
-            Bus<UnitDeathEvent>.OnEvent[listenOwner] += HandleUnitDeath;
-            Bus<UpgradeResearchedEvent>.OnEvent[listenOwner] += HandleUpgrade;
-            Bus<BuildingConstructStartedEvent>.OnEvent[listenOwner] += HandleConstructionStarted;
         }
 
         private void OnDisable()
         {
-            Bus<SupplyEvent>.OnEvent[listenOwner] -= HandleSupply;
-            Bus<BuildingSpawnEvent>.OnEvent[listenOwner] -= HandleBuildingSpawn;
-            Bus<BuildingDeathEvent>.OnEvent[listenOwner] -= HandleBuildingDeath;
+            UnsubscribeBus(listenOwner);
             Bus<BuildingDeathEvent>.UnregisterForAll(HandleCivilCentralDestroyed);
-            Bus<UnitDeathEvent>.OnEvent[listenOwner] -= HandleUnitDeath;
-            Bus<UpgradeResearchedEvent>.OnEvent[listenOwner] -= HandleUpgrade;
-            Bus<BuildingConstructStartedEvent>.OnEvent[listenOwner] -= HandleConstructionStarted;
         }
 
         private void HandleSupply(SupplyEvent evt)

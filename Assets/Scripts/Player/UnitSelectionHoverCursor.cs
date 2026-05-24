@@ -35,6 +35,8 @@ namespace GameDevTV.RTS.Player
         private Texture2D gatherCursorBaked;
         private Texture2D attackCursorBaked;
 
+        private Owner localOwner = Owner.Player1;
+
         private readonly List<ISelectable> selectionMirror = new(16);
         private readonly List<AbstractUnit> selectedUnitsBuffer = new(16);
 
@@ -60,21 +62,43 @@ namespace GameDevTV.RTS.Player
             gatherCursorBaked = SystemCursorTextureBaker.BakeForSystemCursor(gatherCursorTexture);
             attackCursorBaked = SystemCursorTextureBaker.BakeForSystemCursor(attackCursorTexture);
 
-            Bus<UnitSelectedEvent>.OnEvent[Owner.Player1] += OnUnitSelected;
-            Bus<UnitDeselectedEvent>.OnEvent[Owner.Player1] += OnUnitDeselected;
-            Bus<UnitDeathEvent>.OnEvent[Owner.Player1] += OnUnitDeath;
+            localOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            SubscribeBus(localOwner);
+            LocalHumanOwnerService.LocalOwnerChanged += OnLocalOwnerChanged;
         }
 
         private void OnDestroy()
         {
-            Bus<UnitSelectedEvent>.OnEvent[Owner.Player1] -= OnUnitSelected;
-            Bus<UnitDeselectedEvent>.OnEvent[Owner.Player1] -= OnUnitDeselected;
-            Bus<UnitDeathEvent>.OnEvent[Owner.Player1] -= OnUnitDeath;
+            LocalHumanOwnerService.LocalOwnerChanged -= OnLocalOwnerChanged;
+            UnsubscribeBus(localOwner);
             ForceSystemDefaultCursor();
             DestroyRuntimeCursorTexture(gatherCursorBaked);
             DestroyRuntimeCursorTexture(attackCursorBaked);
             gatherCursorBaked = null;
             attackCursorBaked = null;
+        }
+
+        void OnLocalOwnerChanged(Owner owner)
+        {
+            UnsubscribeBus(localOwner);
+            localOwner = owner;
+            selectionMirror.Clear();
+            selectedUnitsBuffer.Clear();
+            SubscribeBus(localOwner);
+        }
+
+        void SubscribeBus(Owner owner)
+        {
+            Bus<UnitSelectedEvent>.OnEvent[owner] += OnUnitSelected;
+            Bus<UnitDeselectedEvent>.OnEvent[owner] += OnUnitDeselected;
+            Bus<UnitDeathEvent>.OnEvent[owner] += OnUnitDeath;
+        }
+
+        void UnsubscribeBus(Owner owner)
+        {
+            Bus<UnitSelectedEvent>.OnEvent[owner] -= OnUnitSelected;
+            Bus<UnitDeselectedEvent>.OnEvent[owner] -= OnUnitDeselected;
+            Bus<UnitDeathEvent>.OnEvent[owner] -= OnUnitDeath;
         }
 
         private void OnDisable()

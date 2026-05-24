@@ -1,0 +1,841 @@
+
+10820401089660
+
+TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI
+KHOA CÔNG NGHỆ THÔNG TIN
+
+
+
+
+
+
+
+
+ĐỒ ÁN TỐT NGHIỆP
+ĐỀ TÀI
+PHÁT TRIỂN TRÒ CHƠI CHIẾN THUẬT THỜI GIAN THỰC TÍCH HỢP ĐIỀU KHIỂN BẰNG GIỌNG NÓI 
+
+Giảng viên hướng dẫn:Hoàng Văn Thông 
+Sinh viên thực hiện: Nguyễn Danh Trường 
+Mã sinh viên: 211200969
+Lớp:Kỹ sư công nghệ thông tin 2
+Khóa:62
+
+
+                                Hà Nội, ngày xx tháng xx năm 20
+
+10807701089659
+
+TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI
+KHOA CÔNG NGHỆ THÔNG TIN
+
+
+
+
+
+
+
+
+ĐỒ ÁN TỐT NGHIỆP
+ĐỀ TÀI
+PHÁT TRIỂN TRÒ CHƠI CHIẾN THUẬT THỜI GIAN THỰC TÍCH HỢP ĐIỀU KHIỂN BẰNG GIỌNG NÓI 
+
+Giảng viên hướng dẫn:Hoàng Văn Thông 
+Sinh viên thực hiện: Nguyễn Danh Trường 
+Mã sinh viên: 211200969
+Lớp:Kỹ sư công nghệ thông tin 2
+Khóa:62
+
+
+                                    Hà Nội, ngày xx tháng xx năm 20 
+
+
+LỜI CẢM ƠN
+
+
+
+MỤC LỤC
+ TOC \o "1-3" \h \z \u LỜI CẢM ƠN PAGEREF _Toc228191392 \h 1
+MỤC LỤC PAGEREF _Toc228191393 \h 2
+DANH MỤC CÁC TỪ VIẾT TẮT PAGEREF _Toc228191394 \h 6
+DANH MỤC BẢNG BIỂU PAGEREF _Toc228191395 \h 7
+DANH MỤC HÌNH ẢNH PAGEREF _Toc228191396 \h 8
+MỞ ĐẦU PAGEREF _Toc228191397 \h 10
+CHƯƠNG 1. TỔNG QUAN ĐỀ TÀI VÀ CÔNG NGHỆ SỬ DỤNG PAGEREF _Toc228191398 \h 12
+1.1. Khái niệm trò chơi điện tử và phân loại thể loại. PAGEREF _Toc228191399 \h 12
+1.1.1. Khái niệm trò chơi điện tử PAGEREF _Toc228191400 \h 12
+1.1.2. Phân loại trò chơi điện tử PAGEREF _Toc228191401 \h 12
+1.1.3. Xu hướng phát triển PAGEREF _Toc228191402 \h 13
+1.2. Khảo sát thể loại chiến thuật thời gian thực và liên hệ đề tài PAGEREF _Toc228191403 \h 13
+1.2.1. Đặc trưng của thể loại RTS PAGEREF _Toc228191404 \h 13
+1.2.2. So sánh với các thể loại tương đồng PAGEREF _Toc228191405 \h 13
+1.2.3. Liên hệ định hướng phát triển sản phẩm PAGEREF _Toc228191406 \h 14
+1.3. Mục tiêu, nhiệm vụ và phạm vi của đề tài PAGEREF _Toc228191407 \h 14
+1.3.1. Mục tiêu chung PAGEREF _Toc228191408 \h 14
+1.3.2. Mục tiêu cụ thể và nhiệm vụ PAGEREF _Toc228191409 \h 14
+1.3.3. Phạm vi của đề tài PAGEREF _Toc228191410 \h 15
+1.4. Khảo sát công nghệ và giải pháp liên quan PAGEREF _Toc228191411 \h 15
+1.4.1. Phân tích giải pháp nhận diện và điều khiển bằng giọng nó PAGEREF _Toc228191412 \h 15
+1.4.2. Đánh giá và so sánh các giải pháp ASR PAGEREF _Toc228191413 \h 16
+1.4.3. Cơ sở lựa chọn Vosk API PAGEREF _Toc228191414 \h 16
+1.5. Công cụ và môi trường phát triển PAGEREF _Toc228191415 \h 17
+1.5.1. Unity Engine và ngôn ngữ C# PAGEREF _Toc228191416 \h 17
+1.5.2. Vosk API (Bộ nhận diện giọng nói ngoại tuyến) PAGEREF _Toc228191417 \h 17
+1.5.3. Mirror Networking (Thư viện đồng bộ mạng LAN) PAGEREF _Toc228191418 \h 18
+1.5.4. NavMesh (Hệ thống tìm đường tự động) PAGEREF _Toc228191419 \h 18
+1.6. Định hướng kiến trúc tổng thể PAGEREF _Toc228191420 \h 19
+1.6.1. Pipeline xử lý lệnh điều khiển PAGEREF _Toc228191421 \h 19
+1.6.2. Các phân hệ chức năng chính PAGEREF _Toc228191422 \h 20
+1.7. Khó khăn, thử thách và định hướng giải pháp PAGEREF _Toc228191423 \h 20
+CHƯƠNG 2. PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG PAGEREF _Toc228191424 \h 22
+2.1. Phân tích yêu cầu chức năng và phi chức năng PAGEREF _Toc228191425 \h 22
+2.1.1. Mục tiêu của phân tích yêu cầu PAGEREF _Toc228191426 \h 22
+2.1.2. Tác nhân (Actors) và ngữ cảnh sử dụng PAGEREF _Toc228191427 \h 22
+2.1.3. Yêu cầu chức năng PAGEREF _Toc228191428 \h 22
+2.1.4. Yêu cầu phi chức năng PAGEREF _Toc228191429 \h 24
+2.1.5. Ràng buộc kỹ thuật và giả định PAGEREF _Toc228191430 \h 24
+2.2. Thiết kế các sơ đồ hệ thống PAGEREF _Toc228191431 \h 25
+2.2.1. Mục tiêu và nguyên tắc lập sơ đồ PAGEREF _Toc228191432 \h 25
+2.2.2. Sơ đồ Use Case PAGEREF _Toc228191433 \h 25
+2.2.3. Sơ đồ Activity (Biểu đồ Hoạt động) PAGEREF _Toc228191434 \h 29
+2.2.4. Sơ đồ Sequence (Biểu đồ Tuần tự) PAGEREF _Toc228191435 \h 38
+2.2.5. Sơ đồ Class (Biểu đồ Lớp) PAGEREF _Toc228191436 \h 39
+2.3. Phân tích nghiệp vụ gameplay PAGEREF _Toc228191437 \h 43
+2.3.1. Mục tiêu phân tích nghiệp vụ gameplay. PAGEREF _Toc228191438 \h 43
+2.3.2. Bối cảnh trận đấu và tiền đề nghiệp vụ PAGEREF _Toc228191439 \h 43
+2.3.3. Vòng lặp gameplay tổng thể (Game Loop) PAGEREF _Toc228191440 \h 43
+2.3.4. Nghiệp vụ Quản lý Tài nguyên PAGEREF _Toc228191441 \h 44
+2.3.5. Nghiệp vụ Xây dựng công trình PAGEREF _Toc228191442 \h 44
+2.3.6. Nghiệp vụ Quân đội và Chiến đấu PAGEREF _Toc228191443 \h 44
+2.3.7. Nghiệp vụ Điều hướng (Pathfinding) PAGEREF _Toc228191444 \h 44
+2.3.8. Nghiệp vụ Điều khiển Giọng nói PAGEREF _Toc228191445 \h 45
+2.3.9. Nghiệp vụ Đồng bộ Mạng LAN PAGEREF _Toc228191446 \h 45
+2.3.10. Nghiệp vụ Trí tuệ nhân tạo (Bot PvE) PAGEREF _Toc228191447 \h 45
+2.2.11. Bảng quy tắc nghiệp vụ trọng yếu (Business Rules Summary) PAGEREF _Toc228191448 \h 46
+2.3.12. Kịch bản nghiệp vụ thực thi mẫu (End-to-End Scenario) PAGEREF _Toc228191449 \h 46
+2.4. Thiết kế kiến trúc tổng thể hệ thống PAGEREF _Toc228191450 \h 47
+2.4.1. Kiến trúc mô-đun trò chơi RTS PAGEREF _Toc228191451 \h 47
+2.4.2. Kiến trúc mạng LAN Client-Server. PAGEREF _Toc228191452 \h 48
+2.4.3. Kiến trúc mô-đun xử lý giọng nói PAGEREF _Toc228191453 \h 49
+2.4.4. Luồng dữ liệu thời gian thực trong game PAGEREF _Toc228191454 \h 51
+2.4.5. Quy trình xử lý và ánh xạ lệnh (Command Mapping) PAGEREF _Toc228191455 \h 51
+2.5. Thiết kế dữ liệu và lưu trữ PAGEREF _Toc228191456 \h 53
+2.5.1. Mục tiêu thiết kế dữ liệu PAGEREF _Toc228191457 \h 53
+2.5.2. Phân loại dữ liệu trong hệ thống PAGEREF _Toc228191458 \h 53
+2.5.3. Mô hình dữ liệu cấu trúc (Data Models) PAGEREF _Toc228191459 \h 54
+2.5.4. Thiết kế ScriptableObject cho cấu hình gameplay PAGEREF _Toc228191460 \h 56
+2.5.5. Lưu cấu hình lệnh giọng nói bằng JSON PAGEREF _Toc228191461 \h 57
+2.5.6. Quản lý trạng thái phiên chơi và Đồng bộ LAN PAGEREF _Toc228191462 \h 57
+2.5.7. Dữ liệu phục vụ kiểm thử và đánh giá PAGEREF _Toc228191463 \h 58
+2.5.8. Ràng buộc thiết kế dữ liệu và hướng mở rộng PAGEREF _Toc228191464 \h 58
+2.6. Thiết kế lớp và thành phần chính PAGEREF _Toc228191465 \h 59
+2.6.1. Mục tiêu và Nguyên tắc thiết kế PAGEREF _Toc228191466 \h 59
+2.6.2. Phân hệ Xử lý Lệnh và Giọng nói (Command & Voice System) PAGEREF _Toc228191467 \h 59
+2.6.3. Phân hệ Logic Trò chơi (Gameplay Core System) PAGEREF _Toc228191468 \h 59
+2.6.4. Phân hệ Trí tuệ nhân tạo (AI System) PAGEREF _Toc228191469 \h 60
+2.6.5. Ma trận phân định trách nhiệm (Responsibility Matrix) PAGEREF _Toc228191470 \h 60
+CHƯƠNG 3. THIẾT KẾ GIAO DIỆN (UI/UX) PAGEREF _Toc228191471 \h 61
+3.1. Mục tiêu thiết kế UI/UX PAGEREF _Toc228191472 \h 61
+3.2. Nguyên tắc thiết kế giao diện PAGEREF _Toc228191473 \h 61
+3.3. Cấu trúc các màn hình chính PAGEREF _Toc228191474 \h 62
+3.4. Thiết kế phân mảnh HUD trong trận đấu PAGEREF _Toc228191475 \h 63
+3.5. Thiết kế hiển thị phản hồi Điều khiển Giọng nói PAGEREF _Toc228191476 \h 63
+3.6. Thiết kế UI cho trạng thái mạng LAN PAGEREF _Toc228191477 \h 64
+3.7. Thiết kế UI cho AI Bot và Tổng kết trận đấu PAGEREF _Toc228191478 \h 64
+3.8. Luồng trải nghiệm người dùng (User Flow) PAGEREF _Toc228191479 \h 65
+3.9. Tiêu chí đánh giá chất lượng UI/UX PAGEREF _Toc228191480 \h 65
+Kết luận và kiến nghị PAGEREF _Toc228191481 \h 66
+Danh mục tài liệu tham khảo PAGEREF _Toc228191482 \h 67
+
+
+DANH MỤC CÁC TỪ VIẾT TẮT
+Từ viết tắt
+Nghĩa tiếng Anh
+Nghĩa tiếng Việt
+AI
+Artificial Intelligence
+Trí tuệ nhân tạo
+APM
+Actions Per Minute
+Số thao tác mỗi phút
+AR
+Augmented Reality
+Thực tế tăng cường
+ASR
+Automatic Speech Recognition
+Nhận diện giọng nói
+FPS
+Frames Per Second / First-Person Shooter
+Tốc độ khung hình / Bắn súng góc nhìn thứ nhất 
+FSM
+Finite State Machine
+Máy trạng thái hữu hạn 
+HP
+Hit Points
+Máu
+HUD
+Heads-Up Display
+Giao diện hiển thị thông tin trực quan
+LAN
+Local Area Network
+Mạng nội bộ / Mạng cục bộ
+MOBA
+Multiplayer Online Battle Arena
+Đấu trường trực tuyến nhiều người chơi 
+MVP
+Minimum Viable Product
+Nguyên mẫu cốt lõi
+NLP
+Natural Language Processing
+Xử lý ngôn ngữ tự nhiên
+OOP
+Object-Oriented Programming
+Lập trình hướng đối tượng
+PC
+Personal Computer
+Máy tính cá nhân
+PvE
+Player versus Environment
+Chế độ đấu đơn với trí tuệ nhân tạo
+RPC
+Remote Procedure Call
+Gọi hàm từ xa
+RTS
+Real-Time Strategy
+Chiến thuật thời gian thực
+RTT
+Real-Time Tactics
+Chiến thuật thời gian thực 
+SO
+ScriptableObject
+Dữ liệu cấu hình tĩnh trong Unity
+TPS
+Third-Person Shooter
+Bắn súng góc nhìn thứ ba
+UI
+User Interface
+Giao diện người dùng
+UX
+User Experience
+Trải nghiệm người dùng
+VR
+Virtual Reality
+Thực tế ảo
+
+
+DANH MỤC BẢNG BIỂU
+ TOC \h \z \t "Bang,1" Bảng 1.1 So sánh các giải pháp nhận diện giọng nói tiếng Việt PAGEREF _Toc227049718 \h 14
+Bảng 2.1 Mô tả luật PAGEREF _Toc227049719 \h 44
+Bảng 2.2. Bảng phân định trách nhiệm PAGEREF _Toc227049720 \h 58
+
+
+DANH MỤC HÌNH ẢNH
+ TOC \h \z \t "Anh,1" Hình 1.1. Minh họa Pipeline xử lý lệnh. PAGEREF _Toc227049721 \h 17
+Hình 2.1. Sơ đồ use case tổng quát. PAGEREF _Toc227049722 \h 23
+Hình 2.2. Sơ đồ Use Case phân hệ Mạng LAN. PAGEREF _Toc227049723 \h 24
+Hình 2.3. Sơ đồ Use Case phân hệ Gameplay RTS. PAGEREF _Toc227049724 \h 24
+Hình 2.4. Sơ đồ Use Case đường ống xử lý Giọng nói. PAGEREF _Toc227049725 \h 25
+Hình 2.5. Sơ đồ Use Case hệ thống Bot FSM. PAGEREF _Toc227049726 \h 26
+Hình 2.6. Sơ đồ Activity tổng quát luồng thực thi thao tác trong game. PAGEREF _Toc227049727 \h 27
+Hình 2.7. Sơ đồ Activity nghiệp vụ điều hướng và di chuyển. PAGEREF _Toc227049728 \h 29
+Hình 2.8. Sơ đồ Activity nghiệp vụ giao tranh. PAGEREF _Toc227049729 \h 31
+Hình 2.9. Sơ đồ Activity nghiệp vụ thu thập kinh tế. PAGEREF _Toc227049730 \h 33
+Hình 2.10. Sơ đồ Activity nghiệp vụ quy hoạch và xây dựng. PAGEREF _Toc227049731 \h 35
+Hình 2.11. Sơ đồ Sequence đặc tả luồng giao tiếp thông điệp khi xử lý lệnh giọng nói. PAGEREF _Toc227049732 \h 36
+Hình 2.12 Sơ đồ lớp nhánh xử lý giọng nói. PAGEREF _Toc227049733 \h 37
+Hình 2.13. Sơ đồ phân cấp cấu trúc Command. PAGEREF _Toc227049734 \h 37
+Hình 2.14. Sơ đồ lớp định tuyến thông điệp Client/Server. PAGEREF _Toc227049735 \h 39
+Hình 2.15. Sơ đồ lớp miền quản lý thực thể, AI và dữ liệu cấu hình. PAGEREF _Toc227049736 \h 40
+Hình 2.16. Kiến trúc mô-đun của trò chơi PAGEREF _Toc227049737 \h 46
+Hình 2.17. Kiến trúc mạng LAN PAGEREF _Toc227049738 \h 47
+Hình 2.18. Kiến trúc mô-đun xử lý giọng nói PAGEREF _Toc227049739 \h 48
+Hình 2.19. Minh họa luồng dữ liệu thời gian thực của game. PAGEREF _Toc227049740 \h 49
+Hình 2.20. Minh họa quy trình xử lý và ánh xạ lệnh PAGEREF _Toc227049741 \h 50
+Hình 2.21. Minh họa phân loại dữ liẹu. PAGEREF _Toc227049742 \h 52
+Hình 2.22. Minh họa Mô hình dữ liệu gamePlay PAGEREF _Toc227049743 \h 54
+Hình 2.23. Luồng nạp câu hình. PAGEREF _Toc227049744 \h 55
+Hình 2.24. mô phỏng PAGEREF _Toc227049745 \h 56
+Hình 2.25. Minh họa màn hình chính. PAGEREF _Toc227049746 \h 60
+Hình 2.26. Minh họa LAN lobby. PAGEREF _Toc227049747 \h 60
+Hình 2.27. Màn chơi cơ bản PAGEREF _Toc227049748 \h 61
+Hình 2.28. Minh họa phải hồi điều khiển giọng nói. PAGEREF _Toc227049749 \h 62
+Hình 2.29. Minh họa kết thúc game. PAGEREF _Toc227049750 \h 63
+
+
+
+MỞ ĐẦU
+Trong những năm gần đây, ngành công nghiệp game đã chứng kiến sự phát triển vượt bậc về cả quy mô và công nghệ. Đặc biệt, thể loại game chiến thuật thời gian thực (RTS) luôn giữ vị trí quan trọng nhưng lại đặt ra thách thức lớn về cường độ thao tác tay (APM). Việc phải đồng thời quản lý kinh tế, xây dựng căn cứ và điều quân đội khiến người chơi chịu áp lực thao tác cực lớn trên các thiết bị ngoại vi truyền thống như chuột và bàn phím. Tại Việt Nam, việc tiếp cận các trò chơi hỗ trợ điều khiển giọng nói còn rất hạn chế do rào cản ngôn ngữ và sự thiếu hụt các nghiên cứu ứng dụng tiếng Việt trong môi trường game thời gian thực. Điều này đặt ra nhu cầu về một hệ thống điều khiển tích hợp giọng nói tiếng Việt, vận hành ổn định trong môi trường Offline và mạng nội bộ LAN để đảm bảo tính riêng tư và độ trễ thấp.
+Xuất phát từ bối cảnh đó, đề tài “Phát triển trò chơi chiến thuật thời gian thực tích hợp điều khiển bằng giọng nói” được thực hiện nhằm giải quyết bài toán giảm tải thao tác cơ học bằng cách tận dụng kênh truyền tin giọng nói tự nhiên. Mục tiêu trọng tâm của nghiên cứu là xây dựng một sản phẩm hoàn thiện, có khả năng vận hành ổn định và sẵn sàng phát hành trên thị trường thay vì dừng lại ở mức độ thử nghiệm kỹ thuật. Hệ thống được thiết kế để tối ưu hóa tương tác người-máy thông qua việc hỗ trợ cả chế độ chơi đơn với AI và chế độ đối kháng qua mạng cục bộ LAN với dữ liệu đồng bộ nhất quán, mang lại trải nghiệm mượt mà và chuyên nghiệp cho người sử dụng.
+Phạm vi nghiên cứu tập trung xử lý một bộ lệnh cấu trúc gồm 20 đến 30 câu lệnh tiếng Việt cốt lõi, áp dụng công nghệ Vosk API và kỹ thuật đồng bộ Mirror Networking trên nền tảng Unity. Quá trình triển khai áp dụng phương pháp nghiên cứu từ khảo sát lý thuyết, so sánh công nghệ đến phân tích và thiết kế hệ thống theo các nguyên lý SOLID để đảm bảo tính mở rộng và bảo trì. Giai đoạn thực thi bao gồm lập trình logic gameplay, thiết lập máy trạng thái hữu hạn (FSM) cho AI Bot và tích hợp đường ống xử lý giọng nói, kết thúc bằng việc kiểm thử định lượng các chỉ số về tỷ lệ nhận diện, độ trễ và hiệu năng khung hình để đảm bảo sản phẩm đạt tiêu chuẩn phát hành.
+Kết quả của đề tài dự kiến đóng góp một phương thức tương tác mới cho dòng game RTS, đồng thời tạo tiền đề kỹ thuật hỗ trợ tiếng Việt cho các nghiên cứu về giao tiếp người-máy trong lĩnh vực giải trí kỹ thuật số. Báo cáo đồ án được cấu trúc thành năm chương nhằm trình bày chi tiết các công đoạn phát triển. 
+Chương 1: Tổng quan đề tài và công nghệ sử dụng.
+Trong chương này đồ án tập trung xây dựng nền tảng lý thuyết về ngành game, khảo sát đặc trưng dòng RTS và lựa chọn công nghệ phát triển phù hợp. 
+Chương 2: Phân tích và thiết kế hệ thống.
+Trong chương này đồ án đi sâu vào phân tích yêu cầu nghiệp vụ và thiết kế kiến trúc phần mềm, đảm bảo tính chặt chẽ trong quy trình xử lý lệnh giọng nói. 
+Chương 3: Thiết kế giao diện (UI/UX).
+Trong chương này của đồ án được dành riêng để thiết kế giao diện người dùng (UI/UX), tập trung vào các cơ chế phản hồi trực quan khi tương tác lời nói để tăng cường trải nghiệm người dùng.
+Chương 4: Cài đặt hệ thống.
+Trong chương này của đồ án trình bày quá trình cài đặt thực tế các thành phần từ logic gameplay, xử lý giọng nói đến AI Bot. Cuối cùng, 
+Chương 5: Thử nghiệm và đánh giá.
+Trong chương này của đồ án thực hiện đánh giá toàn diện sản phẩm thông qua các kịch bản kiểm thử, đo lường độ ổn định mạng và hiệu năng thực tế để khẳng định tính hoàn thiện của trò chơi.
+
+
+CHƯƠNG 1. TỔNG QUAN ĐỀ TÀI VÀ CÔNG NGHỆ SỬ DỤNG
+1.1. Khái niệm trò chơi điện tử và phân loại thể loại.
+1.1.1. Khái niệm trò chơi điện tử
+Trò chơi điện tử là một hệ thống phần mềm tương tác được thiết kế dựa trên tập hợp các quy tắc lập trình sẵn, yêu cầu người sử dụng tham gia nhằm đạt được các mục tiêu cụ thể như hoàn thành nhiệm vụ, vượt qua đối thủ hoặc tối ưu hóa điểm số. Điểm khác biệt cốt lõi giữa trò chơi điện tử và các phần mềm ứng dụng thông thường là việc áp dụng vòng lặp trải nghiệm: thử thách – phản hồi – tiến bộ. Quá trình này đòi hỏi người chơi phải liên tục vận dụng kỹ năng, tư duy chiến thuật và khả năng ra quyết định. Dưới góc độ kỹ thuật máy tính, trò chơi điện tử là sự tích hợp phức hợp của nhiều thành phần bao gồm kết xuất đồ họa, xử lý âm thanh, mô phỏng vật lý, trí tuệ nhân tạo (AI), hệ thống truyền thông mạng và giao diện người dùng (UI) để cấu thành một môi trường tương tác thời gian thực.
+1.1.2. Phân loại trò chơi điện tử
+Trò chơi điện tử được phân loại theo nhiều hệ quy chiếu khác nhau nhằm phục vụ quá trình nghiên cứu, thiết kế và phát triển:
+Phân loại theo nền tảng phần cứng: Máy tính cá nhân (PC), thiết bị di động (Mobile), máy console chuyên dụng, trình duyệt web, hoặc các thiết bị thực tế ảo/thực tế tăng cường (VR/AR).
+Phân loại theo phương thức kết nối và số lượng người chơi: Chơi đơn (Single-player), nhiều người chơi cục bộ (Local multiplayer), chơi qua mạng nội bộ (LAN) hoặc trực tuyến (Online).
+Phân loại theo cơ chế và thể loại (Gameplay): Hành động (Action), nhập vai (RPG), mô phỏng (Simulation), chiến thuật thời gian thực (RTS), đấu trường trực tuyến nhiều người chơi (MOBA), bắn súng góc nhìn thứ nhất/thứ ba (FPS/TPS). Việc xác định rõ phân loại của sản phẩm thiết lập cơ sở để tính toán đặc trưng điều khiển, ước lượng độ phức tạp của hệ thống nhập liệu và các yêu cầu về hiệu năng xử lý, qua đó hỗ trợ quá trình ra quyết định lựa chọn kiến trúc phần mềm và công nghệ triển khai phù hợp.
+
+1.1.3. Xu hướng phát triển
+Ngành công nghiệp trò chơi điện tử hiện đang dịch chuyển theo các định hướng công nghệ chủ đạo sau:
+Đa nền tảng và dịch vụ hóa: Chú trọng khả năng tương thích chéo (cross-platform), phân phối nội dung kỹ thuật số và duy trì vòng đời phần mềm thông qua các bản cập nhật liên tục.
+Tích hợp trí tuệ nhân tạo (AI): Áp dụng AI trong việc xây dựng hành vi thực thể (Bot) phức tạp, tạo nội dung tự động theo thuật toán và điều chỉnh độ khó động.
+Đa dạng hóa phương thức nhập liệu (Multi-modal input): Tối ưu hóa trải nghiệm tương tác bằng cách mở rộng các kênh nhập liệu ngoài chuột và bàn phím truyền thống. Các công nghệ nhận diện giọng nói, cử chỉ hay theo dõi ánh mắt đang được ứng dụng nhằm giảm tải cường độ thao tác vật lý và giải quyết bài toán quá tải nhận thức khi người chơi phải xử lý đa tác vụ đồng thời. Trong phạm vi đề tài xây dựng trò chơi RTS, xu hướng phát triển hệ thống nhập liệu đa kênh kết hợp công nghệ xử lý ngôn ngữ tự nhiên ngoại tuyến (Offline NLP) đóng vai trò định hướng trực tiếp trong việc thiết lập kiến trúc tổng thể và lựa chọn giải pháp nhận diện giọng nói tiếng Việt.
+1.2. Khảo sát thể loại chiến thuật thời gian thực và liên hệ đề tài
+1.2.1. Đặc trưng của thể loại RTS
+Chiến thuật thời gian thực (Real-Time Strategy – RTS) là thể loại trò chơi yêu cầu người chơi đồng thời quản lý các hệ thống phức tạp: thu thập và phân bổ tài nguyên (kinh tế), xây dựng và nâng cấp cơ sở hạ tầng, sản xuất và điều khiển đơn vị chiến đấu (quân sự), cũng như kiểm soát bản đồ. Mọi diễn biến xảy ra liên tục, không chia theo lượt. Đặc trưng này tạo ra yêu cầu khắt khe về chỉ số APM (Actions Per Minute - số thao tác mỗi phút), buộc người chơi phải liên tục xử lý song song giữa quản lý vĩ mô (phát triển kinh tế) và vi mô (điều khiển tác chiến).
+1.2.2. So sánh với các thể loại tương đồng
+MOBA (Multiplayer Online Battle Arena): Trọng tâm đặt vào việc điều khiển một đơn vị duy nhất (tướng/anh hùng) và sự phối hợp đồng đội. Lớp cơ chế quản lý kinh tế và xây dựng căn cứ tổng thể được tối giản hóa hoặc loại bỏ hoàn toàn.
+RTT (Real-Time Tactics): Tập trung chuyên sâu vào chiến thuật tác chiến quân sự trên chiến trường, thường không bao gồm vòng lặp khai thác tài nguyên và xây dựng cơ sở hạ tầng như RTS truyền thống. So với hai thể loại trên, RTS sở hữu vòng lặp cơ chế (kinh tế – xây dựng – quân sự) đầy đủ và phức tạp nhất. Mức độ phức tạp này cung cấp môi trường tối ưu để triển khai hệ thống điều khiển đa kênh, trong đó giọng nói đóng vai trò phụ trợ cho chuột và bàn phím để xử lý các lệnh quản lý có tính cấu trúc.
+1.2.3. Liên hệ định hướng phát triển sản phẩm
+Sản phẩm được xây dựng với mục tiêu hoàn thiện thành một trò chơi RTS có thể phát hành, sở hữu đầy đủ các cơ chế cốt lõi: khai thác tài nguyên, xây dựng, sản xuất đơn vị, chiến đấu và hệ thống tìm đường thông minh. Trọng tâm kỹ thuật là việc tích hợp hệ thống nhận diện giọng nói tiếng Việt ngoại tuyến (Offline) vào trực tiếp luồng điều khiển gameplay. Trò chơi vận hành ổn định trên nền tảng Windows, hỗ trợ chế độ nhiều người chơi qua mạng nội bộ (LAN) dựa trên kiến trúc mạng Client-Server (Host), đảm bảo chất lượng, độ trễ thấp và sự đồng bộ dữ liệu chặt chẽ cho người dùng cuối.
+1.3. Mục tiêu, nhiệm vụ và phạm vi của đề tài
+1.3.1. Mục tiêu chung
+Xây dựng và hoàn thiện một hệ thống trò chơi chiến thuật thời gian thực (RTS) trên nền tảng Windows, tích hợp cơ chế điều khiển bằng giọng nói tiếng Việt hoạt động hoàn toàn ngoại tuyến (Offline) song song với phương thức nhập liệu truyền thống (chuột và bàn phím). Mục tiêu cốt lõi là hiện thực hóa và chứng minh tính khả thi của toàn bộ đường ống xử lý (pipeline) từ khâu tiếp nhận tín hiệu âm thanh, nhận diện văn bản, phân tích cú pháp, ánh xạ vào logic gameplay cho đến việc đồng bộ trạng thái thực thể trong môi trường mạng nội bộ (LAN) và chế độ đấu đơn với trí tuệ nhân tạo (AI).
+1.3.2. Mục tiêu cụ thể và nhiệm vụ
+Để đạt được mục tiêu chung, quá trình triển khai được chia thành các nhóm nhiệm vụ cụ thể sau:
+Phân tích và thiết kế: Đặc tả yêu cầu chức năng và phi chức năng; xây dựng mô hình nghiệp vụ RTS; thiết kế kiến trúc phần mềm hướng mô-đun; thiết kế cấu trúc dữ liệu (cấu hình tĩnh và trạng thái runtime); thiết kế giao diện người dùng (UI/UX) tập trung vào luồng phản hồi trạng thái giọng nói và kết nối mạng.
+Xử lý giọng nói: Tích hợp engine nhận diện giọng nói ngoại tuyến; xây dựng và tối ưu hóa bộ từ điển lệnh tiếng Việt; thiết lập cơ chế chuẩn hóa chuỗi, phân tích cú pháp (Parser) và ánh xạ từ khóa sang tập lệnh điều khiển nội bộ của trò chơi.
+Cài đặt Gameplay RTS: Lập trình các cơ chế cốt lõi bao gồm: hệ thống quản lý tài nguyên, quy trình xây dựng công trình, huấn luyện đơn vị quân, logic chiến đấu và thuật toán tìm đường (Pathfinding) trên bản đồ lưới (NavMesh).
+Lập trình mạng (Networking): Triển khai kiến trúc mạng Client-Server theo mô hình Host; xử lý logic tạo phòng và quản lý phiên chơi qua mạng LAN; đảm bảo đồng bộ hóa trạng thái các đơn vị và xác thực quyền điều khiển phía máy chủ.
+Phát triển AI Bot: Cài đặt hệ thống máy trạng thái hữu hạn (Finite State Machine - FSM) ở mức cơ bản để điều khiển hành vi của đối thủ máy (PvE), bao gồm các chu kỳ phát triển kinh tế và tấn công.
+Thử nghiệm và đánh giá: Đo lường các chỉ số định lượng bao gồm độ trễ nhận diện (Latency), tỷ lệ thực thi lệnh chính xác trong điều kiện thực tế, độ ổn định của hệ thống mạng LAN và hiệu suất khung hình (FPS).
+1.3.3. Phạm vi của đề tài
+Nền tảng triển khai: Sản phẩm được đóng gói dưới dạng ứng dụng thực thi (.exe) hoạt động trên hệ điều hành Windows với cấu hình máy tính cá nhân tiêu chuẩn.
+Môi trường mạng: Hệ thống tập trung tối ưu hóa cho kết nối mạng nội bộ (LAN); không bao gồm tính năng ghép trận (Matchmaking) trên Internet.
+Nhận diện giọng nói: Hoạt động hoàn toàn ngoại tuyến; hệ thống xử lý một tập hợp các câu lệnh có cấu trúc giới hạn được định nghĩa trước (theo định dạng JSON/Grammar) phục vụ chuyên biệt cho việc điều khiển gameplay, không hỗ trợ nhận diện hội thoại tự do.
+Giới hạn nội dung: Đề tài tập trung chứng minh nền tảng kỹ thuật và trải nghiệm vòng lặp cơ chế cốt lõi; không bao gồm việc phát triển cốt truyện, không hỗ trợ đa ngôn ngữ và giới hạn số lượng phe phái cũng như chủng loại đơn vị quân ở mức nguyên mẫu (MVP).
+1.4. Khảo sát công nghệ và giải pháp liên quan
+1.4.1. Phân tích giải pháp nhận diện và điều khiển bằng giọng nó
+Việc tích hợp nhận diện giọng nói (Automatic Speech Recognition - ASR) vào trò chơi điện tử thường được tiếp cận theo hai hướng chính: dựa trên nền tảng điện toán đám mây (Online/Cloud-based) hoặc xử lý cục bộ trên thiết bị (Offline/On-device). Đối với thể loại RTS, yêu cầu về độ trễ phản hồi thấp là yếu tố sống còn để đảm bảo trải nghiệm liền mạch. Hơn nữa, với định hướng triển khai trên môi trường mạng nội bộ (LAN) độc lập với kết nối Internet, giải pháp xử lý ngoại tuyến được ưu tiên tuyệt đối.
+Khi áp dụng cho tiếng Việt, một ngôn ngữ có tính thanh điệu phức tạp, hệ thống ASR ngoại tuyến đòi hỏi sự chuẩn bị kỹ lưỡng về mô hình âm học (Acoustic model) và từ điển phát âm. Để giải quyết bài toán nhầm lẫn âm tiết hoặc từ đồng âm trong môi trường có nhiễu (nhạc nền game, tiếng ồn xung quanh), giải pháp tối ưu là sử dụng một tập lệnh từ vựng hữu hạn (Finite-vocabulary grammar) kết hợp với thuật toán chuẩn hóa văn bản đầu vào trước khi đối chiếu lệnh.
+
+1.4.2. Đánh giá và so sánh các giải pháp ASR
+Nhằm lựa chọn công nghệ phù hợp nhất cho hệ thống, nghiên cứu tiến hành khảo sát và đánh giá ba nhóm giải pháp ASR phổ biến trên thị trường dựa trên các tiêu chí đặc thù của dự án (Bảng 1.1).
+Bảng 1.1 So sánh các giải pháp nhận diện giọng nói tiếng Việt
+Tiêu chí
+Google Speech-to-Text
+Microsoft SAPI/Azure Speech
+Vosk API
+Mô hình triển khai
+Chủ yếu online
+Online + một phần on-device
+Offline cục bộ
+Phụ thuộc Internet
+Cao
+Trung bình–cao
+Thấp
+Độ trễ trong LAN nội bộ
+Biến động theo mạng
+Biến động theo mạng
+Ổn định hơn
+Chi phí vận hành
+Phát sinh theo API usage
+Có thể phát sinh
+Thấp (local)
+Tùy biến từ điển lệnh
+Có nhưng phụ thuộc nền tảng
+Có
+Chủ động cho command set
+Phù hợp đề tài
+Trung bình
+Trung bình
+Cao
+1.4.3. Cơ sở lựa chọn Vosk API
+Dựa trên kết quả khảo sát từ Bảng 1.1, thư viện Vosk API được lựa chọn làm nền tảng cốt lõi cho module xử lý giọng nói của hệ thống với các lý do sau:
+Khả năng vận hành độc lập (Offline-first): Hoàn toàn không phụ thuộc vào đường truyền Internet, đáp ứng tuyệt đối yêu cầu về tính riêng tư và sự ổn định khi triển khai trong môi trường mạng LAN khép kín.
+Tối ưu cho bài toán lệnh cấu trúc: Vosk hỗ trợ tính năng giới hạn từ vựng (Grammar restriction), cho phép hệ thống chỉ tập trung nhận diện các từ khóa được định nghĩa sẵn (ví dụ: "Tấn công", "Xây nhà"). Điều này giúp loại bỏ nhiễu từ các câu nói ngoài lề, gia tăng độ chính xác trong điều kiện thực tế.
+Khả năng tích hợp liền mạch: Vosk cung cấp thư viện hỗ trợ cho C#, cho phép dễ dàng tích hợp vào luồng xử lý âm thanh (Audio buffer) của Unity Engine mà không gây xung đột với luồng chính (Main thread) của game.
+Chi phí và bản quyền: Là giải pháp mã nguồn mở, Vosk loại bỏ rủi ro về chi phí duy trì API, tạo điều kiện thuận lợi cho việc đóng gói và phân phối sản phẩm phần mềm hoàn chỉnh.
+1.5. Công cụ và môi trường phát triển
+1.5.1. Unity Engine và ngôn ngữ C#
+Unity Engine (phiên bản LTS) được sử dụng làm nền tảng cốt lõi để phát triển toàn bộ hệ thống trò chơi nhờ khả năng cung cấp môi trường đồ họa 3D mạnh mẽ và hệ sinh thái công cụ đa dạng.
+Kiến trúc Component-Based: Unity áp dụng mô hình thiết kế dựa trên thành phần (Component-Based Architecture), cho phép gắn các kịch bản hành vi (Scripts) độc lập vào các thực thể (GameObjects). Điều này hỗ trợ việc chia nhỏ module một cách linh hoạt (ví dụ: tách biệt module quản lý âm thanh AudioSource, module vật lý Rigidbody, và module logic UnitController).
+Ngôn ngữ lập trình C#: Toàn bộ logic nghiệp vụ được lập trình bằng C#. Với đặc thù là ngôn ngữ hướng đối tượng (OOP) mạnh mẽ, C# cho phép tổ chức mã nguồn tuân thủ chặt chẽ các nguyên lý thiết kế SOLID. Việc sử dụng Interface và Abstract Class trong C# giúp giảm thiểu sự phụ thuộc cứng (tight coupling) giữa các hệ thống phức tạp như quản lý mạng, xử lý giọng nói và cơ chế gameplay. Đồng thời, C# cung cấp khả năng xử lý đa luồng (Multithreading) qua Task và Coroutine của Unity, rất cần thiết cho các tác vụ nặng.
+Hệ thống hỗ trợ tích hợp: Unity cung cấp sẵn các công cụ như UI Toolkit / uGUI để xây dựng giao diện người dùng (HUD, Menu), hệ thống quản lý âm thanh không gian, và khả năng tương thích cao để tích hợp các plugin bên thứ ba (DML, DLL) như Vosk và Mirror mà không cần can thiệp vào mã nguồn gốc của engine.
+1.5.2. Vosk API (Bộ nhận diện giọng nói ngoại tuyến)
+Vosk API đóng vai trò là hạt nhân của hệ thống điều khiển bằng giọng nói tiếng Việt, hoạt động hoàn toàn độc lập với Internet (Offline). Luồng xử lý tín hiệu âm thanh thành lệnh nghiệp vụ được thiết kế với độ chi tiết cao:
+Thu thập và tiền xử lý tín hiệu: Tín hiệu âm thanh được thu từ microphone thông qua lớp Microphone của Unity với tần số lấy mẫu tiêu chuẩn (thường là 16kHz, định dạng Mono). Dữ liệu này được đưa qua các bộ lọc cơ bản (Noise Gate) để loại bỏ tạp âm môi trường trước khi đưa vào bộ đệm (Audio Buffer).
+Quá trình giải mã (Decoding): Dữ liệu âm thanh thô được đẩy vào Vosk Engine. Vosk sử dụng Mô hình âm học (Acoustic Model) và Mô hình ngôn ngữ (Language Model) dành riêng cho tiếng Việt để phân tích các âm vị và chuyển đổi thành chuỗi văn bản (Text). Để đảm bảo FPS của trò chơi không bị sụt giảm, quá trình giải mã tính toán nặng này được đẩy sang một luồng xử lý chạy nền (Background Thread).
+Chuẩn hóa văn bản đầu ra: Văn bản thô trả về từ Vosk (định dạng JSON) được trích xuất và đưa qua bước chuẩn hóa: chuyển đổi toàn bộ sang chữ thường, loại bỏ khoảng trắng thừa, lọc bỏ các từ đệm vô nghĩa.
+Phân tích cú pháp (Parser & Mapper): Chuỗi văn bản đã chuẩn hóa được đưa vào thuật toán Parser để đối chiếu với tập lệnh hữu hạn (Grammar) đã định nghĩa sẵn. Kết quả đối chiếu sẽ tạo ra một cấu trúc lệnh cụ thể (ví dụ: Action = ATTACK, Target = ENEMY_BASE) và gửi trả lại luồng chính (Main Thread) của Unity để thực thi trong gameplay.
+1.5.3. Mirror Networking (Thư viện đồng bộ mạng LAN)
+Để đáp ứng yêu cầu chơi mạng cục bộ (LAN), Mirror Networking được lựa chọn thay thế cho các giải pháp mặc định. Mirror cung cấp một nền tảng lập trình mạng cấp cao, tối ưu cho cấu trúc Client-Server.
+Mô hình máy chủ có thẩm quyền (Server Authoritative): Hệ thống mạng của trò chơi vận hành theo cơ chế Host-Client. Máy của người tạo phòng (Host) sẽ đóng vai trò vừa là Client vừa là Server. Mọi quyết định quan trọng (như có đủ tài nguyên để xây nhà không, sát thương gây ra là bao nhiêu) đều do Server tính toán và quyết định.
+Luồng truyền tin: Người chơi (Client) không trực tiếp thay đổi trạng thái game. Khi người chơi ra lệnh (bằng chuột hoặc giọng nói), Client gửi một yêu cầu thông qua [Command] lên Server. Server tiến hành xác thực tính hợp lệ của lệnh. Nếu hợp lệ, Server cập nhật trạng thái logic và phát tín hiệu đồng bộ về tất cả các Client khác thông qua [ClientRpc] hoặc cập nhật các biến trạng thái dùng chung [SyncVar]. Cơ chế này loại bỏ hoàn toàn rủi ro gian lận (hack/cheat) và hiện tượng mất đồng bộ (desync) giữa các máy.
+Quản lý thực thể mạng: Mirror sử dụng NetworkIdentity để cấp phát ID độc nhất cho mỗi đơn vị quân, công trình trên toàn hệ thống mạng, giúp các lệnh điều khiển như "Chọn nông dân số 1" được thực thi nhất quán trên màn hình của tất cả người chơi.
+1.5.4. NavMesh (Hệ thống tìm đường tự động)
+Trong thể loại RTS, việc di chuyển hàng chục đơn vị quân cùng lúc trên một bản đồ phức tạp là bài toán tiêu tốn rất nhiều tài nguyên phần cứng. Unity NavMesh (Navigation Mesh) được sử dụng để giải quyết triệt để vấn đề này.
+Baking (Nướng bản đồ): Trước khi trò chơi bắt đầu, hệ thống NavMesh phân tích các yếu tố hình học của bản đồ (địa hình, độ dốc, chướng ngại vật tĩnh như cây cối, vách đá) và tính toán ra một lưới đa giác đại diện cho các khu vực "có thể di chuyển" (Walkable Area).
+
+NavMeshAgent và Pathfinding: Mỗi đơn vị quân được gắn một NavMeshAgent. Thay vì phải tự viết các thuật toán tìm đường phức tạp (như A*), logic game chỉ cần cung cấp tọa độ đích (Destination). Hệ thống nội tại của NavMesh sẽ tự động tính toán lộ trình ngắn nhất, đồng thời xử lý các thông số như vận tốc, gia tốc và bán kính quay vòng của từng loại quân.
+Né tránh cục bộ (Local Avoidance): Khi di chuyển theo nhóm lớn hoặc gặp chướng ngại vật động (ví dụ: một công trình vừa được người chơi khác xây lên), NavMeshAgent kết hợp với NavMeshObstacle sử dụng thuật toán né tránh cục bộ để các đơn vị tự động tách đội hình, không đi xuyên qua nhau và tìm lại lộ trình mới mà không cần sự can thiệp thủ công từ người chơi. Khối lượng tính toán này được tối ưu hóa ở tầng C++ của Unity Engine, đảm bảo hiệu năng cao cho game RTS.
+1.6. Định hướng kiến trúc tổng thể
+1.6.1. Pipeline xử lý lệnh điều khiển
+Hệ thống được thiết kế theo mô hình đường ống (pipeline) xử lý dữ liệu một chiều, đảm bảo tính tuần tự và chặt chẽ từ khâu tiếp nhận thông tin người dùng đến khi thay đổi trạng thái trong trò chơi. Chuỗi xử lý bao gồm các giai đoạn:
+
+Hình 1.1. Minh họa Pipeline xử lý lệnh.
+
+Tiếp nhận tín hiệu: Thu thập dữ liệu âm thanh đầu vào từ microphone của người chơi (Client).
+Giải mã âm thanh (ASR): Chuyển tiếp luồng âm thanh vào engine Vosk xử lý ngoại tuyến để trích xuất chuỗi văn bản thô.
+Chuẩn hóa và phân tích cú pháp: Làm sạch văn bản, loại bỏ nhiễu và phân tích theo cấu trúc ngữ pháp (grammar) đã định nghĩa trước.
+Ánh xạ lệnh (Command Mapping): Chuyển đổi văn bản đã chuẩn hóa thành đối tượng lệnh nội bộ (Command Object) chứa thông tin hành động và mục tiêu.
+Xác thực thẩm quyền: Gửi yêu cầu lệnh lên máy chủ (Server/Host). Máy chủ kiểm tra tính hợp lệ của lệnh dựa trên ngữ cảnh hiện tại (kiểm tra lượng tài nguyên, quyền sở hữu đơn vị, trạng thái bản đồ).
+Thực thi và đồng bộ: Nếu lệnh hợp lệ, máy chủ áp dụng thay đổi vào logic game và phát tín hiệu đồng bộ trạng thái mới tới toàn bộ các Client đang kết nối.
+1.6.2. Các phân hệ chức năng chính
+Kiến trúc phần mềm được module hóa thành 6 phân hệ cốt lõi, hoạt động độc lập và giao tiếp thông qua các Interface:
+Phân hệ Voice (ASR): Chịu trách nhiệm quản lý thiết bị thu âm, cấp phát bộ đệm âm thanh và chạy thuật toán nhận diện cục bộ trên luồng nền (Background thread).
+Phân hệ Command: Đảm nhiệm xử lý ngôn ngữ tự nhiên mức độ cơ bản, bao gồm bộ chuẩn hóa (Normalizer), bộ phân tích cú pháp (Parser) và cơ chế phản hồi lỗi nhận diện.
+Phân hệ RTS Core: Xử lý toàn bộ logic nghiệp vụ trò chơi, bao gồm quản lý tài nguyên, vòng đời công trình, chỉ số đơn vị, hệ thống chiến đấu (sát thương, máu, giáp) và thuật toán tìm đường.
+Phân hệ AI: Điều khiển các thực thể không do người chơi quản lý (Bot), được xây dựng dựa trên kiến trúc Máy trạng thái hữu hạn (FSM) với các hành vi khai thác và tấn công tự động.
+Phân hệ Network: Quản lý vòng đời phiên chơi mạng nội bộ (LAN), xử lý kết nối, ngắt kết nối và cơ chế đồng bộ biến trạng thái (SyncVar) hoặc gọi hàm từ xa (RPC).
+Phân hệ UI/UX: Quản lý hiển thị thông tin trực quan (HUD), hệ thống menu, sảnh chờ (Lobby), trạng thái kết nối và các chỉ báo phản hồi nhận diện giọng nói.
+1.7. Khó khăn, thử thách và định hướng giải pháp
+Quá trình triển khai hệ thống đặt ra các thách thức kỹ thuật đặc thù, yêu cầu các giải pháp thiết kế tương ứng để đảm bảo tính ổn định:
+Thử thách về nhiễu âm thanh và độ chính xác nhận diện: Môi trường thực tế thường có tạp âm, thiết bị thu âm chất lượng thấp hoặc người chơi phát âm không chuẩn xác theo khuôn mẫu.
+Hướng xử lý: Thiết lập hệ thống lọc nhiễu cơ bản (Noise Gate); giới hạn nghiêm ngặt tập lệnh từ vựng nhằm giảm không gian tìm kiếm của thuật toán; áp dụng cơ chế phản hồi trực quan ngay lập tức trên UI (hiển thị text nhận diện được và đổi màu đơn vị) để người chơi tự điều chỉnh cách phát âm.
+Thử thách về đồng bộ mạng và bảo mật: Việc Client tự ý thay đổi trạng thái có thể dẫn đến mất đồng bộ (Desync) toàn hệ thống hoặc tạo khe hở gian lận.
+Hướng xử lý: Áp dụng triệt để mô hình Server Authoritative (Máy chủ có thẩm quyền). Mọi logic tính toán thay đổi trạng thái nhạy cảm (tài nguyên, máu đơn vị) chỉ được thực thi trên máy chủ; Client chỉ có quyền gửi yêu cầu và render kết quả.
+Thử thách về phạm vi và cân bằng hệ thống (Game Balance): Thể loại RTS đòi hỏi khối lượng công việc khổng lồ để thiết kế đa dạng chủng quân và cân bằng chiến thuật, vượt quá thời lượng của một đồ án kỹ thuật.
+Hướng xử lý: Thu hẹp phạm vi sản phẩm về mức độ nguyên mẫu cốt lõi (MVP) với số lượng đơn vị và phe phái giới hạn. Ưu tiên tài nguyên phát triển vào việc chứng minh sự ổn định của pipeline giọng nói và luồng dữ liệu mạng thay vì mở rộng nội dung thương mại.
+
+CHƯƠNG 2. PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
+2.1. Phân tích yêu cầu chức năng và phi chức năng
+2.1.1. Mục tiêu của phân tích yêu cầu
+Xác định các giới hạn chức năng, mức độ chất lượng và ràng buộc kỹ thuật của hệ thống trò chơi RTS tích hợp điều khiển giọng nói. Kết quả phân tích là cơ sở đặc tả để thiết kế kiến trúc, triển khai mã nguồn và xây dựng kịch bản kiểm thử định lượng.
+2.1.2. Tác nhân (Actors) và ngữ cảnh sử dụng
+Hệ thống bao gồm các tác nhân tương tác chính:
+Người chơi (Player): Tác nhân phát lệnh điều khiển thông qua thiết bị ngoại vi (chuột/phím) và giọng nói (microphone).
+Máy chủ mạng (Host/Server): Tác nhân có thẩm quyền cao nhất (Authoritative), chịu trách nhiệm xác thực tính hợp lệ của lệnh và đồng bộ trạng thái.
+Máy khách (Client): Tác nhân nhận thông tin đầu vào từ người chơi, gửi yêu cầu lên máy chủ và kết xuất (render) trạng thái trò chơi.
+Trí tuệ nhân tạo (Bot AI): Tác nhân hệ thống mô phỏng đối thủ trong chế độ PvE.
+Module xử lý ngôn ngữ (Vosk ASR): Tác nhân phần mềm trung gian chuyển đổi tín hiệu âm thanh thành văn bản thô.
+Ngữ cảnh triển khai: Mạng nội bộ (LAN) trên nền tảng Windows, không yêu cầu kết nối Internet cho quá trình nhận diện giọng nói và đồng bộ dữ liệu.
+2.1.3. Yêu cầu chức năng
+Nhóm chức năng Gameplay RTS:
+Quản lý tài nguyên: Hệ thống khởi tạo, tính toán cộng/trừ tài nguyên (gỗ, vàng) dựa trên hoạt động khai thác hoặc tiêu hao (xây dựng, huấn luyện). Khóa các hành động vượt quá khả năng chi trả.
+Quản lý đơn vị: Khởi tạo đơn vị quân từ công trình. Thực thi các lệnh di chuyển (sử dụng NavMesh) và tấn công mục tiêu trong tầm nhìn. Tính toán sát thương, trừ máu (HP) và hủy đối tượng khi HP bằng 0.
+Quản lý công trình: Xác thực vị trí đặt móng hợp lệ trên bản đồ. Cập nhật trạng thái công trình từ thi công đến hoàn thành và mở khóa các chức năng tương ứng (sản xuất quân).
+Luồng trận đấu: Khởi tạo bản đồ, xác định điều kiện thắng/thua (ví dụ: phá hủy nhà chính) và đồng bộ kết quả kết thúc trận đấu.
+Nhóm chức năng nhận diện và xử lý giọng nói:
+Thu thập tín hiệu: Đọc luồng âm thanh đầu vào từ microphone theo thời gian thực. Cung cấp cơ chế bật/tắt (Toggle) luồng nhận diện.
+Giải mã âm thanh: Chuyển đổi tín hiệu giọng nói tiếng Việt thành văn bản thông qua mô hình Vosk Offline.
+Phân tích cú pháp: Tiền xử lý văn bản (loại bỏ từ đệm, chuẩn hóa chữ thường) và phân tách câu lệnh thành các tham số cốt lõi (Chủ thể - Hành động - Mục tiêu).
+Ánh xạ lệnh (Command Mapping): Chuyển đổi dữ liệu văn bản đã phân tích thành đối tượng Command trong Engine. Xử lý bộ từ 20 đến 30 lệnh cơ bản được định nghĩa trước.
+Phản hồi hệ thống: In chuỗi lệnh hệ thống ghi nhận được lên giao diện (UI) và hiển thị thông báo lỗi nếu cấu trúc lệnh không hợp lệ hoặc thiếu tài nguyên.
+Nhóm chức năng mạng LAN (Mirror Networking):
+Quản lý phiên (Session): Tạo phòng (Host) và cho phép các máy khác tham gia (Client) qua địa chỉ IP nội bộ. Quản lý trạng thái sảnh chờ (Lobby).
+Đồng bộ trạng thái (State Sync): Đồng bộ liên tục vị trí, lượng máu của đơn vị và chỉ số tài nguyên qua các biến mạng (SyncVars).
+Xác thực Authoritative: Mọi yêu cầu thay đổi trạng thái từ Client phải được Server kiểm tra và cấp phép trước khi đồng bộ ngược lại toàn mạng để ngăn chặn gian lận (desync).
+Nhóm chức năng AI Bot (PvE):
+Vận hành tự động: Điều khiển các hành vi cơ bản của Bot thông qua Máy trạng thái hữu hạn (FSM).
+Chuyển đổi trạng thái: Tự động ra quyết định chuyển đổi giữa các trạng thái: Tuần tra (Idle/Patrol), Thu thập (Gather), Xây dựng (Build), Huấn luyện (Train), Tấn công (Attack) và Phòng thủ (Defend) dựa trên điều kiện tài nguyên và quân số.
+2.1.4. Yêu cầu phi chức năng
+Hiệu năng (Performance): Độ trễ phản hồi từ khi người chơi kết thúc phát âm đến khi đơn vị bắt đầu thực thi hành động phải đạt < 1 giây. Tốc độ khung hình (FPS) duy trì ở mức 30-60 trên cấu hình máy tính thử nghiệm tiêu chuẩn.
+Độ chính xác (Accuracy): Tỷ lệ giải mã đúng lệnh giọng nói tiếng Việt đạt mức >= 90% trong điều kiện phòng có độ ồn thấp và người chơi phát âm rõ theo đúng bộ từ điển (Grammar).
+Tính ổn định (Reliability): Trạng thái trò chơi không bị treo hoặc sụp đổ (crash) khi nhận dữ liệu rác từ microphone. Sự kiện mạng phải được xử lý tuần tự.
+Khả năng mở rộng (Extensibility): Dữ liệu đơn vị, công trình được quản lý bằng ScriptableObject. Cấu trúc bộ lệnh giọng nói được lưu trữ bằng file JSON để cho phép cập nhật mà không cần can thiệp vào mã nguồn logic.
+Khả năng bảo trì (Maintainability): Kiến trúc mã nguồn tuân thủ nguyên lý tách biệt mối quan tâm (Separation of Concerns). Module Voice, Logic RTS, và Network hoạt động độc lập, giao tiếp thông qua các Interface hoặc Event.
+2.1.5. Ràng buộc kỹ thuật và giả định
+Công nghệ nền tảng: Unity Engine (bản LTS), ngôn ngữ C#.
+Thư viện lõi: Vosk API (Small Model cho tiếng Việt), Mirror Networking.
+Hệ thống điều hướng: Unity NavMesh.
+Giả định môi trường: Phần cứng microphone của người dùng hoạt động ổn định. Băng thông mạng LAN không bị nghẽn mạng do các tác vụ bên ngoài.
+2.1.6. Tiêu chí chấp nhận
+Hệ thống được xác nhận hoàn thành khi đáp ứng các điều kiện sau:
+Vòng lặp trò chơi cơ bản (thu thập -> xây dựng -> chiến đấu -> kết thúc) hoạt động xuyên suốt không lỗi.
+Hệ thống giải mã và thực thi chính xác tập hợp 20-30 lệnh giọng nói tiếng Việt đã khai báo.
+Độ trễ từ giọng nói đến hành động đáp ứng chuẩn < 1 giây.
+Trạng thái của các thực thể (đơn vị, công trình, máu) hiển thị khớp nhau trên màn hình của tất cả các Client trong mạng LAN.
+Bot AI PvE thực hiện thành công chuỗi hành động thu thập và tự động mang quân tấn công căn cứ người chơi.
+2.2. Thiết kế các sơ đồ hệ thống
+2.2.1. Mục tiêu và nguyên tắc lập sơ đồ
+Mục 2.2 mô hình hóa kiến trúc hệ thống qua các sơ đồ UML, tập trung trực tiếp vào cơ chế tương tác thời gian thực, luồng xử lý giọng nói và đồng bộ mạng LAN. Các sơ đồ được tối giản hóa để làm nổi bật các nhánh logic trọng tâm, bám sát kiến trúc phân tầng nhằm cung cấp bản thiết kế kỹ thuật cho giai đoạn cài đặt ở Chương 3.
+2.2.2. Sơ đồ Use Case
+
+Hình 2.1. Sơ đồ use case tổng quát.
+Mục tiêu sơ đồ: Cung cấp góc nhìn vĩ mô về cách các Tác nhân tương tác với 4 cụm mô-đun cốt lõi của trò chơi.
+Thành phần chính: Tác nhân (Người chơi, Host, Bot AI) và 4 Phân hệ (LAN, Gameplay, Giọng nói, Bot AI).
+Luồng chính: Tác nhân ngoại vi cung cấp đầu vào cho hệ thống. Mọi phân hệ điều khiển (Giọng nói, Bot) đều quy tụ về phân hệ Gameplay để tạo ra thay đổi vật lý, sau đó phân hệ Gameplay đẩy dữ liệu sang phân hệ LAN để đồng bộ.
+Ý nghĩa với hệ thống: Xác định ranh giới và tính phụ thuộc luồng dữ liệu giữa các cụm mô-đun lớn trước khi đi vào chi tiết.
+
+Hình 2.2. Sơ đồ Use Case phân hệ Mạng LAN.
+Mục tiêu sơ đồ: Mô tả quyền hạn thao tác phiên mạng (Session) giữa máy trạm và máy chủ.
+Thành phần chính: Người chơi, Host Server và các tính năng sảnh chờ (Lobby).
+Luồng chính: Người chơi có quyền khởi tạo hoặc tham gia phiên. Máy chủ (Host) độc quyền kích hoạt ván đấu và chịu trách nhiệm phát sóng (Broadcast) liên tục tiến trình đồng bộ trạng thái, đồng thời xử lý các ngoại lệ ngắt kết nối.
+Ý nghĩa với hệ thống: Phân định rõ quyền quản trị (Authoritative) của Host trong môi trường mạng nội bộ.
+
+Hình 2.3. Sơ đồ Use Case phân hệ Gameplay RTS.
+Mục tiêu sơ đồ: Liệt kê các thao tác tương tác vật lý cơ bản của một trò chơi chiến thuật thời gian thực.
+Thành phần chính: Tác nhân Người chơi và tập hợp các lệnh cơ học (chuột/phím).
+Luồng chính: Người chơi trực tiếp lựa chọn thực thể và phát lệnh di chuyển, tấn công hoặc kinh tế. Các hành động tấn công sẽ kích hoạt luồng tính toán vật lý nội bộ (trừ HP) và dẫn tới việc kiểm tra điều kiện kết thúc trận đấu.
+Ý nghĩa với hệ thống: Đặc tả các nghiệp vụ lõi (Core loop) bắt buộc phải có của đề tài game RTS.
+
+Hình 2.4. Sơ đồ Use Case đường ống xử lý Giọng nói.
+Mục tiêu sơ đồ: Trực quan hóa tiến trình biến đổi tín hiệu âm thanh thành hành động trong game.
+Thành phần chính: Người chơi, các bộ lọc xử lý ngôn ngữ tự nhiên (NLP pipeline), và giao diện phản hồi.
+Luồng chính: Tín hiệu sau khi được nhận diện (Vosk) sẽ bị bóc tách cú pháp và xác thực. Nếu hợp lệ, nó được ánh xạ thành đối tượng lệnh Gameplay; đồng thời hệ thống liên tục cập nhật kết quả phản hồi lên màn hình HUD (Thành công/Lỗi).
+Ý nghĩa với hệ thống: Minh chứng rõ nét thiết kế độc lập (Decoupling) của module Giọng nói trước khi tiêm (Inject) lệnh vào nhân trò chơi.
+
+Hình 2.5. Sơ đồ Use Case hệ thống Bot FSM.
+Mục tiêu sơ đồ: Xác định phạm vi năng lực tự động hóa của đối thủ máy (PvE).
+Thành phần chính: Tác nhân Bot AI và các trạng thái chiến thuật.
+Luồng chính: Bot AI không can thiệp lệnh trực tiếp mà phải thông qua một hàm đánh giá tập trung (Đánh giá tài nguyên và mức độ đe dọa). Dựa trên kết quả đánh giá, Bot mới được quyền gọi các chức năng kinh tế (thu thập, xây dựng) hoặc quân sự (tấn công, phòng thủ).
+Ý nghĩa với hệ thống: Khẳng định Bot AI bị ràng buộc bởi các quy tắc thao tác vật lý (như khai thác, huấn luyện) hoàn toàn tương đồng với một người chơi thực.
+2.2.3. Sơ đồ Activity (Biểu đồ Hoạt động)
+
+Hình 2.6. Sơ đồ Activity tổng quát luồng thực thi thao tác trong game.
+Mục tiêu sơ đồ: Tiêu chuẩn hóa đường ống xử lý tín hiệu đầu vào thành hành động vật lý trên hệ thống mạng.
+Thành phần chính: Phân hệ nhận diện (ASR, Parser, Mapper), Máy chủ (Validator, Dispatcher), và Giao diện HUD.
+Luồng chính: Tín hiệu đi qua ba chốt kiểm duyệt tuần tự: ngữ pháp (tại Parser), ngữ cảnh (tại Mapper), và luật nghiệp vụ (tại Server). Việc vi phạm tại bất kỳ chốt chặn nào cũng sẽ ngắt tiến trình và trả về thông báo lỗi; nếu hợp lệ, trạng thái mới được đồng bộ toàn mạng.
+Ý nghĩa với hệ thống: Thiết lập cơ chế lọc lỗi nhiều lớp (Multi-layer Validation), ngăn chặn triệt để việc máy trạm gửi các gói tin điều khiển rác lên máy chủ.
+
+Hình 2.7. Sơ đồ Activity nghiệp vụ điều hướng và di chuyển.
+Mục tiêu sơ đồ: Đặc tả quá trình thay đổi tọa độ không gian của các thực thể động.
+Thành phần chính: Command Mapper, Server, và hệ thống tìm đường (NavMesh).
+Luồng chính: Tọa độ đích được trích xuất từ văn bản và gửi lên Máy chủ. Máy chủ kích hoạt thuật toán tìm đường cục bộ, tính toán vector di chuyển và liên tục phát sóng tọa độ mới xuống các máy trạm.
+Ý nghĩa với hệ thống: Đảm bảo quyền định tuyến hoàn toàn thuộc về Máy chủ, triệt tiêu khả năng gian lận dịch chuyển tức thời (Teleport) từ phía máy trạm.
+
+Hình 2.8. Sơ đồ Activity nghiệp vụ giao tranh.
+Mục tiêu sơ đồ: Mô hình hóa vòng lặp tính toán sát thương giữa các thực thể.
+Thành phần chính: Máy chủ xác thực (Validator) và Lớp điều khiển đơn vị (UnitController).
+Luồng chính: Hệ thống xác thực chéo Chủ thể (Subject) và Mục tiêu (Target). Khi được cấp phép, thực thể khởi động vòng lặp trừ máu (HP) tự động theo tần suất đòn đánh. Dữ liệu mạng chỉ được đồng bộ khi có sự thay đổi thực tế về chỉ số HP.
+Ý nghĩa với hệ thống: Giảm tải băng thông mạng bằng cách chỉ đồng bộ kết quả sát thương, đồng thời duy trì tính nhất quán dữ liệu chiến đấu giữa toàn bộ người chơi.
+
+Hình 2.9. Sơ đồ Activity nghiệp vụ thu thập kinh tế.
+Mục tiêu sơ đồ: Biểu diễn chu trình kinh tế từ thao tác điều hướng đến tăng trưởng tài sản.
+Thành phần chính: Nút tài nguyên (ResourceNode), Sổ xái tài nguyên (PlayerWallet), và Lớp điều khiển đơn vị.
+Luồng chính: Lệnh trích xuất loại tài nguyên và điều hướng nhân công (Nông dân) đến tọa độ mỏ. Khi tiếp xúc vật lý, vòng lặp khai thác (Timer) được kích hoạt trên Máy chủ, liên tục cộng dồn giá trị vào bộ nhớ tài khoản của người chơi.
+Ý nghĩa với hệ thống: Đảm bảo hệ thống kinh tế vận hành độc lập trên Máy chủ, loại trừ hoàn toàn các can thiệp thay đổi số liệu từ bộ nhớ cục bộ của máy trạm.
+
+Hình 2.10. Sơ đồ Activity nghiệp vụ quy hoạch và xây dựng.
+Mục tiêu sơ đồ: Quản lý vòng đời bất đồng bộ của đối tượng kiến trúc có độ trễ hình thành.
+Thành phần chính: Trình quản lý công trình (BuildingManager) và Trình quản lý tài nguyên (ResourceManager).
+Luồng chính: Hệ thống yêu cầu xác thực không gian (không đè lấp) và xác thực kinh tế (đủ chi phí). Tài nguyên bị khấu trừ ngay lập tức khi móng công trình xuất hiện. Tiến độ thi công cập nhật theo thời gian thực và công trình chỉ kích hoạt công năng (sản xuất/phòng thủ) khi đạt trạng thái hoàn thiện 100%.
+Ý nghĩa với hệ thống: Giải quyết bài toán đồng bộ trạng thái vòng đời dài hạn (Long-running State) của các thực thể tĩnh trong môi trường mạng lưới đa người chơi.
+2.2.4. Sơ đồ Sequence (Biểu đồ Tuần tự)
+
+Hình 2.11. Sơ đồ Sequence đặc tả luồng giao tiếp thông điệp khi xử lý lệnh giọng nói.
+Mục tiêu sơ đồ: Trình bày chuỗi giao tiếp thông điệp (Message Passing) theo trục thời gian từ quá trình tiền xử lý ở Máy trạm (Client) đến quá trình xác thực ở Máy chủ (Server).
+Thành phần chính: Phân hệ nhận diện (VoiceProcessor, Parser & Mapper), Lớp mạng (Client, Game Server), các lớp quản lý nghiệp vụ (ResourceManager, Gameplay Controllers) và Giao diện HUD.
+Luồng chính: Tín hiệu âm thanh được Máy trạm giải mã thành đối tượng lệnh có cấu trúc (IGameCommand) và gửi truy vấn lên Máy chủ. Máy chủ đóng vai trò trọng tài, tiến hành xác thực quyền sở hữu và số dư tài nguyên trước khi gọi các lớp Controller để thay đổi trạng thái vật lý. Kết quả biến đổi sau đó được phát sóng ngược lại để Máy trạm cập nhật giao diện.
+Ý nghĩa với hệ thống: Trực quan hóa mô hình Server-Authoritative, chứng minh Máy trạm chỉ làm nhiệm vụ dịch tín hiệu và hiển thị, trong khi mọi quyền quyết định thay đổi trạng thái đều bị Máy chủ kiểm soát hoàn toàn.
+2.2.5. Sơ đồ Class (Biểu đồ Lớp)
+
+Hình 2.12 Sơ đồ lớp nhánh xử lý giọng nói.
+Mục tiêu sơ đồ: Thể hiện luồng cấp phát đối tượng từ lúc nhận tín hiệu âm thanh ngoại vi đến khi trích xuất kết quả phân tích cú pháp.
+Thành phần chính: Các lớp xử lý đầu vào (VoiceProcessor), giao diện nhận diện (ISpeechToTextEngine), và các bộ bóc tách chuỗi (CommandParser, CommandMapper).
+Luồng chính: Tín hiệu đi qua engine nhận diện, được CommandParser chuyển thành cấu trúc dữ liệu trung gian (CommandParseResult), sau đó CommandMapper sử dụng cấu trúc này để chuẩn bị khởi tạo lệnh điều khiển.
+Ý nghĩa với hệ thống: Cô lập hoàn toàn tính năng nhận diện giọng nói và thư viện xử lý ngôn ngữ khỏi mã nguồn hạt nhân của trò chơi.
+
+Hình 2.13. Sơ đồ phân cấp cấu trúc Command.
+
+Mục tiêu sơ đồ: Chuẩn hóa toàn bộ các hành động tương tác trong game thông qua một giao diện thực thi duy nhất.
+Thành phần chính: Giao diện IGameCommand chứa phương thức Execute và các lớp con biểu diễn hành động cụ thể.
+Luồng chính: Bất kỳ thao tác nào phát sinh từ người chơi (chuột, phím, giọng nói) hoặc từ Bot AI đều bắt buộc phải được đóng gói thành một đối tượng kế thừa từ IGameCommand.
+Ý nghĩa với hệ thống: Ứng dụng mẫu thiết kế Command Pattern để đảm bảo tính đa hình, cho phép Máy chủ triệu gọi hàm thực thi mà không cần phân loại nguồn gốc hoặc định dạng cụ thể của lệnh.
+
+Hình 2.14. Sơ đồ lớp định tuyến thông điệp Client/Server.
+Mục tiêu sơ đồ: Đặc tả sự phụ thuộc và hướng truyền thông điệp điều khiển trên hạ tầng mạng LAN.
+Thành phần chính: Bộ phân phối lệnh cục bộ (CommandDispatcher), các lớp truyền tải mạng (RTSClient, GameServer), lớp xác thực (CommandValidator) và hạt nhân điều khiển (ServerGameController).
+Luồng chính: Lệnh được gửi một chiều từ bộ định tuyến của Client qua giao thức mạng lên Server. Server tiếp nhận gói tin, yêu cầu CommandValidator xác thực tính hợp lệ, sau đó bàn giao cho Controller trung tâm để triển khai logic.
+Ý nghĩa với hệ thống: Khẳng định luồng dữ liệu mạng một chiều, bảo vệ quyền kiểm soát logic thẩm quyền (Authoritative) tuyệt đối tại máy chủ.
+
+Hình 2.15. Sơ đồ lớp miền quản lý thực thể, AI và dữ liệu cấu hình.
+Mục tiêu sơ đồ: Minh họa mối liên kết giữa logic điều khiển, bộ lưu trữ trạng thái động và tập dữ liệu thông số tĩnh.
+Thành phần chính: Bộ điều khiển tổng ServerGameController, các lớp quản lý nghiệp vụ (Manager), các biến trạng thái (State), dữ liệu cấu hình (ConfigSO) và tiến trình điều khiển Bot (AIBotController).
+Luồng chính: Controller gọi các Manager để tính toán tương tác vật lý. Các Manager truy xuất thông số định mức từ ConfigSO, sau đó tính toán và ghi đè kết quả cuối cùng vào các lớp State tương ứng. Bot AI hoạt động độc lập và chỉ cung cấp lệnh vào ServerGameController.
+Ý nghĩa với hệ thống: Phân rã triệt để thành ba lớp: Dữ liệu tĩnh (đọc từ ScriptableObject), Dữ liệu động (các State để đồng bộ mạng), và Logic xử lý (các lớp Manager)
+2.3. Phân tích nghiệp vụ gameplay
+2.3.1. Mục tiêu phân tích nghiệp vụ gameplay.
+Mục tiêu của phần này là đặc tả toàn diện cách thức hệ thống vận hành ở tầng nghiệp vụ (Business Logic). Quá trình này xác định thao tác của người chơi, phản hồi hệ thống, luồng dữ liệu bị thay đổi và các ràng buộc điều kiện. Kết quả phân tích đóng vai trò kim chỉ nam để thiết kế cơ chế ánh xạ lệnh (Command Mapping) cho hệ thống nhận diện giọng nói, xây dựng kiến trúc các phân hệ và định nghĩa kịch bản kiểm thử, đảm bảo mọi cơ chế kỹ thuật tuân thủ nghiêm ngặt luật chơi.
+2.3.2. Bối cảnh trận đấu và tiền đề nghiệp vụ
+Trận đấu RTS diễn ra trong bối cảnh đối đầu trực tiếp giữa người chơi (Client) và đối thủ (người chơi khác qua mạng LAN hoặc Bot AI). Môi trường thi đấu là bản đồ lưới (Grid-based Map) chứa không gian di chuyển, vật cản và tài nguyên. Mỗi phe khởi đầu với Nhà chính, tài nguyên tối thiểu và nông dân. Mục tiêu tối thượng là phá hủy Nhà chính của đối phương. Do tính chất thời gian thực, các thao tác diễn ra đồng thời. Hệ thống phải đáp ứng hai tiêu chuẩn: tính hợp lệ của logic (tài nguyên, không gian) và tính tức thời của phản hồi (cập nhật và đồng bộ nhanh chóng).
+2.3.3. Vòng lặp gameplay tổng thể (Game Loop)
+Vòng lặp nghiệp vụ gồm các giai đoạn phát triển song song:
+Khởi tạo (Initialization): Thiết lập bản đồ, phân bổ điểm xuất phát và cấp phát thực thể ban đầu.
+Tích lũy kinh tế (Resource Gathering): Điều động nông dân khai thác và vận chuyển tài nguyên về cơ sở lưu trữ.
+Mở rộng hạ tầng (Infrastructure Building): Sử dụng quỹ tài nguyên để thi công công trình, mở khóa nhóm chức năng mới.
+Phát triển lực lượng (Military Training): Sản xuất đơn vị chiến đấu và tổ chức đội hình.
+Giao tranh và kiểm soát (Combat & Map Control): Điều động quân sự khám phá bản đồ, tranh chấp tài nguyên và phát động tấn công.
+Định đoạt kết quả (Game Resolution): Liên tục kiểm tra trạng thái Nhà chính. Khi Nhà chính bị phá hủy, hệ thống đóng băng Input và hiển thị kết quả Thắng/Thua.
+
+2.3.4. Nghiệp vụ Quản lý Tài nguyên
+Quy trình khai thác bắt đầu khi nông dân được chỉ định mục tiêu. Khi tiếp cận mỏ, đơn vị chuyển sang trạng thái Gathering. Sau mỗi chu kỳ, tài nguyên dự trữ được cộng thêm một hằng số, trữ lượng mỏ bị trừ tương ứng và UI cập nhật tức thì. Quy tắc nghiệp vụ nghiêm ngặt yêu cầu biến số tài nguyên không được mang giá trị âm. Hệ thống bắt buộc đối chiếu chi phí (Current_Resource >= Required_Cost) trước mọi lệnh tiêu hao. Nếu không đủ, lệnh bị hủy và hiển thị cảnh báo. Mỏ cạn kiệt sẽ bị tiêu hủy, nông dân chuyển về trạng thái rảnh rỗi (Idle).
+2.3.5. Nghiệp vụ Xây dựng công trình
+Nghiệp vụ bắt đầu khi người chơi chọn bản thiết kế và vị trí đặt móng. Hệ thống kiểm tra chéo: đủ tài nguyên, vị trí di chuyển được (Walkable) và không bị chồng lấn (Overlap) với thực thể khác. Khi thỏa mãn, tài nguyên bị trừ, công trình sinh ra ở trạng thái "Đang thi công" (UnderConstruction). Tiến độ tăng dần đến 100%, công trình chuyển sang "Hoạt động" (Completed), cập nhật NavMesh thành vật cản và kích hoạt chức năng. Nếu HP giảm xuống 0 trong lúc thi công, công trình và hàng đợi sản xuất đi kèm bị hủy bỏ.
+2.3.6. Nghiệp vụ Quân đội và Chiến đấu
+Đơn vị quân xuất hiện tại điểm tập kết (Rally Point) sau thời gian chờ hàng đợi (Production Queue). Mỗi thực thể mang dữ liệu cấu hình: HP, Sát thương, Tầm đánh, Tốc độ. Khi nhận lệnh tấn công, đơn vị di chuyển đến khi khoảng cách với mục tiêu <= Tầm đánh. Thực thể vào trạng thái chiến đấu, trừ HP đối thủ theo chu kỳ Tốc độ đánh. Khi HP <= 0, thực thể bị đánh dấu "Đã chết" (Dead), kích hoạt sự kiện tiêu hủy trên máy chủ, giải phóng bộ nhớ và không gian. Các đơn vị đang nhắm vào mục tiêu này sẽ tự động tìm kiếm mục tiêu thù địch mới.
+2.3.7. Nghiệp vụ Điều hướng (Pathfinding)
+Nghiệp vụ điều hướng sử dụng Unity NavMesh. Khi tiếp nhận tọa độ đích, NavMesh Agent tính toán quỹ đạo đa giác liên tục trong vùng hợp lệ. Thực thể tự động né tránh vật cản tĩnh và kích hoạt cơ chế tránh va chạm động (Local Avoidance) để chống kẹt dính. Nếu mục tiêu nằm ngoài NavMesh hoặc bị bịt kín, hệ thống tính toán và đưa đơn vị đến điểm hợp lệ gần nhất.
+
+2.3.8. Nghiệp vụ Điều khiển Giọng nói
+Giọng nói là kênh nhập liệu bổ trợ để giảm tải thao tác cơ học. Lệnh bắt buộc tuân thủ ngữ pháp: [Chủ thể] + [Hành động] + [Mục tiêu]. Tín hiệu âm thanh được Vosk nhận diện thành văn bản thô, đi qua khối chuẩn hóa (loại từ đệm) và bộ Parser trích xuất tham số. Nếu thiếu tham số hoặc sai ngữ cảnh, hệ thống bác bỏ lệnh và báo lỗi. Lệnh hợp lệ được đóng gói thành Command tiêu chuẩn để thực thi và hiển thị phản hồi trên UI.
+2.3.9. Nghiệp vụ Đồng bộ Mạng LAN
+Hệ thống áp dụng mô hình Máy chủ thẩm quyền (Server-Authoritative) bằng thư viện Mirror để chống gian lận (Hack/Cheat) và lệch dữ liệu (Desync). Client không có quyền tự thay đổi trạng thái, chỉ gửi "Yêu cầu" (Request) lên Server. Server đối chiếu điều kiện; nếu hợp lệ, trực tiếp thay đổi Game State trên hệ thống của nó và phát sóng (Broadcast) cập nhật về toàn bộ Client. Dữ liệu đồng bộ liên tục gồm tọa độ (Transform), HP, tài nguyên và các sự kiện tức thời (Spawn/Destroy).
+2.3.10. Nghiệp vụ Trí tuệ nhân tạo (Bot PvE)
+Bot AI hoạt động dựa trên Máy trạng thái hữu hạn (FSM), mô phỏng thao tác người chơi và tuân thủ cùng luật chơi. Cấu trúc FSM luân chuyển giữa các trạng thái: Idle, GatherResource, BuildStructure, TrainUnit, AttackEnemy, DefendBase. Thuật toán ưu tiên dựa trên ngưỡng thông số (ví dụ: tài nguyên thấp -> GatherResource; lính đông -> AttackEnemy). Cơ chế ngắt (Interrupt) ép Bot từ bỏ trạng thái hiện tại để chuyển sang DefendBase khi phát hiện sát thương tại nhà chính.
+
+2.3.11. Bảng quy tắc nghiệp vụ trọng yếu (Business Rules Summary)
+Hệ thống vận hành dựa trên các quy tắc tuyệt đối sau:
+Bảng 2.1 Mô tả luật
+Mã luật
+Mô tả quy tắc
+Hệ quả khi vi phạm
+BR-01
+Các lệnh có chi phí (Xây dựng/Huấn luyện) yêu cầu số dư tài nguyên tương ứng phải >= định mức.
+Từ chối lệnh, thông báo thiếu tài nguyên lên UI.
+BR-02
+Một thực thể chỉ thực thi một tiến trình hành động duy nhất tại một thời điểm.
+Ghi đè tiến trình cũ bằng tiến trình lệnh mới nhất.
+BR-03
+Khối lệnh giọng nói phải ánh xạ thành công bộ ba tham số (Chủ thể - Hành động - Mục tiêu).
+Hủy quá trình xử lý, xuất thông báo yêu cầu lặp lại lệnh.
+BR-04
+Mọi thay đổi về trạng thái thực thể phải được xử lý tập trung và xác thực tại Server.
+Từ chối áp dụng logic từ Client, cưỡng chế đồng bộ lại trạng thái từ Server.
+BR-05
+Thực thể có HP <= 0 tự động mất khả năng tương tác.
+Kích hoạt chuỗi sự kiện tiêu hủy và dọn dẹp bộ nhớ trên toàn mạng.
+BR-06
+Sự kiện kiểm tra điều kiện kết thúc trận đấu (Nhà chính bị hủy) diễn ra trong mỗi khung hình.
+Trận đấu kết thúc tức thì, khóa hệ thống nhập liệu điều khiển.
+
+2.3.12. Kịch bản nghiệp vụ thực thi mẫu (End-to-End Scenario)
+Để làm rõ sự phối hợp giữa các phân hệ nghiệp vụ, kịch bản dưới đây mô tả luồng dữ liệu khi người chơi ra lệnh: "Chọn lính hai tấn công nhà chính địch".
+Giao tiếp đầu vào: Người chơi phát âm câu lệnh. Microphone ghi nhận và chuyển tín hiệu âm thanh thô cho mô-đun Vosk.
+Nhận diện và Phân tích: Vosk trả về chuỗi văn bản. Bộ Parser bóc tách dữ liệu theo mẫu, thu được kết quả: Chủ thể = Unit_2, Hành động = Attack, Mục tiêu = Enemy_Main_Base.
+Ánh xạ lệnh: Hệ thống khởi tạo đối tượng AttackCommand chứa dữ liệu vừa phân tích.
+Xác thực Mạng: Do kiến trúc Client-Server, Client đóng gói AttackCommand và gửi yêu cầu thông qua RPC (Remote Procedure Call) lên Server.
+Đánh giá logic (Server-side): Server nhận lệnh, kiểm tra xem Unit_2 của người chơi này có còn sống không và Enemy_Main_Base có nằm trên bản đồ hay không.
+Thực thi: Xác thực thành công, Server gọi hàm SetTarget trên lớp UnitController của Unit_2. Unit_2 sử dụng NavMesh để tiếp cận mục tiêu và bắt đầu chu kỳ giảm HP của Nhà chính địch.
+Đồng bộ và Phản hồi: Server liên tục gửi tọa độ mới của Unit_2 và lượng HP còn lại của Nhà chính địch xuống tất cả các Client (thông qua SyncVar). Tại máy của người chơi ra lệnh, UI hiển thị dòng chữ: "Đã thực thi lệnh tấn công".
+2.4. Thiết kế kiến trúc tổng thể hệ thống
+2.4.1. Kiến trúc mô-đun trò chơi RTS
+Hệ thống được thiết kế theo kiến trúc phân lớp hướng mô-đun (Modular Architecture) nhằm tuân thủ nguyên lý đơn nhiệm (Single Responsibility Principle), cô lập các rủi ro lỗi và tối ưu hóa khả năng bảo trì. Cấu trúc tổng thể được chia thành 6 lớp cơ bản:
+Input Layer (Lớp giao tiếp đầu vào): Thu nhận tín hiệu thô từ các thiết bị ngoại vi (chuột, bàn phím) và dữ liệu âm thanh từ microphone.
+Command Layer (Lớp điều phối lệnh): Chịu trách nhiệm chuẩn hóa mọi tín hiệu đầu vào thành các đối tượng lệnh (Command) thống nhất có thể hiểu được bởi hệ thống lõi.
+Gameplay Core Layer (Lớp hạt nhân logic): Xử lý toàn bộ quy tắc nghiệp vụ của trò chơi bao gồm quản lý tài nguyên, điều hướng đơn vị, logic xây dựng, tính toán sát thương và kiểm tra điều kiện kết thúc trận đấu.
+AI Layer (Lớp trí tuệ nhân tạo): Điều khiển các tác nhân Bot thông qua mô hình Máy trạng thái hữu hạn (FSM).
+Network Layer (Lớp mạng): Quản lý luồng truyền tải gói tin và đồng bộ trạng thái thực thể giữa Client và Server.
+Presentation Layer (Lớp hiển thị): Kết xuất đồ họa (Render), quản lý giao diện người dùng (HUD) và phát các luồng thông báo phản hồi.
+Nguyên tắc cốt lõi của kiến trúc này là định tuyến mọi nguồn dữ liệu đầu vào (chuột, phím, giọng nói) đi qua một phễu trung tâm (Command Layer) trước khi được chuyển giao cho Gameplay Core. Phương pháp này loại bỏ sự trùng lặp mã nguồn và đảm bảo tính nhất quán tuyệt đối trong việc áp dụng luật trò chơi.
+
+Hình 2.16. Kiến trúc mô-đun của trò chơi
+2.4.2. Kiến trúc mạng LAN Client-Server.
+Hệ thống mạng được xây dựng dựa trên mô hình Máy chủ có thẩm quyền (Server-Authoritative) thông qua thư viện Mirror. Trong mô hình này, Server đóng vai trò là "Nguồn sự thật" (Source of Truth) duy nhất lưu trữ và quản lý trạng thái chính xác của toàn bộ trận đấu.
+Máy trạm (Client) không có quyền trực tiếp can thiệp vào các biến số trạng thái. Thay vào đó, Client chỉ thực hiện gửi các gói tin chứa Yêu cầu hành động (Request Action như di chuyển, tấn công, xây dựng) lên Server. Server tiến hành đối chiếu yêu cầu với bộ luật trò chơi. Nếu yêu cầu hợp lệ, Server cập nhật trạng thái mới vào bộ nhớ cục bộ, sau đó phát sóng (Broadcast) dữ liệu đã thay đổi về toàn bộ các Client đang kết nối. Kiến trúc này triệt tiêu hoàn toàn rủi ro sai lệch trạng thái (Desync) giữa các máy trạm và vô hiệu hóa các nỗ lực gian lận (Cheat/Hack) từ phía người chơi. Về mặt triển khai vật lý trong môi trường mạng LAN, hệ thống sử dụng cấu hình Host-Client, trong đó một máy tính đảm nhiệm song song hai vai trò: Máy chủ xử lý logic (Server) và Máy trạm tham gia trò chơi (Player).
+
+Hình 2.17. Kiến trúc mạng LAN
+2.4.3. Kiến trúc mô-đun xử lý giọng nói
+Phân hệ giọng nói hoạt động độc lập với logic trò chơi, được thiết kế theo mô hình đường ống (Pipeline) xử lý dữ liệu tuần tự bao gồm các trạm:
+Audio Capture: Kích hoạt Microphone, thu nhận tín hiệu âm thanh và chuyển đổi thành luồng byte thô.
+ASR Engine (Vosk): Nạp mô hình ngôn ngữ tiếng Việt offline, giải mã chuỗi tín hiệu âm thanh và xuất ra văn bản thô.
+Text Normalization: Chuẩn hóa dữ liệu đầu ra (chuyển đổi chữ thường, loại bỏ các từ đệm vô nghĩa, chuẩn hóa định dạng Token).
+Command Parsing: Phân tích cú pháp chuỗi văn bản, bóc tách dữ liệu thành cấu trúc ba thành phần: Chủ thể - Hành động - Mục tiêu.
+Command Mapping: Ánh xạ các thành phần ngữ nghĩa vào một lớp cấu trúc dữ liệu lệnh cụ thể của Engine.
+Validation: Xác thực tính hợp lệ của câu lệnh dựa trên trạng thái hiện tại của ván đấu.
+Dispatch: Đẩy đối tượng lệnh hợp lệ vào hàng đợi xử lý chung của hệ thống logic.
+Việc phân mảnh đường ống xử lý cho phép cô lập chính xác nguyên nhân gây lỗi, phân định rõ lỗi do phần cứng thu âm, lỗi nhận diện của thư viện Vosk, lỗi sai ngữ pháp lệnh hay lỗi do vi phạm logic trò chơi.
+
+Hình 2.18. Kiến trúc mô-đun xử lý giọng nói
+2.4.4. Luồng dữ liệu thời gian thực trong game
+Để duy trì tính toàn vẹn của một trận đấu RTS, mọi biến đổi trạng thái (Sinh ra, di chuyển, tấn công, tiêu hủy) đều bắt buộc tuân thủ luồng dữ liệu một chiều (Unidirectional Data Flow) với trình tự sau:
+
+
+Hình 2.19. Minh họa luồng dữ liệu thời gian thực của game.
+Quá trình bắt đầu khi người chơi thực hiện thao tác cơ học hoặc phát ra hiệu lệnh giọng nói. Dữ liệu này được Command Builder thu thập và đóng gói định dạng. Gói dữ liệu (Client Request) được chuyển qua giao thức mạng lên Server. Tại đây, Server đối chiếu các điều kiện ràng buộc về tài nguyên, quyền sở hữu đơn vị và tính hợp lệ của mục tiêu. Khi xác thực thành công, hệ thống hạt nhân trên Server thay đổi các chỉ số bộ nhớ (Game State Update) và lập tức gọi hàm đồng bộ (State Sync). Ở bước cuối cùng, Client nhận gói tin đồng bộ, giải nén và cập nhật hoạt ảnh, vị trí tọa độ lên giao diện (Client Render).
+2.4.5. Quy trình xử lý và ánh xạ lệnh (Command Mapping) 
+Khối Command Mapping có nhiệm vụ chuyển đổi dữ liệu phi cấu trúc (văn bản tự nhiên) thành dữ liệu có cấu trúc định hướng đối tượng.
+Xét ví dụ đối với câu lệnh: "Chọn lính hai tấn công nhà chính địch":
+Đầu ra từ ASR cung cấp chuỗi văn bản thô. Khối Normalizer tiền xử lý để loại bỏ nhiễu.
+Khối Parser trích xuất các biến số định danh: Subject = Unit_2, Action = Attack, Target = EnemyMainBase.
+Bộ Mapper khởi tạo một thực thể AttackCommand(Subject, Target).
+Bộ Validator kiểm tra điều kiện tồn tại: Hệ thống truy vấn xem Unit_2 có thuộc quyền điều khiển của người phát lệnh không, và EnemyMainBase có đang tồn tại trên bản đồ không.
+Nếu logic xác thực hợp lệ, AttackCommand được đẩy vào mạng truyền dẫn lên Server. Nếu một trong các điều kiện bị vi phạm, lệnh bị hủy bỏ cục bộ tại Client, đồng thời kích hoạt hàm hiển thị văn bản báo lỗi trực quan trên HUD.
+Mô hình này tạo điều kiện thuận lợi cho việc kiểm thử tự động (Unit Test) từng công đoạn độc lập và cho phép mở rộng không giới hạn từ điển lệnh tiếng Việt mà không can thiệp vào mã nguồn gốc của phân hệ Gameplay.
+
+Hình 2.20. Minh họa quy trình xử lý và ánh xạ lệnh
+2.5. Thiết kế dữ liệu và lưu trữ
+2.5.1. Mục tiêu thiết kế dữ liệu
+Thiết kế dữ liệu nhằm xây dựng một mô hình cấu trúc thông tin chặt chẽ, đáp ứng các yêu cầu cốt lõi: biểu diễn chính xác trạng thái nghiệp vụ RTS theo thời gian thực, tối ưu hóa quá trình đồng bộ hóa gói tin trong môi trường mạng LAN, và cô lập dữ liệu khỏi mã nguồn logic (Hard-coding). Việc thiết kế dữ liệu chuẩn hóa giúp hệ thống dễ dàng mở rộng nội dung (thêm đơn vị, công trình hoặc từ vựng mới) và giảm thiểu rủi ro phát sinh lỗi khi tinh chỉnh các thông số cân bằng trò chơi.
+2.5.2. Phân loại dữ liệu trong hệ thống
+Dữ liệu của hệ thống được phân tách thành hai nhóm chuyên biệt dựa trên vòng đời và tính chất biến đổi:
+Dữ liệu cấu hình tĩnh (Static Configuration Data): Là tập hợp các thông số mang tính chất định nghĩa, ít thay đổi và được nạp vào bộ nhớ trước khi trận đấu bắt đầu. Nhóm này bao gồm các chỉ số gốc của đơn vị quân, công trình, mỏ tài nguyên và bộ từ điển cú pháp lệnh giọng nói. Dữ liệu tĩnh được lưu trữ dưới dạng ScriptableObject trong Unity và tệp JSON cho cấu hình ngôn ngữ.
+Dữ liệu trạng thái động (Runtime State Data): Là các biến số thay đổi liên tục theo thời gian thực trong suốt phiên chơi, bao gồm: tọa độ không gian, lượng máu (HP) hiện tại, trạng thái hành động (FSM State) của các thực thể, tiến độ thi công và ngân sách tài nguyên của người chơi. Nhóm dữ liệu này được lưu trữ trên RAM và do Server quản lý hoàn toàn để đồng bộ qua mạng.
+
+Hình 2.21. Minh họa phân loại dữ liẹu.
+2.5.3. Mô hình dữ liệu cấu trúc (Data Models)
+Các thực thể trong trò chơi được mô hình hóa thành các lớp dữ liệu với các thuộc tính cụ thể:
+Mô hình dữ liệu Đơn vị (Unit Data)
+Thuộc tính định nghĩa (Tĩnh): UnitId (Mã định danh), UnitName (Tên hiển thị), MaxHP (Máu tối đa), AttackDamage (Sát thương cơ bản), AttackRange (Tầm đánh), AttackCooldown (Tốc độ đánh), MoveSpeed (Tốc độ di chuyển), Cost (Chi phí tài nguyên: Vàng, Gỗ), TrainTime (Thời gian huấn luyện), UnitRole (Vai trò: Nông dân/Chiến đấu).
+Thuộc tính trạng thái: CurrentHP, CurrentState (Idle/Move/Attack/ Gather), OwnerPlayerId (Mã người sở hữu), WorldPosition (Tọa độ Transform).
+Mô hình dữ liệu Công trình (Building Data)
+Thuộc tính định nghĩa (Tĩnh): BuildingId, BuildingName, MaxHP, BuildTime, Cost, Unlocks (Danh sách công nghệ/đơn vị được phép mở khóa), CanTrainUnits (Cờ boolean xác định khả năng sản xuất).
+Thuộc tính trạng thái (Động): CurrentHP, BuildProgress (Tiến độ phần trăm), BuildingState (Placed/UnderConstruction/Completed/Destroyed), OwnerPlayerId, WorldPosition.
+Mô hình dữ liệu Tài nguyên (Resource Data)
+Dữ liệu mỏ tài nguyên trên bản đồ: ResourceType (Gỗ/Vàng), ResourceNodeId, Capacity (Trữ lượng tối đa), CurrentAmount (Trữ lượng còn lại), HarvestRate (Tốc độ cho phép khai thác), NodePosition.
+Dữ liệu ví tài nguyên của người chơi: PlayerResourceWallet (Lưu trữ số dư hiện tại của từng loại tài nguyên), ResourceTransactionHistory (Nhật ký thay đổi phục vụ đối chiếu và debug).
+
+Hình 2.22. Minh họa Mô hình dữ liệu gamePlay
+2.5.4. Thiết kế ScriptableObject cho cấu hình gameplay
+Hệ thống sử dụng ScriptableObject (SO) của Unity để lưu trữ toàn bộ dữ liệu cấu hình tĩnh. Các lớp SO được thiết kế bao gồm: UnitConfigSO, BuildingConfigSO, ResourceConfigSO và GameBalanceConfigSO (quản lý tham số tổng quát như tài nguyên khởi điểm, giới hạn dân số).
+Phương pháp này mang lại các giá trị kỹ thuật:
+Tách bạch hoàn toàn dữ liệu cân bằng (Balance Data) khỏi mã nguồn C#.
+Cho phép tinh chỉnh thông số trực tiếp trên giao diện Unity Inspector mà không cần biên dịch lại mã nguồn.
+Tối ưu hóa bộ nhớ do các thực thể cùng loại (ví dụ: 100 lính giống nhau) sẽ dùng chung một tham chiếu bộ nhớ đến cùng một tệp SO thay vì tạo ra 100 bản sao dữ liệu độc lập.
+2.5.5. Lưu cấu hình lệnh giọng nói bằng JSON
+Bộ từ điển và ngữ pháp cho chức năng nhận diện giọng nói được thiết kế lưu trữ độc lập qua định dạng JSON. Một bản ghi cấu hình (Record) bao gồm các trường:
+CommandId: Định danh lệnh nội bộ (Ví dụ: CMD_ATTACK).
+Patterns: Các mẫu câu gốc được chấp nhận.
+ActionType: Loại hành động tương ứng trong Game Logic.
+RequiredSlots: Các tham số bắt buộc phải trích xuất (Subject, Target, Location).
+Synonyms: Tập hợp các từ đồng nghĩa (Ví dụ: "tấn công", "đánh", "tiêu diệt" đều được ánh xạ về cùng một ActionType).
+ErrorHint: Chuỗi văn bản gợi ý trả về UI khi quá trình trích xuất thất bại.
+Việc sử dụng JSON cho phép dễ dàng cập nhật, bổ sung từ vựng mới để đạt chỉ tiêu 20-30 lệnh mà không can thiệp vào mã nguồn phân tích (Parser), đồng thời tạo tiền đề để mở rộng đa ngôn ngữ trong tương lai bằng cách nạp các tệp JSON khác nhau.
+
+Hình 2.23. Luồng nạp câu hình.
+2.5.6. Quản lý trạng thái phiên chơi và Đồng bộ LAN
+Trạng thái của một trận đấu (Match Session State) bao gồm các dữ liệu meta: Danh sách người chơi (NetworkId, Role), trạng thái máy chủ (Waiting, InProgress, Ended), bộ đếm thời gian thực và cờ kiểm tra điều kiện thắng/thua.
+Cơ chế đồng bộ trong mạng LAN tuân thủ nghiêm ngặt Chính sách nhất quán dữ liệu (Consistency Policy) theo kiến trúc Authoritative Server: Máy trạm (Client) tuyệt đối không có quyền tự quyết định kết quả của một hành động. Mọi thay đổi về lượng máu, trừ tài nguyên, hay cập nhật tiến độ xây dựng bắt buộc phải được xử lý tại Server. Server ghi nhận dữ liệu này vào bộ nhớ trạng thái trung tâm, sau đó phát luồng dữ liệu (Broadcast) dưới dạng SyncVar hoặc sự kiện RPC xuống Client. Các thao tác cập nhật hiển thị ở Client chỉ là ảnh chiếu (Reflection) của nguồn dữ liệu chuẩn từ Server.
+Dữ liệu được ưu tiên đồng bộ băng thông cao bao gồm: Tọa độ di chuyển, sự kiện khởi tạo/tiêu hủy thực thể (Spawn/Despawn), và sự thay đổi HP.
+
+Hình 2.24. mô phỏng
+2.5.7. Dữ liệu phục vụ kiểm thử và đánh giá
+Nhằm đảm bảo tính khách quan và cung cấp số liệu định lượng cho chương Đánh giá, hệ thống thiết kế cơ chế lưu trữ nhật ký (Log) ẩn trong quá trình vận hành. Các luồng dữ liệu được thu thập bao gồm:
+Tỷ lệ giải mã thành công/thất bại của từng nhóm lệnh giọng nói.
+Độ trễ (Latency) tính bằng mili-giây từ thời điểm kết thúc thu âm (Timestamp A) đến thời điểm đối tượng lệnh được đưa vào hàng đợi thực thi (Timestamp B).
+Số lượng sự kiện mất đồng bộ mạng và số lần thử kết nối lại (Reconnect attempts).
+Các chỉ số đo lường trận đấu: Thời lượng, tổng số lệnh giọng nói được sử dụng so với thao tác chuột, tổng số đơn vị được sinh ra.
+2.5.8. Ràng buộc thiết kế dữ liệu và hướng mở rộng
+Ràng buộc: Cấu trúc dữ liệu trạng thái động bắt buộc phải ở định dạng cơ bản (Primitive types hoặc các Struct đơn giản) để bộ tuần tự hóa (Serializer) của thư viện Mirror có thể mã hóa và giải mã liên tục với chi phí CPU thấp nhất, đảm bảo tốc độ đồng bộ thời gian thực trong mạng LAN. Tránh sử dụng các cấu trúc đồ thị tham chiếu vòng (Circular Reference) gây tràn bộ nhớ khi gửi qua mạng.
+Hướng mở rộng: Cấu trúc dữ liệu hiện tại tạo nền tảng để phát triển thêm tính năng Replay trận đấu (bằng cách lưu chuỗi sự kiện Command theo trục thời gian vào cơ sở dữ liệu) và hệ thống Hồ sơ người chơi (Player Profile) lưu trữ cấu hình phím tắt và tham số độ nhạy microphone cục bộ.
+
+2.6. Thiết kế lớp và thành phần chính
+2.6.1. Mục tiêu và Nguyên tắc thiết kế
+Mục tiêu của phần này là hiện thực hóa kiến trúc thành các sơ đồ lớp và giao diện (Interface), tạo tiền đề cho quá trình lập trình. Hệ thống được thiết kế tối ưu hóa khả năng bảo trì thông qua các nguyên lý:
+Độ kết dính cao, liên kết lỏng lẻo: Phân tách rõ ràng theo miền nghiệp vụ.
+Nguyên lý Đơn nhiệm (SRP): Mỗi lớp chỉ đảm nhiệm một chức năng duy nhất, tránh tạo ra lớp bao đồm (God Class).
+Nguyên lý Đảo ngược Phụ thuộc (DIP): Mô-đun cấp cao phụ thuộc vào Interface trừu tượng thay vì lớp cài đặt cụ thể. Hệ thống được chia thành 4 phân hệ cốt lõi: Xử lý Lệnh & Giọng nói, Logic Trò chơi, Trí tuệ Nhân tạo, và Quản lý Dữ liệu.
+2.6.2. Phân hệ Xử lý Lệnh và Giọng nói (Command & Voice System)
+Phân hệ hoạt động như lớp đệm chuyển đổi tín hiệu ngoại vi thành dữ liệu có cấu trúc:
+Lớp VoiceProcessor: Quản lý microphone và thư viện Vosk ASR. Đọc luồng âm thanh theo khung thời gian và trả về văn bản thô, tách biệt hoàn toàn khỏi logic trò chơi.
+Lớp CommandParser: Chuẩn hóa văn bản đầu vào (loại từ đệm, đưa về chữ thường) và trích xuất ngữ pháp thành các Token trung gian (Chủ thể, Hành động, Mục tiêu).
+Lớp CommandMapper: Ánh xạ Token thành đối tượng Lệnh cụ thể, xử lý từ đồng nghĩa và xác thực ngữ nghĩa sơ bộ. Việc tách biệt Parser và Mapper giúp dễ dàng cập nhật từ điển mà không ảnh hưởng logic lõi.
+Hệ thống IgameCommand: Giao diện chung cho mọi hành động (MoveCommand, AttackCommand...). Ứng dụng Command Pattern đảm bảo tính nhất quán: lệnh từ chuột hay giọng nói đều khởi tạo cùng một đối tượng để hệ thống dễ dàng xử lý.
+2.6.3. Phân hệ Logic Trò chơi (Gameplay Core System)
+Quản lý các thực thể và quy tắc vật lý trên bản đồ:
+Lớp UnitController: Quản lý vòng đời đơn vị độc lập, giao tiếp với NavMeshAgent để tìm đường, điều khiển máy trạng thái (Idle, Move, Attack) và tính toán sát thương cục bộ.
+Lớp ResourceManager: Đóng vai trò là "Nguồn sự thật" (Source of Truth) về kinh tế. Cung cấp API lõi (CanAfford, Spend, Add) để quản lý ngân sách, tách biệt hoàn toàn khỏi logic khai thác vật lý.
+Lớp BuildingManager: Quản lý vòng đời công trình. Tương tác mật thiết với ResourceManager để kiểm tra và trừ chi phí hợp lệ.
+2.6.4. Phân hệ Trí tuệ nhân tạo (AI System)
+Lớp AIBotController: Vận hành đối thủ PvE tự động thông qua Máy trạng thái hữu hạn (FSM). Liên tục đánh giá thông số môi trường (tài nguyên, quân số) để quyết định luân chuyển trạng thái (GatherResource, BuildStructure, TrainUnit, AttackEnemy...).
+Cơ chế hoạt động: AIBotController không can thiệp trực tiếp vào mã nguồn mà xuất ra các đối tượng IGameCommand y hệt thao tác của người chơi thật. Điều này đảm bảo Bot tuân thủ tuyệt đối luật chơi cốt lõi (tốn tài nguyên, thời gian chờ).
+2.6.5. Ma trận phân định trách nhiệm (Responsibility Matrix)
+Bảng 2.2. Bảng phân định trách nhiệm
+Lớp (Class)
+Trách nhiệm cốt lõi
+(Core Responsibility)
+Giới hạn không can thiệp (Anti-Responsibility)
+VoiceProcessor
+Giao tiếp API phần cứng, xuất chuỗi văn bản.
+Phân tích ý nghĩa câu lệnh, luật trò chơi.
+CommandParser
+Bóc tách cấu trúc ngữ pháp (Chủ thể, Hành động).
+Ánh xạ logic game, khởi tạo thực thể.
+IGameCommand
+Đóng gói thông số của một lệnh thao tác.
+Trực tiếp xử lý đồng bộ mạng LAN.
+UnitController
+Tìm đường (NavMesh), tính sát thương cục bộ, xử lý HP.
+Cập nhật kho tài nguyên, định tuyến toàn cục.
+ResourceManager
+Quản lý sổ xái tài nguyên, kiểm tra tính hợp lệ giao dịch.
+Xử lý hoạt ảnh khai thác của đơn vị nông dân.
+BuildingManager
+Quản lý tọa độ đặt móng, trạng thái thi công.
+Tính toán thuật toán tìm đường tránh công trình.
+AIBotController
+Đánh giá tình huống, quyết định chiến thuật (FSM).
+Can thiệp trực tiếp mã nguồn để tạo lợi thế (Cheat).
+
+
+CHƯƠNG 3. THIẾT KẾ GIAO DIỆN (UI/UX)
+3.1. Mục tiêu thiết kế UI/UX
+Thiết kế giao diện người dùng (UI) và trải nghiệm người dùng (UX) của hệ thống được xây dựng nhằm đáp ứng ba mục tiêu kỹ thuật trọng tâm:
+Tối ưu hóa khả năng điều khiển thời gian thực: Đảm bảo người chơi có thể quan sát, phân tích và phản xạ nhanh chóng trước các luồng sự kiện diễn ra liên tục trong môi trường RTS.
+Đồng bộ hóa đa kênh nhập liệu: Tích hợp song song hai phương thức điều khiển (thiết bị ngoại vi vật lý và giọng nói) mà không gây xung đột thao tác hay quá tải nhận thức.
+Cung cấp phản hồi trạng thái xác định: Thiết lập cơ chế phản hồi tức thời cho mọi lệnh đầu vào, đặc biệt là hệ thống nhận diện giọng nói, nhằm xác nhận mức độ xử lý của hệ thống (nhận diện thành công, lỗi cú pháp, hoặc lỗi nghiệp vụ). Với đặc thù của một đồ án kỹ thuật phần mềm, thiết kế giao diện ưu tiên nguyên tắc thực dụng: cấu trúc rõ ràng, thao tác nhanh và tối đa hóa không gian quan sát bản đồ chiến thuật, thay vì tập trung vào các hiệu ứng đồ họa phức tạp.
+3.2. Nguyên tắc thiết kế giao diện
+Hệ thống UI được chuẩn hóa dựa trên năm nguyên tắc cơ bản:
+Giảm thiểu hao phí thao tác: Các vùng thông tin quan trọng được cố định vị trí, giảm thời gian định vị bằng mắt và số lần nhấp chuột không cần thiết.
+Phân cấp thông tin chiến lược: Thông tin mang tính quyết định (số dư tài nguyên, quy mô quân đội, cảnh báo tấn công) được ưu tiên hiển thị nổi bật hơn các thông số phụ trợ.
+Phản hồi hai chiều trực quan: Mọi hành động tương tác từ người dùng đều kích hoạt phản hồi từ hệ thống thông qua biến đổi văn bản, mã màu, biểu tượng hoặc âm thanh báo hiệu.
+Bảo toàn không gian chiến thuật: Các bảng điều khiển (Panel) được đẩy về sát các biên màn hình, tuyệt đối không che khuất khu vực quan sát và tương tác chính ở trung tâm bản đồ.
+Nhất quán về mặt ngữ nghĩa: Áp dụng một hệ thống quy ước duy nhất về màu sắc và biểu tượng cho cùng một loại trạng thái trên toàn bộ các màn hình.
+
+3.3. Cấu trúc các màn hình chính
+Hệ thống phân bổ thành ba màn hình chức năng lõi: 
+Màn hình Khởi động (Main Menu): quản lý truy cập và kiểm tra cấu hình Microphone.
+Màn hình Sảnh chờ (LAN Lobby): quản lý phiên kết nối, IP/Port, trạng thái Ready để đồng bộ trước khi tải bản đồ.
+Màn hình Tương tác (HUD): vận hành trận đấu, tích hợp bảng điều khiển tài nguyên, thông tin thực thể, bản đồ thu nhỏ và nhật ký giọng nói.
+
+Hình 2.25. Minh họa màn hình chính.
+
+Hình 2.26. Minh họa LAN lobby.
+
+3.4. Thiết kế phân mảnh HUD trong trận đấu
+HUD được chia thành bốn khu vực chuyên biệt:
+Khu vực quản lý tài nguyên cố định góc trên, kết xuất số dư theo thời gian thực.
+Khu vực thông tin thực thể ở cạnh dưới, hiển thị HP, trạng thái hành động và tiến độ thi công của đối tượng đang chọn.
+Khu vực lệnh thao tác chứa nút bấm (Di chuyển, Tấn công, Xây dựng), phím tắt và công tắc thu âm.
+Bản đồ thu nhỏ (Mini-map) ánh xạ vị trí căn cứ, tài nguyên và hỗ trợ dịch chuyển góc nhìn nhanh.
+
+Hình 2.27. Màn chơi cơ bản
+3.5. Thiết kế hiển thị phản hồi Điều khiển Giọng nói
+Khung phản hồi (Voice Command Panel) hiển thị văn bản Vosk nhận diện, trạng thái phân tích ngữ pháp và kết quả logic, sử dụng chuẩn mã hóa màu sắc khắt khe: 
+Màu Xanh lục cho lệnh hợp lệ và đang thực thi.
+Màu Vàng khi thiếu tham số ràng buộc
+Màu Đỏ khi lệnh sai định dạng hoặc vi phạm luật trò chơi.
+Hệ thống tích hợp biểu tượng trạng thái Microphone và cơ chế tự động ngắt (Timeout) để từ chối tạp âm môi trường.
+
+Hình 2.28. Minh họa phải hồi điều khiển giọng nói.
+3.6. Thiết kế UI cho trạng thái mạng LAN 
+Trong môi trường mạng nội bộ, UI có nhiệm vụ phản ánh tình trạng kết nối vật lý. Các chỉ báo bao gồm: mức độ trễ (Ping), thông báo đứt kết nối, trạng thái đang thử kết nối lại (Reconnect), và thông báo hủy phiên từ phía Host. Nhằm tránh làm đứt gãy mạch thao tác, các thông báo này được hiển thị dưới dạng khối thông báo nổi, diện tích nhỏ (Toast Notification), không làm gián đoạn luồng sự kiện đang diễn ra trên HUD.
+3.7. Thiết kế UI cho AI Bot và Tổng kết trận đấu
+Chỉ báo thực thể AI: Trong chế độ PvE, các đơn vị và công trình do hệ thống FSM điều khiển được phân định ranh giới nhận thức thông qua màu sắc hoặc viền bao quanh độc lập, kết hợp với nhãn dán trong danh sách người chơi.
+Màn hình Tổng kết (Post-match Screen): Xuất hiện khi điều kiện kết thúc trận được thỏa mãn. Màn hình cung cấp các số liệu định lượng: thời lượng trận đấu, tổng lượng tài nguyên đã khai thác, số lượng thực thể được khởi tạo và thống kê tần suất sử dụng lệnh giọng nói. Dữ liệu này phục vụ cho việc đánh giá hiệu năng và thói quen sử dụng của người chơi.
+
+Hình 2.29. Minh họa kết thúc game.
+3.8. Luồng trải nghiệm người dùng (User Flow)
+Hệ thống vận hành theo một luồng tuyến tính khép kín:
+Truy cập Main Menu, thiết lập phần cứng.
+Khởi tạo hoặc tham gia phiên mạng tại LAN Lobby, xác nhận trạng thái Ready.
+Tiến vào trận đấu: Thao tác kết hợp cơ học (Chuột/Phím) và lệnh Giọng nói; liên tục theo dõi phản hồi trạng thái trên HUD.
+Hoàn thành trận đấu, đối chiếu thống kê tại Post-match Screen và lựa chọn tái khởi động hoặc thoát phiên. Quy trình này đảm bảo tính liền mạch, giảm thiểu độ dốc học tập (Learning Curve) đối với người dùng mới tiếp cận hệ thống.
+3.9. Tiêu chí đánh giá chất lượng UI/UX
+Chất lượng thiết kế giao diện được đo lường thông qua các biến số định lượng và định tính phục vụ cho công tác kiểm thử ở Chương 4:
+Độ trễ thời gian trung bình từ khi phát lệnh đến khi nhận được xác nhận trực quan trên HUD.
+Tỷ lệ người dùng hiểu chính xác phản hồi mã màu giọng nói (Xanh/Vàng/Đỏ) ngay trong lần thao tác đầu tiên.
+Tần suất xảy ra thao tác sai (Misclick) do sự phân bổ không gian HUD gây nhầm lẫn.
+Mức độ hiệu quả chiến thuật khi kết hợp lệnh giọng nói so với việc chỉ sử dụng chuột/phím truyền thống.
+
+
+Kết luận và kiến nghị
+
+Danh mục tài liệu tham khảo
+

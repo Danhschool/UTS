@@ -40,7 +40,10 @@ namespace GameDevTV.RTS.Player
 
         private readonly HashSet<AbstractUnit> playerUnitsOnField = new(128);
 
+        private Owner hudOwner = Owner.Player1;
+
         private static Supplies activeInstance;
+        static bool busHandlersRegistered;
 
         /// <summary>
         /// Mục tiêu: Đồng bộ HUD dân sau khi unit Player1 spawn xong (Start / NotifySpawned).
@@ -50,9 +53,17 @@ namespace GameDevTV.RTS.Player
             activeInstance?.TrackPlayerUnitSpawn(unit);
         }
 
-        private void Awake()
+        /// <summary>
+        /// Mục tiêu: Tránh NullRef khi PlayerViewBinder/FactionHudBinder gọi trước Supplies.Awake (UI chưa active).
+        /// Cách hoạt động: Tạo dictionary static một lần với giá trị mặc định cho mọi Owner.
+        /// </summary>
+        static void EnsureDictionariesInitialized()
         {
-            activeInstance = this;
+            if (Stone != null)
+            {
+                return;
+            }
+
             Stone = new Dictionary<Owner, int>();
             Wood = new Dictionary<Owner, int>();
             Food = new Dictionary<Owner, int>();
@@ -67,48 +78,96 @@ namespace GameDevTV.RTS.Player
                 Population.Add(owner, 0);
                 PopulationLimit.Add(owner, 0);
             }
+        }
 
-            Bus<SupplyEvent>.RegisterForAll(HandleSupplyEvent);
-            Bus<UnitSpawnEvent>.RegisterForAll(HandleUnitSpawn);
-            Bus<UnitDeathEvent>.RegisterForAll(HandleUnitDeath);
-            RegisterExistingPlayerUnits();
-            RefreshPlayer1SupplyHud();
+        private void Awake()
+        {
+            activeInstance = this;
+            EnsureDictionariesInitialized();
+            RegisterBusHandlersIfNeeded();
+            hudOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            RegisterExistingHudOwnerUnits();
+            RefreshSupplyHud();
+        }
+
+        void OnEnable()
+        {
+            EnsureDictionariesInitialized();
+            RegisterBusHandlersIfNeeded();
+            RegisterExistingHudOwnerUnits();
+            RefreshSupplyHud();
+        }
+
+        static void RegisterBusHandlersIfNeeded()
+        {
+            if (busHandlersRegistered || activeInstance == null)
+            {
+                return;
+            }
+
+            Bus<SupplyEvent>.RegisterForAll(activeInstance.HandleSupplyEvent);
+            Bus<UnitSpawnEvent>.RegisterForAll(activeInstance.HandleUnitSpawn);
+            Bus<UnitDeathEvent>.RegisterForAll(activeInstance.HandleUnitDeath);
+            busHandlersRegistered = true;
         }
 
         /// <summary>
-        /// Đồng bộ HUD tài nguyên của Player1 với số liệu runtime (mặc định 0 khi mới vào game).
+        /// Mục tiêu: HUD S/W/F/Population theo human local (P1 offline, P2 client MP).
+        /// Cách hoạt động: Gán hudOwner, quét lại unit phe đó, refresh text.
         /// </summary>
-        /// <remarks>
-        /// Trước đây chỉ cập nhật khi có <see cref="SupplyEvent"/> nên text trong scene không đổi cho đến lần thu/chi đầu tiên.
-        /// </remarks>
-        private void RefreshPlayer1SupplyHud()
+        public void BindHudOwner(Owner owner)
         {
+            if (!HumanFogVisionUtility.EmitsFogVision(owner))
+            {
+                return;
+            }
+
+            EnsureDictionariesInitialized();
+            hudOwner = owner;
+
+            if (!isActiveAndEnabled)
+            {
+                return;
+            }
+
+            RegisterExistingHudOwnerUnits();
+            RefreshSupplyHud();
+        }
+
+        void RefreshSupplyHud()
+        {
+            EnsureDictionariesInitialized();
+            if (Stone == null || !Stone.ContainsKey(hudOwner))
+            {
+                return;
+            }
+
             if (stoneText != null)
             {
-                stoneText.SetText(Stone[Owner.Player1].ToString());
+                stoneText.SetText(Stone[hudOwner].ToString());
             }
 
             if (woodText != null)
             {
-                woodText.SetText(Wood[Owner.Player1].ToString());
+                woodText.SetText(Wood[hudOwner].ToString());
             }
 
             if (foodText != null)
             {
-                foodText.SetText(Food[Owner.Player1].ToString());
+                foodText.SetText(Food[hudOwner].ToString());
             }
 
-            RefreshPlayer1PopulationHud();
+            RefreshPopulationHud();
         }
 
-        private void RegisterExistingPlayerUnits()
+        void RegisterExistingHudOwnerUnits()
         {
             playerUnitsOnField.Clear();
             AbstractUnit[] units = FindObjectsByType<AbstractUnit>(FindObjectsSortMode.None);
             for (int i = 0; i < units.Length; i++)
             {
                 AbstractUnit unit = units[i];
-                if (unit != null && unit.Owner == Owner.Player1 && unit.CurrentHealth > 0)
+                if (unit != null && unit.Owner == hudOwner && unit.CurrentHealth > 0)
                 {
                     playerUnitsOnField.Add(unit);
                 }
@@ -119,13 +178,13 @@ namespace GameDevTV.RTS.Player
 
         private void TrackPlayerUnitSpawn(AbstractUnit unit)
         {
-            if (unit == null || unit.Owner != Owner.Player1)
+            if (unit == null || unit.Owner != hudOwner)
             {
                 return;
             }
 
             playerUnitsOnField.Add(unit);
-            RefreshPlayer1PopulationHud();
+            RefreshPopulationHud();
         }
 
         private void HandleUnitDeath(UnitDeathEvent evt)
@@ -135,16 +194,25 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
-            playerUnitsOnField.Remove(evt.Unit);
-            RefreshPlayer1PopulationHud();
+            if (evt.Unit != null && evt.Unit.Owner == hudOwner)
+            {
+                playerUnitsOnField.Remove(evt.Unit);
+                RefreshPopulationHud();
+            }
         }
 
         /// <summary>
-        /// Mục tiêu: Cập nhật số unit Player1 đang sống trên Population Container (HUD).
+        /// Mục tiêu: Cập nhật số unit human local đang sống trên Population Container (HUD).
         /// Cách hoạt động: Đếm HashSet, ghi vào Population và populationText giống stone/wood/food.
         /// </summary>
-        private void RefreshPlayer1PopulationHud()
+        void RefreshPopulationHud()
         {
+            EnsureDictionariesInitialized();
+            if (Population == null || !Population.ContainsKey(hudOwner))
+            {
+                return;
+            }
+
             playerUnitsOnField.RemoveWhere(unit => unit == null);
 
             int aliveCount = 0;
@@ -155,14 +223,14 @@ namespace GameDevTV.RTS.Player
                     aliveCount++;
                 }
             }
-            Population[Owner.Player1] = aliveCount;
+            Population[hudOwner] = aliveCount;
 
             if (populationText == null)
             {
                 return;
             }
 
-            int limit = PopulationLimit[Owner.Player1];
+            int limit = PopulationLimit[hudOwner];
             populationText.SetText(limit > 0 ? $"{aliveCount}/{limit}" : aliveCount.ToString());
         }
 
@@ -194,11 +262,16 @@ namespace GameDevTV.RTS.Player
             if (activeInstance == this)
             {
                 activeInstance = null;
+                busHandlersRegistered = false;
             }
 
-            Bus<SupplyEvent>.UnregisterForAll(HandleSupplyEvent);
-            Bus<UnitSpawnEvent>.UnregisterForAll(HandleUnitSpawn);
-            Bus<UnitDeathEvent>.UnregisterForAll(HandleUnitDeath);
+            if (busHandlersRegistered)
+            {
+                Bus<SupplyEvent>.UnregisterForAll(HandleSupplyEvent);
+                Bus<UnitSpawnEvent>.UnregisterForAll(HandleUnitSpawn);
+                Bus<UnitDeathEvent>.UnregisterForAll(HandleUnitDeath);
+                busHandlersRegistered = false;
+            }
         }
 
         private void HandleSupplyEvent(SupplyEvent evt)
@@ -208,10 +281,12 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
+            EnsureDictionariesInitialized();
+
             if (evt.Supply.Equals(stoneSO))
             {
                 Stone[evt.Owner] += evt.Amount;
-                if (Owner.Player1 == evt.Owner && stoneText != null)
+                if (hudOwner == evt.Owner && stoneText != null)
                 {
                     stoneText.SetText(Stone[evt.Owner].ToString());
                 }
@@ -219,7 +294,7 @@ namespace GameDevTV.RTS.Player
             else if (evt.Supply.Equals(woodSO))
             {
                 Wood[evt.Owner] += evt.Amount;
-                if (Owner.Player1 == evt.Owner && woodText != null)
+                if (hudOwner == evt.Owner && woodText != null)
                 {
                     woodText.SetText(Wood[evt.Owner].ToString());
                 }
@@ -227,7 +302,7 @@ namespace GameDevTV.RTS.Player
             else if (evt.Supply.Equals(foodSO))
             {
                 Food[evt.Owner] += evt.Amount;
-                if (Owner.Player1 == evt.Owner && foodText != null)
+                if (hudOwner == evt.Owner && foodText != null)
                 {
                     foodText.SetText(Food[evt.Owner].ToString());
                 }

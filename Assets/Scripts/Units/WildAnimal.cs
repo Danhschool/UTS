@@ -16,7 +16,7 @@ namespace GameDevTV.RTS.Units
     {
         [SerializeField] private AnimalAIConfigSO animalConfig;
         [Tooltip("Faction động vật — phải khác Player1 để unit player tấn công và vào NearbyEnemies.")]
-        [SerializeField] private Owner wildlifeOwner = Owner.AI1;
+        [SerializeField] private Owner wildlifeOwner = Owner.AI2;
 
         private bool corpseSupplySpawned;
         private NavMeshAgent cachedAgent;

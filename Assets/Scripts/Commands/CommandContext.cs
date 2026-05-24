@@ -1,3 +1,4 @@
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
@@ -12,13 +13,13 @@ namespace GameDevTV.RTS.Commands
         public MouseButton Button { get; private set; }
         public Owner Owner { get; private set; }
 
+        /// <summary>
+        /// Mục tiêu: Context mặc định dùng LocalOwner (offline Player1, MP theo team).
+        /// Cách hoạt động: Owner từ <see cref="LocalHumanOwnerAccess.GetLocalOwnerOrDefault"/>.
+        /// </summary>
         public CommandContext(AbstractCommandable commandable, RaycastHit hit, int unitIndex = 0, MouseButton mouseButton = MouseButton.Left)
+            : this(LocalHumanOwnerAccess.GetLocalOwnerOrDefault(), commandable, hit, unitIndex, mouseButton)
         {
-            Commandable = commandable;
-            Hit = hit;
-            UnitIndex = unitIndex;
-            Button = mouseButton;
-            Owner = Owner.Player1;
         }
 
         public CommandContext(Owner owner, AbstractCommandable commandable, RaycastHit hit, int unitIndex = 0, MouseButton mouseButton = MouseButton.Left)

@@ -46,6 +46,7 @@ namespace GameDevTV.RTS.AI
             }
 
             if (AIMilitaryHostileScanner.TryFindVisibleEnemyCivilCentral(
+                    friendlyOwner,
                     primaryEnemyOwner,
                     requireVisible,
                     out BaseBuilding enemyCc))
@@ -110,6 +111,7 @@ namespace GameDevTV.RTS.AI
             }
 
             if (AIMilitaryHostileScanner.TryFindVisibleEnemyCivilCentral(
+                    friendlyOwner,
                     enemyOwner,
                     requireVisible,
                     out BaseBuilding enemyCc))

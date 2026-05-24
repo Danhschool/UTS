@@ -44,25 +44,28 @@ namespace GameDevTV.RTS.AI
                 return;
             }
 
+            float maxRatio = settings != null
+                ? Mathf.Max(1.1f, settings.GatherImbalanceMaxRatio)
+                : 3f;
+
             if (!hasVisibleFoodGatherNodes
                 && settings != null
                 && settings.EnableStoneWoodOnlyWhenNoFoodMines)
             {
-                ApplyStoneWoodOnlySplit(
+                ApplyStoneWoodSplitFromStock(
                     gatherWorkerCount,
+                    snapshot,
+                    maxRatio,
                     settings.StoneWoodMajorShare,
-                    settings.StoneWoodMinMajorSlots,
                     out stoneSlots,
                     out woodSlots);
+                TryReserveFoodSlotWhenStockLow(snapshot, settings, gatherWorkerCount, ref stoneSlots, ref woodSlots, ref foodSlots);
                 return;
             }
 
             int interval = settings != null
                 ? Mathf.Max(1, settings.GatherBalanceCheckIntervalTicks)
                 : 20;
-            float maxRatio = settings != null
-                ? Mathf.Max(1.1f, settings.GatherImbalanceMaxRatio)
-                : 3f;
 
             BalanceCache cache = GetOrCreate(owner);
             if (ShouldRunBalanceCheck(plannerTickIndex, cache.LastCheckPlannerTick, interval))
@@ -160,28 +163,105 @@ namespace GameDevTV.RTS.AI
         }
 
         /// <summary>
-        /// Mục tiêu: Chia worker chỉ giữa đá và gỗ (70/30 mặc định; majority ≥ min khi tổng ≥ min).
-        /// Cách hoạt động: stoneSlots = ceil/share có sàn min; woodSlots = phần còn lại.
+        /// Mục tiêu: Không còn mỏ food tĩnh — chia worker đá/gỗ theo kho (giống 40/40 hoặc 60% thiếu).
+        /// Cách hoạt động: Cân bằng → ~50/50; lệch → majorShare (mặc định 0.7) cho loại ít trong kho; luôn ≥1 gỗ nếu ≥2 worker.
         /// </summary>
-        private static void ApplyStoneWoodOnlySplit(
+        static void ApplyStoneWoodSplitFromStock(
             int gatherWorkerCount,
-            float majorShare,
-            int minMajorSlots,
+            AIWorldStateSnapshot snapshot,
+            float maxRatio,
+            float majorShareWhenImbalanced,
             out int stoneSlots,
             out int woodSlots)
         {
-            majorShare = Mathf.Clamp(majorShare, 0.51f, 0.95f);
-            minMajorSlots = Mathf.Max(1, minMajorSlots);
-
-            int major = Mathf.CeilToInt(gatherWorkerCount * majorShare);
-            if (gatherWorkerCount >= minMajorSlots)
+            stoneSlots = woodSlots = 0;
+            if (gatherWorkerCount <= 0 || snapshot == null)
             {
-                major = Mathf.Max(minMajorSlots, major);
+                return;
             }
 
-            major = Mathf.Clamp(major, 1, gatherWorkerCount);
-            stoneSlots = major;
-            woodSlots = gatherWorkerCount - stoneSlots;
+            if (gatherWorkerCount == 1)
+            {
+                stoneSlots = 1;
+                return;
+            }
+
+            int stone = Mathf.Max(0, snapshot.Stone);
+            int wood = Mathf.Max(0, snapshot.Wood);
+            majorShareWhenImbalanced = Mathf.Clamp(majorShareWhenImbalanced, 0.51f, 0.95f);
+
+            if (IsStoneWoodStockBalanced(stone, wood, maxRatio))
+            {
+                woodSlots = Mathf.Max(1, gatherWorkerCount / 2);
+                stoneSlots = gatherWorkerCount - woodSlots;
+                return;
+            }
+
+            int majorSlots = Mathf.Max(1, Mathf.RoundToInt(gatherWorkerCount * majorShareWhenImbalanced));
+            majorSlots = Mathf.Min(majorSlots, gatherWorkerCount - 1);
+
+            if (stone <= wood)
+            {
+                stoneSlots = majorSlots;
+                woodSlots = gatherWorkerCount - stoneSlots;
+            }
+            else
+            {
+                woodSlots = majorSlots;
+                stoneSlots = gatherWorkerCount - stoneSlots;
+            }
+        }
+
+        static bool IsStoneWoodStockBalanced(int stone, int wood, float maxRatio)
+        {
+            int max = Mathf.Max(stone, wood);
+            int min = Mathf.Min(stone, wood);
+            if (max <= 0)
+            {
+                return true;
+            }
+
+            if (min <= 0)
+            {
+                return false;
+            }
+
+            return (float)max / min <= maxRatio;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Chế độ chỉ đá/gỗ vẫn có 1 slot food khi kho thấp (xác thú / săn).
+        /// Cách hoạt động: Lấy 1 từ stone hoặc wood nếu còn dư slot.
+        /// </summary>
+        static void TryReserveFoodSlotWhenStockLow(
+            AIWorldStateSnapshot snapshot,
+            AIEconomySettings settings,
+            int gatherWorkerCount,
+            ref int stoneSlots,
+            ref int woodSlots,
+            ref int foodSlots)
+        {
+            if (snapshot == null
+                || settings == null
+                || gatherWorkerCount < 3
+                || foodSlots > 0
+                || snapshot.Food >= settings.FoodHuntBelowAmount)
+            {
+                return;
+            }
+
+            if (stoneSlots > 1)
+            {
+                stoneSlots--;
+                foodSlots = 1;
+                return;
+            }
+
+            if (woodSlots > 1)
+            {
+                woodSlots--;
+                foodSlots = 1;
+            }
         }
 
         internal enum SupplyKind

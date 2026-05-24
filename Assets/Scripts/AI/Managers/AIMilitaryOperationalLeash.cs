@@ -1,3 +1,4 @@
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Utilities;
 using UnityEngine;
@@ -48,6 +49,7 @@ namespace GameDevTV.RTS.AI
         /// Mục tiêu: Chỉ tổng tấn công khi CC địch nằm trong vùng hoạt động.
         /// </summary>
         public static bool IsEnemyCivilCentralInOperationalZone(
+            Owner friendlyOwner,
             Owner enemyOwner,
             Vector3 friendlyCivilCentralPosition,
             float operationalRadius,
@@ -58,7 +60,7 @@ namespace GameDevTV.RTS.AI
                 return false;
             }
 
-            if (requireVisible && !enemyCc.IsVisible)
+            if (requireVisible && !FactionFogQuery.IsVisibleTo(friendlyOwner, enemyCc))
             {
                 return false;
             }

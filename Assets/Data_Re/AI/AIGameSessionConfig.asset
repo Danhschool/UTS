@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61e313cab7631b444ac37894b8555b45, type: 3}
   m_Name: AIGameSessionConfig
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.AI.AIGameSessionConfigSO
-  defaultDifficulty: 1
+  defaultDifficulty: 0
   easy: {fileID: 11400000, guid: a8cd3f1e6debdc7498897e64f43f1416, type: 2}
   medium: {fileID: 11400000, guid: 9d08ae3c03c161d41b267da9c09be642, type: 2}
   hard: {fileID: 11400000, guid: 3e60f0371049d9c4d9a6ad40f1153ca7, type: 2}

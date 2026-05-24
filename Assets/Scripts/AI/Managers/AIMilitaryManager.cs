@@ -181,6 +181,7 @@ namespace GameDevTV.RTS.AI
                      && (!defenseRingMode
                          || !manualOverrides.RequireEnemyCcInLeashForUnifiedAttack
                          || AIMilitaryOperationalLeash.IsEnemyCivilCentralInOperationalZone(
+                             snapshot.Owner,
                              config.EnemyOwner,
                              ccPosition,
                              operationalRadius,
@@ -294,6 +295,7 @@ namespace GameDevTV.RTS.AI
             if (defenseRingMode && manualOverrides.RequireEnemyCcInLeashForUnifiedAttack)
             {
                 return AIMilitaryOperationalLeash.IsEnemyCivilCentralInOperationalZone(
+                    snapshot.Owner,
                     config.EnemyOwner,
                     ccPosition,
                     operationalRadius,
@@ -990,6 +992,7 @@ namespace GameDevTV.RTS.AI
         {
             attackPoint = default;
             if (AIMilitaryHostileScanner.TryFindVisibleEnemyCivilCentral(
+                    snapshot.Owner,
                     config.EnemyOwner,
                     config.RequireVisibleTargets,
                     out BaseBuilding enemyCc))

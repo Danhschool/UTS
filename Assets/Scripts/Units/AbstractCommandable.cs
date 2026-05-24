@@ -76,6 +76,16 @@ namespace GameDevTV.RTS.Units
         }
 
         /// <summary>
+        /// Mục tiêu: MP/offline spawn gán Owner rồi bật đúng VisionTransform + layer fog.
+        /// Cách hoạt động: Set <see cref="Owner"/> và gọi <see cref="RefreshVisionFromSightConfig"/>.
+        /// </summary>
+        public void SyncOwnerAndFogVision(Owner owner)
+        {
+            Owner = owner;
+            RefreshVisionFromSightConfig();
+        }
+
+        /// <summary>
         /// Cập nhật collider / scale vòng nhìn sau khi <see cref="SightConfigSO.SightRadius"/> thay đổi (upgrade).
         /// </summary>
         protected void RefreshVisionFromSightConfig()
@@ -84,7 +94,12 @@ namespace GameDevTV.RTS.Units
             {
                 float size = UnitSO.SightConfig.SightRadius * 2;
                 VisionTransform.localScale = new Vector3(size, size, size);
-                VisionTransform.gameObject.SetActive(Owner == Owner.Player1);
+                bool emitsVision = HumanFogVisionUtility.EmitsFogVision(Owner);
+                VisionTransform.gameObject.SetActive(emitsVision);
+                if (emitsVision)
+                {
+                    OwnerFogVisionLayers.ApplyToHierarchy(VisionTransform.gameObject, Owner);
+                }
             }
         }
 
@@ -328,6 +343,11 @@ namespace GameDevTV.RTS.Units
             foreach (UnitWorldHealthBar healthBar in healthBars)
             {
                 healthBar.RefreshOwnerStyleInEditor();
+            }
+
+            if (Application.isPlaying && HumanFogVisionUtility.EmitsFogVision(Owner))
+            {
+                RefreshVisionFromSightConfig();
             }
         }
 #endif

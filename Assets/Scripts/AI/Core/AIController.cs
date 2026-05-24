@@ -3,6 +3,7 @@ using System.Text;
 using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.Minimap;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.UI.GameEventLog;
 using GameDevTV.RTS.Units;
 using UnityEngine;
@@ -31,7 +32,7 @@ namespace GameDevTV.RTS.AI
         [SerializeField] private bool dispatchEconomyIntents = true;
         [SerializeField] private bool dispatchBaseIntents = true;
         [SerializeField] private bool dispatchMilitaryIntents = true;
-        [Tooltip("Fog explored (minimap) — dùng biết map đã khám phá hết để gọi 100% quân đi đánh.")]
+        [Tooltip("Fog explored (minimap) — chung với người chơi; scout / gọi 100% quân đi đánh.")]
         [SerializeField] private MinimapFogSystemReference fogSystemReference;
 
         private AIUnitRegistry registry;
@@ -69,14 +70,28 @@ namespace GameDevTV.RTS.AI
 
         private void OnEnable()
         {
+            militaryManager = new AIMilitaryManager(militarySettings, baseSettings, fogSystemReference);
+
+            if (OwnerTeamMapping.IsHumanPlayer(aiOwner))
+            {
+                Debug.LogError(
+                    $"[AIController] aiOwner={aiOwner} là phe human — gây điều khiển worker/người chơi sai. Đặt AI2+ trên bot (menu ProjectRTS/PvAI/M5 Fix).",
+                    this);
+                enabled = false;
+                return;
+            }
+
             registry.Initialize(aiOwner);
             ApplyDifficultyProfile(difficultyProfile);
-            nextTickTime = Time.time;
+            float interval = difficultyProfile != null ? difficultyProfile.TickInterval : tickInterval;
+            float phase = (Mathf.Abs((int)aiOwner) % 97) / 97f * interval;
+            nextTickTime = Time.time + phase;
             plannerTickIndex = 0;
         }
 
         private void OnDisable()
         {
+            AIFactionSightQuery.ClearFaction(aiOwner);
             registry.Dispose();
         }
 
@@ -98,7 +113,9 @@ namespace GameDevTV.RTS.AI
         /// </summary>
         public void Tick()
         {
+            AISceneEntityCache.EnsureFresh();
             AIWorldStateSnapshot snapshot = worldState.BuildSnapshot(registry, aiOwner);
+            AIFactionSightQuery.RefreshFromSnapshot(snapshot);
 
             RunPlannerDispatch(snapshot);
             PostAiStatusToGameEventIfNeeded(snapshot);

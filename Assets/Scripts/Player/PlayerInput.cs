@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Minimap;
@@ -61,7 +62,7 @@ namespace GameDevTV.RTS.Player
         private float orthoSizeVelocity;
         private float smoothedFollowZ;
         private float followZVelocity;
-        private const Owner LocalPlayerOwner = Owner.Player1;
+        private Owner localOwner = Owner.Player1;
 
         private HashSet<AbstractUnit> aliveUnits = new(100);
         private HashSet<AbstractUnit> addedUnits = new(24);
@@ -81,28 +82,50 @@ namespace GameDevTV.RTS.Player
             scrollOrthoSize = camera != null ? camera.orthographicSize : 20f;
             scrollZoomScale = smoothedZoomScale = zoomTargetScale = ComputeInitialZoomScaleFromFollowOffset();
 
-            Bus<UnitSelectedEvent>.OnEvent[Owner.Player1] += HandleUnitSelected;
-            Bus<UnitDeselectedEvent>.OnEvent[Owner.Player1] += HandleUnitDeselected;
-            Bus<UnitSpawnEvent>.OnEvent[Owner.Player1] += HandleUnitSpawn;
-            Bus<CommandSelectedEvent>.OnEvent[Owner.Player1] += HandleActionSelected;
-            Bus<UnitDeathEvent>.OnEvent[Owner.Player1] += HandleUnitDeath;
-            Bus<BuildingConstructStartedEvent>.OnEvent[Owner.Player1] += OnBuildingConstructStarted;
+            localOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            SubscribeBus(localOwner);
+            LocalHumanOwnerService.LocalOwnerChanged += OnLocalOwnerChanged;
         }
 
         private void OnDestroy()
         {
-            Bus<UnitSelectedEvent>.OnEvent[Owner.Player1] -= HandleUnitSelected;
-            Bus<UnitDeselectedEvent>.OnEvent[Owner.Player1] -= HandleUnitDeselected;
-            Bus<UnitSpawnEvent>.OnEvent[Owner.Player1] -= HandleUnitSpawn;
-            Bus<CommandSelectedEvent>.OnEvent[Owner.Player1] -= HandleActionSelected;
-            Bus<UnitDeathEvent>.OnEvent[Owner.Player1] -= HandleUnitDeath;
-            Bus<BuildingConstructStartedEvent>.OnEvent[Owner.Player1] -= OnBuildingConstructStarted;
+            LocalHumanOwnerService.LocalOwnerChanged -= OnLocalOwnerChanged;
+            UnsubscribeBus(localOwner);
             DisposePlacementGhost();
+        }
+
+        void OnLocalOwnerChanged(Owner owner)
+        {
+            UnsubscribeBus(localOwner);
+            localOwner = owner;
+            aliveUnits.RemoveWhere(unit => unit == null || unit.Owner != localOwner);
+            selectedUnits.Clear();
+            SubscribeBus(localOwner);
+        }
+
+        void SubscribeBus(Owner owner)
+        {
+            Bus<UnitSelectedEvent>.OnEvent[owner] += HandleUnitSelected;
+            Bus<UnitDeselectedEvent>.OnEvent[owner] += HandleUnitDeselected;
+            Bus<UnitSpawnEvent>.OnEvent[owner] += HandleUnitSpawn;
+            Bus<CommandSelectedEvent>.OnEvent[owner] += HandleActionSelected;
+            Bus<UnitDeathEvent>.OnEvent[owner] += HandleUnitDeath;
+            Bus<BuildingConstructStartedEvent>.OnEvent[owner] += OnBuildingConstructStarted;
+        }
+
+        void UnsubscribeBus(Owner owner)
+        {
+            Bus<UnitSelectedEvent>.OnEvent[owner] -= HandleUnitSelected;
+            Bus<UnitDeselectedEvent>.OnEvent[owner] -= HandleUnitDeselected;
+            Bus<UnitSpawnEvent>.OnEvent[owner] -= HandleUnitSpawn;
+            Bus<CommandSelectedEvent>.OnEvent[owner] -= HandleActionSelected;
+            Bus<UnitDeathEvent>.OnEvent[owner] -= HandleUnitDeath;
+            Bus<BuildingConstructStartedEvent>.OnEvent[owner] -= OnBuildingConstructStarted;
         }
 
         private void OnBuildingConstructStarted(BuildingConstructStartedEvent evt)
         {
-            if (evt.Owner != Owner.Player1)
+            if (evt.Owner != localOwner)
             {
                 return;
             }
@@ -139,7 +162,7 @@ namespace GameDevTV.RTS.Player
         private void HandleUnitDeselected(UnitDeselectedEvent evt) => selectedUnits.Remove(evt.Unit);
         private void HandleUnitSpawn(UnitSpawnEvent evt)
         {
-            if (evt.Unit.Owner == LocalPlayerOwner)
+            if (evt.Unit.Owner == localOwner)
             {
                 aliveUnits.Add(evt.Unit);
             }
@@ -696,6 +719,23 @@ namespace GameDevTV.RTS.Player
                     return true;
                 }
 
+                if (PlayerInputNetworkBridge.ShouldRelayCommands
+                    && PlayerInputNetworkBridge.TryRelayUnitCommand != null
+                    && PlayerInputNetworkBridge.TryRelayUnitCommand(
+                        abstractUnits[i],
+                        hit,
+                        command,
+                        mouseButton,
+                        i))
+                {
+                    if (command.IsSingleUnitCommand)
+                    {
+                        return true;
+                    }
+
+                    continue;
+                }
+
                 command.Handle(context);
                 if (command.IsSingleUnitCommand)
                 {
@@ -718,7 +758,7 @@ namespace GameDevTV.RTS.Player
         /// Mục tiêu: Click chọn đúng unit khi ray chạm cả unit lẫn building (ưu tiên tuyệt đối unit).
         /// Cách hoạt động: Quét mọi hit, chọn AbstractUnit có distance nhỏ nhất; chỉ khi không có unit mới chọn ISelectable khác.
         /// </summary>
-        private static bool TrySelectClosestUnitFromHits(RaycastHit[] hits)
+        private bool TrySelectClosestUnitFromHits(RaycastHit[] hits)
         {
             AbstractUnit closestUnit = null;
             float closestDistance = float.MaxValue;
@@ -797,10 +837,10 @@ namespace GameDevTV.RTS.Player
 
         /// <summary>
         /// Mục tiêu: Chỉ cho phép chọn unit/nhà thuộc phe người chơi local.
-        /// Cách hoạt động: So sánh <see cref="AbstractCommandable.Owner"/> với <see cref="LocalPlayerOwner"/>.
+        /// Cách hoạt động: So sánh <see cref="AbstractCommandable.Owner"/> với <see cref="localOwner"/>.
         /// </summary>
-        private static bool IsOwnedByLocalPlayer(AbstractCommandable commandable) =>
-            commandable != null && commandable.Owner == LocalPlayerOwner;
+        private bool IsOwnedByLocalPlayer(AbstractCommandable commandable) =>
+            commandable != null && commandable.Owner == localOwner;
 
         private void ActivateAction(RaycastHit hit)
         {
@@ -855,10 +895,10 @@ namespace GameDevTV.RTS.Player
                     UpdateGhostPlacementVisual(EvaluateGhostPlacementValid(placementGhostPinnedPosition, pinnedPlacementRestrictionsCommand));
                 }
                 else if (commandBeingActivated is BuildBuildingCommand buildCommand
-                    && !SupplyAffordability.HasEnough(LocalPlayerOwner, buildCommand.Building.Cost))
+                    && !SupplyAffordability.HasEnough(localOwner, buildCommand.Building.Cost))
                 {
                     SupplyAffordability.WarnPlayerIfInsufficient(
-                        LocalPlayerOwner,
+                        localOwner,
                         buildCommand.Building.Cost,
                         $"xây {buildCommand.Building.Name}");
                     DisposePlacementGhost();

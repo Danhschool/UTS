@@ -1,6 +1,7 @@
 using System;
 using GameDevTV.RTS.Units;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace GameDevTV.RTS.UI
 {
@@ -15,7 +16,8 @@ namespace GameDevTV.RTS.UI
         }
 
         [SerializeField] private Style player1Style;
-        [SerializeField] private Style ai1Style;
+        [FormerlySerializedAs("ai1Style")]
+        [SerializeField] private Style player2Style;
         [SerializeField] private Style defaultStyle;
 
         public bool TryGetStyle(Owner owner, out Style style)
@@ -25,8 +27,8 @@ namespace GameDevTV.RTS.UI
                 case Owner.Player1:
                     style = player1Style;
                     return style.borderSprite != null || style.fillSprite != null;
-                case Owner.AI1:
-                    style = ai1Style;
+                case Owner.Player2:
+                    style = player2Style;
                     return style.borderSprite != null || style.fillSprite != null;
                 default:
                     style = defaultStyle;

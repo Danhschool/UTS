@@ -368,12 +368,23 @@ namespace GameDevTV.RTS.Units
         {
             base.OnLoseVisibility();
 
+            if (MainRenderer == null
+                || Progress.State != BuildingProgress.BuildingState.Completed)
+            {
+                return;
+            }
+
+            MeshFilter sourceFilter = MainRenderer.GetComponent<MeshFilter>();
+            if (sourceFilter == null || sourceFilter.sharedMesh == null)
+            {
+                return;
+            }
+
             if (culledVisuals == null)
             {
                 Transform originalRendererTransform = MainRenderer.transform;
-                GameObject culledGO = new ($"Culled {BuildingSO.Name} Visuals")
+                GameObject culledGO = new($"Culled {BuildingSO.Name} Visuals")
                 {
-                    layer = LayerMask.GetMask("TransparentFX"),
                     transform =
                     {
                         position = originalRendererTransform.position,
@@ -381,13 +392,17 @@ namespace GameDevTV.RTS.Units
                         localScale = originalRendererTransform.localScale
                     }
                 };
+
+                int transparentFxLayer = LayerMask.NameToLayer("TransparentFX");
+                culledGO.layer = transparentFxLayer >= 0 ? transparentFxLayer : 0;
+
                 culledVisuals = culledGO.AddComponent<Placeholder>();
                 culledVisuals.Owner = Owner;
                 culledVisuals.ParentObject = gameObject;
                 MeshFilter meshFilter = culledGO.AddComponent<MeshFilter>();
-                meshFilter.mesh = MainRenderer.GetComponent<MeshFilter>().mesh;
+                meshFilter.sharedMesh = sourceFilter.sharedMesh;
                 MeshRenderer renderer = culledGO.AddComponent<MeshRenderer>();
-                renderer.materials = MainRenderer.materials;
+                renderer.sharedMaterials = MainRenderer.sharedMaterials;
             }
             else
             {

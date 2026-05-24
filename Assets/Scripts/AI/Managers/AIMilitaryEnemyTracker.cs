@@ -1,3 +1,4 @@
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
 using UnityEngine;
 
@@ -17,7 +18,7 @@ namespace GameDevTV.RTS.AI
         /// </summary>
         public static void RememberVisibleEnemyCivilCentral(Owner aiOwner, BaseBuilding enemyCc)
         {
-            if (enemyCc == null || !enemyCc.IsVisible)
+            if (enemyCc == null || !FactionFogQuery.IsVisibleTo(aiOwner, enemyCc))
             {
                 return;
             }

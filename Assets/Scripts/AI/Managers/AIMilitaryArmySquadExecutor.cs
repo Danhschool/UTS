@@ -223,6 +223,7 @@ namespace GameDevTV.RTS.AI
                     requireVisible);
 
             if (AIMilitaryHostileScanner.TryFindVisibleEnemyCivilCentral(
+                    friendlyOwner,
                     enemyOwner,
                     requireVisible,
                     out BaseBuilding enemyCc))
@@ -299,6 +300,7 @@ namespace GameDevTV.RTS.AI
             IReadOnlyList<AbstractUnit> army)
         {
             if (!AIMilitaryHostileScanner.TryFindVisibleEnemyCivilCentral(
+                    friendlyOwner,
                     enemyOwner,
                     requireVisible,
                     out BaseBuilding enemyCc))

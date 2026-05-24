@@ -21,6 +21,8 @@ namespace GameDevTV.RTS.Minimap
         [SerializeField] private MinimapFogSystemReference fogSystem;
         [SerializeField] private bool hideIconsOutsideExplored = true;
 
+        private Owner trackedOwner = Owner.Player1;
+
         private readonly Dictionary<AbstractCommandable, MinimapIconView> activeIcons = new(128);
         private readonly Queue<MinimapIconView> iconPool = new(64);
 
@@ -96,6 +98,22 @@ namespace GameDevTV.RTS.Minimap
             fogSystem?.EnsureReferences();
         }
 
+        /// <summary>
+        /// Mục tiêu: Minimap chỉ track icon phe human local.
+        /// Cách hoạt động: Gán trackedOwner, xóa icon cũ, quét lại commandables trong scene.
+        /// </summary>
+        public void BindLocalOwner(Owner owner)
+        {
+            if (!HumanFogVisionUtility.EmitsFogVision(owner))
+            {
+                return;
+            }
+
+            trackedOwner = owner;
+            ClearAllIcons();
+            RegisterExistingCommandables();
+        }
+
         private void RegisterExistingCommandables()
         {
             AbstractUnit[] units = FindObjectsByType<AbstractUnit>(FindObjectsSortMode.None);
@@ -126,7 +144,7 @@ namespace GameDevTV.RTS.Minimap
                 return;
             }
 
-            if (trackPlayerUnitsOnly && commandable.Owner != Owner.Player1)
+            if (trackPlayerUnitsOnly && commandable.Owner != trackedOwner)
             {
                 return;
             }
@@ -175,7 +193,7 @@ namespace GameDevTV.RTS.Minimap
 
         private void UpdateIconVisibility(AbstractCommandable commandable, MinimapIconView view)
         {
-            if (commandable.Owner == Owner.Player1)
+            if (commandable.Owner == trackedOwner)
             {
                 view.SetVisible(true);
                 return;

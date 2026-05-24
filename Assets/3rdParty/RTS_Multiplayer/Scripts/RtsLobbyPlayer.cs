@@ -36,12 +36,28 @@ namespace ProjectRTS.Netplay
         }
 
         void HookName(string oldV, string newV) { }
-        void HookTeam(int oldV, int newV) { }
+
+        void HookTeam(int oldV, int newV)
+        {
+            if (isLocalPlayer)
+                PublishLocalTeamIndex();
+        }
+
         void HookReady(bool oldV, bool newV) { }
 
         public override void OnStartLocalPlayer()
         {
+            PublishLocalTeamIndex();
             RtsLobbyUI.Instance?.OnLocalPlayerAssigned(this);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Gán LocalOwner sau khi SyncVar team đã có trên client local.
+        /// Cách hoạt động: Gọi từ OnStartLocalPlayer và HookTeam khi playerTeamIndex đổi.
+        /// </summary>
+        void PublishLocalTeamIndex()
+        {
+            RtsLocalHumanOwnerNotifier.NotifyLocalTeamIndex(PlayerTeamIndex);
         }
 
         [Command]

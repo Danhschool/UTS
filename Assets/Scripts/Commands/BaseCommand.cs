@@ -46,7 +46,7 @@ namespace GameDevTV.RTS.Commands
             return Restrictions.All(restriction => restriction.CanPlace(point));
         }
 
-        public bool IsHitColliderVisible(CommandContext context) => context.Hit.collider != null
-            && context.Hit.collider.TryGetComponent(out IHideable hideable) && hideable.IsVisible;
+        public bool IsHitColliderVisible(CommandContext context) =>
+            CommandFactionVisibility.IsHitVisibleToCommander(context);
     }
 }

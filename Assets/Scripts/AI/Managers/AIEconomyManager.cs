@@ -13,7 +13,7 @@ namespace GameDevTV.RTS.AI
     /// <summary>
     /// SRP: Worker gather 40/40/20 hoặc 60% thiếu; hết mỏ food → 70/30 đá-gỗ; thiếu food → thêm Corral; Store xa CC.
     /// Mỗi worker: <see cref="GatherCommand"/> → BT Gather Sub Graph tự loop + tự return khi đầy (Petra: không spam ReturnSupplies).
-    /// Chỉ mỏ <see cref="GatherableSupply.IsVisible"/>; khóa gather trên <see cref="Worker.ShouldIssueGatherTo"/>.
+    /// Chỉ mỏ <see cref="GatherableSupply.IsVisible"/> (fog gameplay chung với người chơi); khóa gather trên <see cref="Worker.ShouldIssueGatherTo"/>.
     /// </summary>
     public sealed class AIEconomyManager
     {
@@ -21,6 +21,7 @@ namespace GameDevTV.RTS.AI
         private readonly List<AbstractUnitSO> depositTypeScratch = new(4);
         private readonly List<Worker> idleGatherWorkersScratch = new(32);
         private readonly HashSet<int> reservedGatherSupplyThisTick = new(32);
+        private readonly AIEconomyGatherSupplyIndex gatherSupplyIndex = new();
 
         public AIEconomyManager(AIEconomySettings manualOverrides = null)
         {
@@ -95,6 +96,7 @@ namespace GameDevTV.RTS.AI
             Vector3 anchor = GetEconomyAnchor(snapshot);
             int gatherCapable = CountGatherCapableWorkers(snapshot);
             bool hasVisibleFoodMines = AIEconomyFoodGatherUtility.HasVisibleFoodGatherNode(snapshot, config);
+            gatherSupplyIndex.Rebuild(snapshot, config);
 
             AIWorkerGatherSlotPlanner.ComputeGatherSlotTargets(
                 snapshot.Owner,
@@ -177,7 +179,8 @@ namespace GameDevTV.RTS.AI
                     continue;
                 }
 
-                IncrementPendingGatherCount(preferredKind, ref stoneActive, ref woodActive, ref foodActive);
+                SupplyKind assignedKind = ClassifySupply(config, supply.Supply);
+                IncrementPendingGatherCount(assignedKind, ref stoneActive, ref woodActive, ref foodActive);
                 reservedGatherSupplyThisTick.Add(supply.GetInstanceID());
 
                 queue.Enqueue(new AICommandIntent(
@@ -289,22 +292,24 @@ namespace GameDevTV.RTS.AI
             int woodDeficit = woodSlots - woodCount;
             int foodDeficit = foodSlots - foodCount;
 
-            if (foodSlots > 0
-                && foodDeficit > 0
-                && foodDeficit >= woodDeficit
-                && foodDeficit >= stoneDeficit)
+            SupplyKind bestKind = SupplyKind.Stone;
+            int bestDeficit = stoneDeficit;
+
+            if (woodDeficit > bestDeficit)
             {
-                return SupplyKind.Food;
+                bestKind = SupplyKind.Wood;
+                bestDeficit = woodDeficit;
             }
 
-            if (woodDeficit > 0 && woodDeficit >= stoneDeficit)
+            if (foodSlots > 0 && foodDeficit > bestDeficit)
             {
-                return SupplyKind.Wood;
+                bestKind = SupplyKind.Food;
+                bestDeficit = foodDeficit;
             }
 
-            if (stoneDeficit > 0)
+            if (bestDeficit > 0)
             {
-                return SupplyKind.Stone;
+                return bestKind;
             }
 
             int stoneOver = stoneCount - stoneSlots;
@@ -404,12 +409,16 @@ namespace GameDevTV.RTS.AI
             out GatherableSupply bestSupply,
             out Collider bestCollider)
         {
-            if (TryPickGatherTargetForKind(snapshot, config, worker, SupplyKind.Stone, anchor, out bestSupply, out bestCollider))
+            bool woodFirst = snapshot.Wood < snapshot.Stone;
+            SupplyKind first = woodFirst ? SupplyKind.Wood : SupplyKind.Stone;
+            SupplyKind second = woodFirst ? SupplyKind.Stone : SupplyKind.Wood;
+
+            if (TryPickGatherTargetForKind(snapshot, config, worker, first, anchor, out bestSupply, out bestCollider))
             {
                 return true;
             }
 
-            return TryPickGatherTargetForKind(snapshot, config, worker, SupplyKind.Wood, anchor, out bestSupply, out bestCollider);
+            return TryPickGatherTargetForKind(snapshot, config, worker, second, anchor, out bestSupply, out bestCollider);
         }
 
         /// <summary>
@@ -472,55 +481,26 @@ namespace GameDevTV.RTS.AI
             out GatherableSupply bestSupply,
             out Collider bestCollider)
         {
-            bestSupply = null;
-            bestCollider = null;
-            float bestScore = float.MaxValue;
-
-            for (int i = 0; i < snapshot.GatherableSupplies.Count; i++)
-            {
-                GatherableSupply supply = snapshot.GatherableSupplies[i];
-                if (supply == null || supply.Amount <= 0 || !supply.IsVisible)
-                {
-                    continue;
-                }
-
-                if (reservedGatherSupplyThisTick.Contains(supply.GetInstanceID()))
-                {
-                    continue;
-                }
-
-                if (ClassifySupply(config, supply.Supply) != kind)
-                {
-                    continue;
-                }
-
-                Collider collider = supply.GetComponent<Collider>();
-                if (collider == null)
-                {
-                    collider = supply.GetComponentInChildren<Collider>();
-                }
-
-                if (collider == null)
-                {
-                    continue;
-                }
-
-                float distWorker = (supply.transform.position - worker.transform.position).sqrMagnitude;
-                float distAnchor = (supply.transform.position - anchor).sqrMagnitude;
-                float score = distWorker + distAnchor * config.AnchorDistanceWeight;
-
-                if (score >= bestScore)
-                {
-                    continue;
-                }
-
-                bestScore = score;
-                bestSupply = supply;
-                bestCollider = collider;
-            }
-
-            return bestSupply != null;
+            bool excludeCorpseFood = kind == SupplyKind.Food;
+            return gatherSupplyIndex.TryPickClosest(
+                ToIndexKind(kind),
+                worker,
+                anchor,
+                config.AnchorDistanceWeight,
+                excludeCorpseFood,
+                reservedGatherSupplyThisTick,
+                out bestSupply,
+                out bestCollider);
         }
+
+        static AIEconomyGatherSupplyIndex.SupplyKind ToIndexKind(SupplyKind kind) =>
+            kind switch
+            {
+                SupplyKind.Stone => AIEconomyGatherSupplyIndex.SupplyKind.Stone,
+                SupplyKind.Wood => AIEconomyGatherSupplyIndex.SupplyKind.Wood,
+                SupplyKind.Food => AIEconomyGatherSupplyIndex.SupplyKind.Food,
+                _ => AIEconomyGatherSupplyIndex.SupplyKind.Unknown
+            };
 
         private void EnqueueRemoteStoreBuildIfNeeded(
             AIWorldStateSnapshot snapshot,
@@ -634,7 +614,9 @@ namespace GameDevTV.RTS.AI
             for (int i = 0; i < snapshot.GatherableSupplies.Count; i++)
             {
                 GatherableSupply supply = snapshot.GatherableSupplies[i];
-                if (supply == null || supply.Amount <= 0 || !supply.IsVisible)
+                if (supply == null
+                    || supply.Amount <= 0
+                    || !FactionFogQuery.IsVisibleTo(snapshot.Owner, supply))
                 {
                     continue;
                 }
@@ -735,46 +717,21 @@ namespace GameDevTV.RTS.AI
                     ? snapshot.Workers[0].transform.position
                     : Vector3.zero;
 
-        private static SupplyKind ClassifySupply(AIEconomyRuntimeConfig config, SupplySO supply)
-        {
-            if (supply == null)
-            {
-                return SupplyKind.Unknown;
-            }
+        private static SupplyKind ClassifySupply(AIEconomyRuntimeConfig config, SupplySO supply) =>
+            ToManagerSupplyKind(AIEconomySupplyKindClassifier.Classify(
+                supply,
+                config.StoneSupply,
+                config.WoodSupply,
+                config.FoodSupply));
 
-            if (config.StoneSupply != null && supply.Equals(config.StoneSupply))
+        static SupplyKind ToManagerSupplyKind(AIEconomySupplyKindClassifier.Kind kind) =>
+            kind switch
             {
-                return SupplyKind.Stone;
-            }
-
-            if (config.WoodSupply != null && supply.Equals(config.WoodSupply))
-            {
-                return SupplyKind.Wood;
-            }
-
-            if (config.FoodSupply != null && supply.Equals(config.FoodSupply))
-            {
-                return SupplyKind.Food;
-            }
-
-            string name = supply.name;
-            if (name.Contains("Stone", System.StringComparison.OrdinalIgnoreCase))
-            {
-                return SupplyKind.Stone;
-            }
-
-            if (name.Contains("Wood", System.StringComparison.OrdinalIgnoreCase))
-            {
-                return SupplyKind.Wood;
-            }
-
-            if (name.Contains("Food", System.StringComparison.OrdinalIgnoreCase))
-            {
-                return SupplyKind.Food;
-            }
-
-            return SupplyKind.Unknown;
-        }
+                AIEconomySupplyKindClassifier.Kind.Stone => SupplyKind.Stone,
+                AIEconomySupplyKindClassifier.Kind.Wood => SupplyKind.Wood,
+                AIEconomySupplyKindClassifier.Kind.Food => SupplyKind.Food,
+                _ => SupplyKind.Unknown
+            };
 
         private void CollectDepositTypesFromBuilding(BuildingSO building)
         {

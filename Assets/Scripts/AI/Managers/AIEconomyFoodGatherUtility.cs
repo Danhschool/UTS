@@ -1,4 +1,5 @@
 using GameDevTV.RTS.Environment;
+using GameDevTV.RTS.Player;
 using UnityEngine;
 
 namespace GameDevTV.RTS.AI
@@ -26,13 +27,15 @@ namespace GameDevTV.RTS.AI
                 GatherableSupply node = snapshot.GatherableSupplies[i];
                 if (node == null
                     || node.Amount <= 0
-                    || !node.IsVisible
-                    || node.Supply == null)
+                    || node.Supply == null
+                    || !FactionFogQuery.IsVisibleTo(snapshot.Owner, node))
                 {
                     continue;
                 }
 
-                if (IsFoodSupply(config, node.Supply))
+                if (IsFoodSupply(config, node.Supply)
+                    && !AIEconomyWildCorpseFoodUtility.IsWildAnimalCorpseGatherNode(node)
+                    && AIEconomyGatherTerritoryGuard.IsGatherSupplyAllowed(snapshot, node))
                 {
                     return true;
                 }
@@ -77,7 +80,8 @@ namespace GameDevTV.RTS.AI
                 return true;
             }
 
-            return supply.name.Contains("Food", System.StringComparison.OrdinalIgnoreCase);
+            return AIEconomySupplyKindClassifier.ClassifyByName(supply.name)
+                   == AIEconomySupplyKindClassifier.Kind.Food;
         }
     }
 }

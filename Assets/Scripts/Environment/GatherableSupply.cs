@@ -12,6 +12,8 @@ namespace GameDevTV.RTS.Environment
         [field: SerializeField] public SupplySO Supply { get; private set; }
         [field: SerializeField] public int Amount { get; private set; }
         [field: SerializeField] public bool IsVisible { get; private set; }
+        [Tooltip("Tắt: chỉ ẩn mesh khi fog che — không spawn GameObject Culled Visuals (giảm lag giữa/cuối game).")]
+        [SerializeField] private bool enableCulledPlaceholderVisuals;
         public Transform Transform => this == null ? null : transform;
 
         private Placeholder culledVisuals;
@@ -118,6 +120,11 @@ namespace GameDevTV.RTS.Environment
                 {
                     particleSystem.gameObject.SetActive(false);
                 }
+            }
+
+            if (!enableCulledPlaceholderVisuals)
+            {
+                return;
             }
 
             if (culledVisuals == null)

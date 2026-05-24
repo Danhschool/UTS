@@ -38,6 +38,7 @@ namespace GameDevTV.RTS.AI
 
             AIInfluenceMap.CollectRemoteEconomicPositionsFromSnapshot(
                 snapshot,
+                snapshot.Owner,
                 ccPosition,
                 remoteClusterMinDistance,
                 economicScratch);

@@ -37,7 +37,10 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         public static void WarnPlayerIfInsufficient(Owner owner, SupplyCostSO cost, string actionDescription)
         {
-            if (owner != Owner.Player1 || cost == null || HasEnough(owner, cost))
+            if (!HumanFogVisionUtility.EmitsFogVision(owner)
+                || !LocalHumanOwnerAccess.IsLocalOwner(owner)
+                || cost == null
+                || HasEnough(owner, cost))
             {
                 return;
             }

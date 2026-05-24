@@ -111,7 +111,7 @@ namespace GameDevTV.RTS.AI
 
         private void TryAddUnit(AbstractUnit unit)
         {
-            if (unit == null || unit.Owner != owner)
+            if (unit == null || unit is WildAnimal || unit.Owner != owner)
             {
                 return;
             }

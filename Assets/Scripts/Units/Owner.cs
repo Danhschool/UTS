@@ -4,7 +4,7 @@ namespace GameDevTV.RTS.Units
     {
         Invalid = 0,
         Player1 = 1,
-        AI1 = 2,
+        Player2 = 2,
         AI2 = 4,
         AI3 = 8,
         AI4 = 16,

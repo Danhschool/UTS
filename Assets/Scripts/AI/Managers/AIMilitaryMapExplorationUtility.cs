@@ -52,7 +52,7 @@ namespace GameDevTV.RTS.AI
 
         /// <summary>
         /// Mục tiêu: Ước lượng % map đã explore trong vòng patrol hiện tại.
-        /// Cách hoạt động: Lưới điểm trong đĩa; đếm <see cref="MinimapFogSystemReference.IsWorldPositionExplored"/>.
+            /// Cách hoạt động: Lưới điểm trong đĩa; đếm <see cref="MinimapFogSystemReference.IsWorldPositionExplored"/>.
         /// </summary>
         public static float EstimateExploredCoverageInDisk(
             MinimapFogSystemReference fogSystem,
