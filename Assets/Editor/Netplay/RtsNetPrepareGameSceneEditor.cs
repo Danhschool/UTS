@@ -115,6 +115,11 @@ namespace GameDevTV.RTS.Editor.Netplay
             setup.disableAiControllersOnLoad = true;
         }
 
+        public static void EnsureBuildSettingsPublic() => EnsureBuildSettings();
+
+        public static void CreateDefaultSpawnPointsPublic(RtsUtsGameSceneSetup setup) =>
+            CreateDefaultSpawnPoints(setup);
+
         static void EnsureBuildSettings()
         {
             var scenes = new[]

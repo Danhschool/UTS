@@ -15,6 +15,14 @@ namespace GameDevTV.RTS.Netplay
         public GameObject civilCentralPrefab;
         public GameObject startingWorkerPrefab;
 
+        [Header("Starting workers")]
+        [Min(0)]
+        [Tooltip("Số worker spawn cạnh mỗi Civil Central khi vào trận MP.")]
+        public int startingWorkerCount = 1;
+
+        public Vector3 workerOffsetFromBase = new(2f, 0f, 2f);
+        public Vector3 workerSpawnSpacing = new(2f, 0f, 0f);
+
         [Header("Scene")]
         [Tooltip("Tắt AIController khi test MP PvP phase 1.")]
         public bool disableAiControllersOnLoad = true;

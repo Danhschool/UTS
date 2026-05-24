@@ -192,6 +192,20 @@ namespace ProjectRTS.Netplay
                 statusText.text = "Lobby — chat và bấm Ready khi sẵn sàng.";
         }
 
+        /// <summary>
+        /// Mục tiêu: Ẩn UI lobby khi đã vào RtsNet_Game (tránh chữ "Lobby — chat..." che Game view).
+        /// Cách hoạt động: Tắt Canvas lobby nếu component còn tồn tại sau ServerChangeScene.
+        /// </summary>
+        public static void HideLobbyCanvasForGameplay()
+        {
+            if (Instance == null)
+            {
+                return;
+            }
+
+            Instance.gameObject.SetActive(false);
+        }
+
         public void ShowLoginAgain()
         {
             ShowLoginPanel(true);

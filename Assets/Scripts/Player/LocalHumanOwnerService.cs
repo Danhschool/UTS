@@ -58,8 +58,12 @@ namespace GameDevTV.RTS.Player
             }
 
             Instance = this;
-            if (persistAcrossScenes)
+
+            // Không DDOL cả Main Camera — gây "Display 1 No cameras rendering" khi chuyển Lobby → Game.
+            if (persistAcrossScenes && GetComponent<Camera>() == null)
+            {
                 DontDestroyOnLoad(gameObject);
+            }
 
             TryBootstrapOfflineDefault();
         }

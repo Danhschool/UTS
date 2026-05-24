@@ -79,11 +79,28 @@ namespace ProjectRTS.Netplay
         public override void OnServerSceneChanged(string sceneName)
         {
             base.OnServerSceneChanged(sceneName);
-            string active = SceneManager.GetActiveScene().name;
-            if (active != gameScene)
-                return;
+            OnEnteredGameplayScene();
+        }
 
-            RtsServerGameplayNotifier.NotifyMatchSceneLoaded();
+        public override void OnClientSceneChanged()
+        {
+            base.OnClientSceneChanged();
+            OnEnteredGameplayScene();
+        }
+
+        void OnEnteredGameplayScene()
+        {
+            if (SceneManager.GetActiveScene().name != gameScene)
+            {
+                return;
+            }
+
+            RtsLobbyUI.HideLobbyCanvasForGameplay();
+
+            if (NetworkServer.active)
+            {
+                RtsServerGameplayNotifier.NotifyMatchSceneLoaded();
+            }
         }
 
         /// <summary>Gọi từ UI host khi cả hai người đã Ready.</summary>

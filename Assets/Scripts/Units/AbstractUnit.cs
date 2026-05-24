@@ -54,9 +54,23 @@ namespace GameDevTV.RTS.Units
 
             unitSO = UnitSO as UnitSO;
 
-            graphAgent.SetVariableValue("Command", UnitCommands.Stop);
-            graphAgent.SetVariableValue("AttackConfig", unitSO.AttackConfig);
-            AttackRangeDisplayInstaller.InstallIfNeeded(gameObject);
+            if (graphAgent != null)
+            {
+                graphAgent.SetVariableValue("Command", UnitCommands.Stop);
+                if (unitSO != null)
+                {
+                    graphAgent.SetVariableValue("AttackConfig", unitSO.AttackConfig);
+                }
+            }
+
+            if (unitSO != null)
+            {
+                AttackRangeDisplayInstaller.InstallIfNeeded(gameObject);
+            }
+            else
+            {
+                Debug.LogError($"[{nameof(AbstractUnit)}] {name} thiếu UnitSO trên prefab.", this);
+            }
         }
 
         protected override void Start()
@@ -65,6 +79,11 @@ namespace GameDevTV.RTS.Units
             plannerBlackboardReady = graphAgent != null && graphAgent.Graph != null;
 
             base.Start();
+
+            if (unitSO == null)
+            {
+                return;
+            }
 
             deathController.Configure(unitSO.DeathConfig, deathConfigOverride);
 
@@ -89,7 +108,11 @@ namespace GameDevTV.RTS.Units
                 DamageableSensor.SetupFrom(unitSO.AttackConfig);
             }
 
-            graphAgent.SetVariableValue("AttackConfig", unitSO.AttackConfig);
+            if (graphAgent != null)
+            {
+                graphAgent.SetVariableValue("AttackConfig", unitSO.AttackConfig);
+            }
+
             SyncMoveSpeedFromUnitSo();
             RefreshVisionFromSightConfig();
 

@@ -4,7 +4,6 @@ using GameDevTV.RTS.Player;
 using Mirror;
 using ProjectRTS.Netplay;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace GameDevTV.RTS.Editor.Netplay
@@ -22,15 +21,15 @@ namespace GameDevTV.RTS.Editor.Netplay
         [MenuItem("ProjectRTS/Netplay/M4 Integrate UTS spawn + network components")]
         public static void Integrate()
         {
-            EnsureNetworkedPrefab(CivilCentralPrefabPath);
-            EnsureNetworkedPrefab(WorkerPrefabPath);
-            EnsurePlayerPrefabCommands();
-            WireGameScene();
+            EnsureNetworkedPrefabAsset(CivilCentralPrefabPath);
+            EnsureNetworkedPrefabAsset(WorkerPrefabPath);
+            EnsurePlayerPrefabCommandsAsset();
+            WireGameSceneFields();
             AssetDatabase.SaveAssets();
-            Debug.Log("[RtsNetUtsIntegration] M4 code wiring xong. Copy terrain/UI từ Game 1 vào RtsNet_Game trong Editor nếu chưa có.");
+            Debug.Log("[RtsNetUtsIntegration] M4 code wiring xong. Dùng ★ One-Click Play Setup để đăng ký Spawn Prefabs trên Lobby.");
         }
 
-        static void EnsureNetworkedPrefab(string path)
+        public static void EnsureNetworkedPrefabAsset(string path)
         {
             GameObject prefabRoot = PrefabUtility.LoadPrefabContents(path);
             if (!prefabRoot.TryGetComponent(out NetworkIdentity _))
@@ -50,17 +49,9 @@ namespace GameDevTV.RTS.Editor.Netplay
 
             PrefabUtility.SaveAsPrefabAsset(prefabRoot, path);
             PrefabUtility.UnloadPrefabContents(prefabRoot);
-
-            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-            var networkManager = Object.FindFirstObjectByType<RtsNetworkManager>();
-            if (networkManager != null && asset != null && !networkManager.spawnPrefabs.Contains(asset))
-            {
-                networkManager.spawnPrefabs.Add(asset);
-                EditorUtility.SetDirty(networkManager);
-            }
         }
 
-        static void EnsurePlayerPrefabCommands()
+        public static void EnsurePlayerPrefabCommandsAsset()
         {
             GameObject prefabRoot = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
             if (!prefabRoot.TryGetComponent(out RtsUtsPlayerCommands _))
@@ -72,9 +63,8 @@ namespace GameDevTV.RTS.Editor.Netplay
             PrefabUtility.UnloadPrefabContents(prefabRoot);
         }
 
-        static void WireGameScene()
+        public static void WireGameSceneFields()
         {
-            var scene = EditorSceneManager.OpenScene(GameScenePath, OpenSceneMode.Single);
             RtsUtsGameSceneSetup setup = Object.FindFirstObjectByType<RtsUtsGameSceneSetup>();
             if (setup == null)
             {
@@ -88,6 +78,7 @@ namespace GameDevTV.RTS.Editor.Netplay
 
             setup.civilCentralPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CivilCentralPrefabPath);
             setup.startingWorkerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(WorkerPrefabPath);
+            setup.startingWorkerCount = 1;
             setup.disableAiControllersOnLoad = true;
 
             if (setup.teamSpawnPoints == null || setup.teamSpawnPoints.Length < 2)
@@ -104,9 +95,6 @@ namespace GameDevTV.RTS.Editor.Netplay
             {
                 new GameObject("LocalHumanOwnerService").AddComponent<LocalHumanOwnerService>();
             }
-
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene);
         }
     }
 }

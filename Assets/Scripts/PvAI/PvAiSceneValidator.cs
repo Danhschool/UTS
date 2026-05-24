@@ -36,6 +36,7 @@ namespace GameDevTV.RTS.PvAI
             }
 
             ValidateRequiredBootstrap(findings);
+            ValidatePvAiSpawnSetup(findings);
             ValidateAiControllers(findings);
             ValidateBotPlayer2Migration(findings);
             ValidateFactionOwnership(findings);
@@ -157,6 +158,91 @@ namespace GameDevTV.RTS.PvAI
                     PvAiHealthSeverity.Warning,
                     "Thiếu PlayerViewBinder — fog/HUD có thể không bind theo LocalOwner.")
                 : PvAiHealthFinding.Pass("player_view_binder", "Có PlayerViewBinder."));
+        }
+
+        static void ValidatePvAiSpawnSetup(List<PvAiHealthFinding> findings)
+        {
+            PvAiGameSceneSetup setup = Object.FindFirstObjectByType<PvAiGameSceneSetup>(FindObjectsInactive.Include);
+            if (setup == null)
+            {
+                findings.Add(PvAiHealthFinding.Fail(
+                    "pvai_spawn_setup",
+                    "H8",
+                    PvAiHealthSeverity.Error,
+                    "Thiếu PvAiGameSceneSetup — chạy menu ProjectRTS/PvAI/Setup Game 1 spawn (long-term)."));
+                return;
+            }
+
+            findings.Add(PvAiHealthFinding.Pass("pvai_spawn_setup", "Có PvAiGameSceneSetup."));
+
+            if (setup.civilCentralPrefab == null)
+            {
+                findings.Add(PvAiHealthFinding.Fail(
+                    "pvai_cc_prefab",
+                    "H8",
+                    PvAiHealthSeverity.Error,
+                    "PvAiGameSceneSetup thiếu civilCentralPrefab."));
+            }
+            else
+            {
+                findings.Add(PvAiHealthFinding.Pass("pvai_cc_prefab", "Đã gán civilCentralPrefab."));
+            }
+
+            bool spawnOk = setup.factionSpawnPoints != null
+                           && setup.factionSpawnPoints.Length >= 2
+                           && setup.factionSpawnPoints[0] != null
+                           && setup.factionSpawnPoints[1] != null;
+            findings.Add(spawnOk
+                ? PvAiHealthFinding.Pass("pvai_spawn_points", "Đủ 2 faction spawn points.")
+                : PvAiHealthFinding.Fail(
+                    "pvai_spawn_points",
+                    "H8",
+                    PvAiHealthSeverity.Error,
+                    "Thiếu factionSpawnPoints[0] (human) hoặc [1] (AI)."));
+
+            PvAiGameSceneBootstrap bootstrap = Object.FindFirstObjectByType<PvAiGameSceneBootstrap>(FindObjectsInactive.Include);
+            findings.Add(bootstrap == null
+                ? PvAiHealthFinding.Fail(
+                    "pvai_spawn_bootstrap",
+                    "H8",
+                    PvAiHealthSeverity.Warning,
+                    "Thiếu PvAiGameSceneBootstrap — spawn PvE có thể không chạy.")
+                : PvAiHealthFinding.Pass("pvai_spawn_bootstrap", "Có PvAiGameSceneBootstrap."));
+
+            int sceneCc = CountScenePlacedCivilCentrals();
+            if (sceneCc > 0)
+            {
+                findings.Add(PvAiHealthFinding.Fail(
+                    "pvai_no_scene_cc",
+                    "H8",
+                    PvAiHealthSeverity.Warning,
+                    $"{sceneCc} civil_central cắm sẵn trong scene — nên xóa (menu Setup) để tránh trùng MP/PvE."));
+            }
+            else
+            {
+                findings.Add(PvAiHealthFinding.Pass(
+                    "pvai_no_scene_cc",
+                    "Không có civil_central cắm sẵn trong scene (đúng long-term)."));
+            }
+        }
+
+        static int CountScenePlacedCivilCentrals()
+        {
+            int count = 0;
+            BaseBuilding[] buildings = Object.FindObjectsByType<BaseBuilding>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < buildings.Length; i++)
+            {
+                BaseBuilding building = buildings[i];
+                if (building != null
+                    && building.gameObject.name.ToLowerInvariant().Contains("civil_central"))
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         static void ValidateAiControllers(List<PvAiHealthFinding> findings)

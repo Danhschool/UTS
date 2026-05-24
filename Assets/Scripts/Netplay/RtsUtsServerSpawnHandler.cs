@@ -1,4 +1,5 @@
 using GameDevTV.RTS.AI;
+using GameDevTV.RTS.Utilities;
 using GameDevTV.RTS.Units;
 using Mirror;
 using ProjectRTS.Netplay;
@@ -40,8 +41,26 @@ namespace GameDevTV.RTS.Netplay
 
             if (setup.startingWorkerPrefab != null)
             {
-                Vector3 workerPos = spawn + new Vector3(2f, 0f, 2f);
-                SpawnEntity(setup.startingWorkerPrefab, workerPos, request.ConnectionId, owner);
+                SpawnStartingWorkers(setup, spawn, request.ConnectionId, owner);
+            }
+        }
+
+        static void SpawnStartingWorkers(
+            RtsUtsGameSceneSetup setup,
+            Vector3 baseSpawn,
+            int connectionId,
+            Owner owner)
+        {
+            int count = StartingWorkerSpawnLayout.ClampCount(setup.startingWorkerCount);
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 workerPos = StartingWorkerSpawnLayout.GetPosition(
+                    baseSpawn,
+                    setup.workerOffsetFromBase,
+                    setup.workerSpawnSpacing,
+                    i);
+
+                SpawnEntity(setup.startingWorkerPrefab, workerPos, connectionId, owner);
             }
         }
 

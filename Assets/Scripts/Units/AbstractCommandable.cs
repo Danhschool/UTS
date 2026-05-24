@@ -38,7 +38,10 @@ namespace GameDevTV.RTS.Units
 
         protected virtual void Awake()
         {
-            UnitSO = UnitSO.Clone() as AbstractUnitSO;
+            if (UnitSO != null)
+            {
+                UnitSO = UnitSO.Clone() as AbstractUnitSO;
+            }
 
             renderers = GetComponentsInChildren<Renderer>();
             particleSystems = GetComponentsInChildren<ParticleSystem>();
@@ -90,7 +93,7 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         protected void RefreshVisionFromSightConfig()
         {
-            if (UnitSO.SightConfig != null && VisionTransform != null)
+            if (UnitSO != null && UnitSO.SightConfig != null && VisionTransform != null)
             {
                 float size = UnitSO.SightConfig.SightRadius * 2;
                 VisionTransform.localScale = new Vector3(size, size, size);

@@ -1,6 +1,7 @@
 using GameDevTV.RTS.Player;
 using Mirror;
 using ProjectRTS.Netplay;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -23,6 +24,8 @@ namespace GameDevTV.RTS.Netplay
             }
 
             LocalHumanOwnerService.EnsureExists();
+            RtsLobbyUI.HideLobbyCanvasForGameplay();
+            EnsureGameplayCameraRenders();
 
             if (disableCapsuleGameInput && NetworkClient.localPlayer != null)
             {
@@ -37,6 +40,40 @@ namespace GameDevTV.RTS.Netplay
             if (binder != null)
             {
                 binder.RefreshFromLocalOwner();
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Tránh màn hình đen "No cameras rendering" sau load scene MP.
+        /// Cách hoạt động: Bật Camera gameplay (không RT) + CinemachineBrain trên Main Camera.
+        /// </summary>
+        static void EnsureGameplayCameraRenders()
+        {
+            Camera[] cameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
+            for (int i = 0; i < cameras.Length; i++)
+            {
+                Camera cam = cameras[i];
+                if (cam == null || cam.targetTexture != null)
+                {
+                    continue;
+                }
+
+                if (!cam.gameObject.activeInHierarchy)
+                {
+                    cam.gameObject.SetActive(true);
+                }
+
+                cam.enabled = true;
+            }
+
+            Camera main = Camera.main;
+            if (main != null)
+            {
+                CinemachineBrain brain = main.GetComponent<CinemachineBrain>();
+                if (brain != null)
+                {
+                    brain.enabled = true;
+                }
             }
         }
     }
