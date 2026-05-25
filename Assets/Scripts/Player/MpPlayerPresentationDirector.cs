@@ -25,6 +25,16 @@ namespace GameDevTV.RTS.Player
 
         public bool HasConfiguredRigs => player1Rig != null || player2Rig != null;
 
+        /// <summary>Mục tiêu: Camera/input chung đã anchor — P2 client dùng cùng instance (không rig P2 stub).</summary>
+        public PlayerInput SharedPlayerInput
+        {
+            get
+            {
+                ResolveSharedPlayerInput();
+                return _sharedPlayerInput;
+            }
+        }
+
         void Awake()
         {
             DeactivateAllRigs();

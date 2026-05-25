@@ -25,12 +25,14 @@ namespace GameDevTV.RTS.Player
             if (director != null && director.HasConfiguredRigs)
             {
                 director.RefreshFromLocalOwner();
+                LocalHumanCameraSpawnFocus.RequestRefocusForLocalHuman();
                 return;
             }
 
             PlayerViewBinder binder =
                 Object.FindFirstObjectByType<PlayerViewBinder>(FindObjectsInactive.Include);
             binder?.Apply(localOwner);
+            LocalHumanCameraSpawnFocus.RequestRefocusForLocalHuman();
 
             FactionVisibilityUpdater visibilityUpdater =
                 Object.FindFirstObjectByType<FactionVisibilityUpdater>(FindObjectsInactive.Include);

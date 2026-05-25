@@ -98,6 +98,7 @@ namespace GameDevTV.RTS.Netplay
 
                     if (IsPresentationReady())
                     {
+                        LocalHumanCameraSpawnFocus.RequestRefocusForLocalHuman();
                         yield break;
                     }
 
