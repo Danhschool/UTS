@@ -1,4 +1,3 @@
-using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
 using UnityEngine;
@@ -41,7 +40,7 @@ namespace GameDevTV.RTS.Commands
                 return true;
             }
 
-            if (OwnerTeamMapping.IsHumanPlayer(commander))
+            if (HumanFogVisionUtility.IsHumanPlayer(commander))
             {
                 return hideable.IsVisible;
             }

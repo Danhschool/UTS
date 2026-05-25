@@ -1,4 +1,3 @@
-using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
 using Mirror;
 using UnityEngine;
@@ -6,13 +5,13 @@ using UnityEngine;
 namespace GameDevTV.RTS.PvAI
 {
     /// <summary>
-    /// SRP: Tạo bản instance offline từ prefab MP (không NetworkIdentity trên instance).
+    /// SRP: Tạo bản instance offline từ prefab (gỡ Mirror nếu prefab từng wire MP).
     /// </summary>
     public static class PvAiOfflineEntityFactory
     {
         /// <summary>
-        /// Mục tiêu: Spawn unit/building PvE từ prefab dùng chung với MP.
-        /// Cách hoạt động: Instantiate → gỡ Mirror/network UTS → gán Owner + fog vision.
+        /// Mục tiêu: Spawn unit/building PvE.
+        /// Cách hoạt động: Instantiate → gỡ NetworkIdentity/NetworkBehaviour → gán Owner + fog vision.
         /// </summary>
         public static GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Owner owner)
         {
@@ -21,7 +20,6 @@ namespace GameDevTV.RTS.PvAI
                 return null;
             }
 
-            // Awake trên prefab chạy trong Instantiate; sau đó gỡ network rồi mới gán Owner.
             GameObject instance = Object.Instantiate(prefab, position, rotation);
             StripNetworkComponents(instance);
 
@@ -34,19 +32,18 @@ namespace GameDevTV.RTS.PvAI
         }
 
         /// <summary>
-        /// Mục tiêu: Gỡ Mirror khỏi instance PvE (prefab dùng chung với MP).
-        /// Cách hoạt động: Xóa RtsUtsNetworkEntity trước (RequireComponent NetworkIdentity), rồi transform, rồi identity.
+        /// Mục tiêu: Prefab có thể còn component Mirror từ lần tích hợp MP trước.
+        /// Cách hoạt động: Destroy mọi NetworkBehaviour rồi NetworkIdentity trên root.
         /// </summary>
         static void StripNetworkComponents(GameObject root)
         {
-            if (root.TryGetComponent(out RtsUtsNetworkEntity networkEntity))
+            NetworkBehaviour[] behaviours = root.GetComponents<NetworkBehaviour>();
+            for (int i = behaviours.Length - 1; i >= 0; i--)
             {
-                Object.DestroyImmediate(networkEntity);
-            }
-
-            if (root.TryGetComponent(out NetworkTransformUnreliable networkTransform))
-            {
-                Object.DestroyImmediate(networkTransform);
+                if (behaviours[i] != null)
+                {
+                    Object.DestroyImmediate(behaviours[i]);
+                }
             }
 
             if (root.TryGetComponent(out NetworkIdentity identity))

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
 using GameDevTV.RTS.AI;
-using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
 using Mirror;
@@ -266,7 +265,7 @@ namespace GameDevTV.RTS.PvAI
                 }
 
                 Owner o = c.AiOwner;
-                if (OwnerTeamMapping.IsHumanPlayer(o))
+                if (HumanFogVisionUtility.IsHumanPlayer(o))
                 {
                     wrongOwner++;
                     wrongDetails.Add($"{c.gameObject.name} owner={(int)o} scene={c.gameObject.scene.name}");

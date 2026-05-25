@@ -1,5 +1,5 @@
 using GameDevTV.RTS.Environment;
-using GameDevTV.RTS.Netplay;
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Utilities;
 using UnityEngine;
@@ -27,7 +27,7 @@ namespace GameDevTV.RTS.AI
                 return true;
             }
 
-            if (OwnerTeamMapping.IsHumanPlayer(snapshot.Owner))
+            if (HumanFogVisionUtility.IsHumanPlayer(snapshot.Owner))
             {
                 return true;
             }
@@ -37,7 +37,7 @@ namespace GameDevTV.RTS.AI
             float distToOwnSq = (supplyPos - ownCcPos).sqrMagnitude;
 
             Owner enemyOwner = ResolvePrimaryEnemyOwner(snapshot.Owner);
-            if (!OwnerTeamMapping.IsHumanPlayer(enemyOwner))
+            if (!HumanFogVisionUtility.IsHumanPlayer(enemyOwner))
             {
                 return true;
             }
@@ -70,7 +70,7 @@ namespace GameDevTV.RTS.AI
                 return Owner.AI2;
             }
 
-            if (OwnerTeamMapping.IsHumanPlayer(aiOwner))
+            if (HumanFogVisionUtility.IsHumanPlayer(aiOwner))
             {
                 return Owner.AI2;
             }

@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 8395517768350979603}
   - component: {fileID: 5788190384831448055}
   - component: {fileID: 3689305159895156171}
-  - component: {fileID: 5606768149345035736}
   m_Layer: 7
   m_Name: civil_central
   m_TagString: Untagged
@@ -163,21 +162,6 @@ MonoBehaviour:
   positionSensitivity: 0.01
   rotationSensitivity: 0.01
   scaleSensitivity: 0.01
---- !u!114 &5606768149345035736
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2665764001411241133}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 33b57de20edc31046a3f95c630f5e6dc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsNetworkEntity
-  syncDirection: 0
-  syncMode: 0
-  syncInterval: 0
 --- !u!1 &8321338625966038123
 GameObject:
   m_ObjectHideFlags: 0
@@ -895,6 +879,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4774175999237473787}
     m_Modifications:
+    - target: {fileID: 881508950669932766, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: -293.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 881508950669932766, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -137.75
+      objectReference: {fileID: 0}
     - target: {fileID: 967910581917642554, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_PixelsPerUnitMultiplier
       value: 5
@@ -933,19 +925,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.95848274
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0.11218867
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0.26037613
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: -0.030476555
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Minimap;
@@ -648,11 +647,12 @@ namespace GameDevTV.RTS.Player
                 return false;
             }
 
-            if (commandBeingActivated is MoveCommand moveCommand
-                && abstractUnits.Count > 1
-                && GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, moveCommand))
+            if (commandBeingActivated is MoveCommand moveCommand && abstractUnits.Count > 1)
             {
-                return true;
+                if (GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, moveCommand))
+                {
+                    return true;
+                }
             }
 
             if (commandBeingActivated is RallyAreaCommand rallyCommand
@@ -676,11 +676,12 @@ namespace GameDevTV.RTS.Player
                             continue;
                         }
 
-                        if (baseCommand is MoveCommand move
-                            && abstractUnits.Count > 1
-                            && GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, move))
+                        if (baseCommand is MoveCommand move && abstractUnits.Count > 1)
                         {
-                            return true;
+                            if (GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, move))
+                            {
+                                return true;
+                            }
                         }
 
                         if (baseCommand is RallyAreaCommand rally
@@ -706,34 +707,18 @@ namespace GameDevTV.RTS.Player
                     continue;
                 }
 
-                if (command is MoveCommand moveForGroup
-                    && abstractUnits.Count > 1
-                    && GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, moveForGroup))
+                if (command is MoveCommand moveForGroup && abstractUnits.Count > 1)
                 {
-                    return true;
+                    if (GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, moveForGroup))
+                    {
+                        return true;
+                    }
                 }
 
                 if (command is RallyAreaCommand rallyForGroup
                     && RallyAreaCommand.TryApplyRally(abstractUnits[0], hit, rallyForGroup))
                 {
                     return true;
-                }
-
-                if (PlayerInputNetworkBridge.ShouldRelayCommands
-                    && PlayerInputNetworkBridge.TryRelayUnitCommand != null
-                    && PlayerInputNetworkBridge.TryRelayUnitCommand(
-                        abstractUnits[i],
-                        hit,
-                        command,
-                        mouseButton,
-                        i))
-                {
-                    if (command.IsSingleUnitCommand)
-                    {
-                        return true;
-                    }
-
-                    continue;
                 }
 
                 command.Handle(context);
@@ -854,6 +839,12 @@ namespace GameDevTV.RTS.Player
 
             List<AbstractUnit> abstractUnits = CollectSelectedAbstractUnits();
             bool buildDispatched = false;
+
+            List<AbstractCommandable> abstractCommandables = selectedUnits
+                .Where(unit => unit is AbstractCommandable)
+                .Cast<AbstractCommandable>()
+                .ToList();
+
             if (commandBeingActivated is MoveCommand moveCommand
                 && abstractUnits.Count > 1
                 && GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, moveCommand))
@@ -862,11 +853,6 @@ namespace GameDevTV.RTS.Player
             }
             else
             {
-                List<AbstractCommandable> abstractCommandables = selectedUnits
-                    .Where(unit => unit is AbstractCommandable)
-                    .Cast<AbstractCommandable>()
-                    .ToList();
-
                 for (int i = 0; i < abstractCommandables.Count; i++)
                 {
                     CommandContext context = new(abstractCommandables[i], hit, i);

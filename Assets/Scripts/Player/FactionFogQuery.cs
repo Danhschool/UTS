@@ -1,5 +1,4 @@
 using GameDevTV.RTS.AI;
-using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
 using UnityEngine;
 
@@ -27,7 +26,7 @@ namespace GameDevTV.RTS.Player
                 return true;
             }
 
-            if (OwnerTeamMapping.IsHumanPlayer(viewer))
+            if (HumanFogVisionUtility.IsHumanPlayer(viewer))
             {
                 return hideable.IsVisible;
             }
@@ -41,7 +40,7 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         public static bool IsWorldVisibleTo(Owner viewer, Vector3 worldPosition)
         {
-            if (OwnerTeamMapping.IsHumanPlayer(viewer))
+            if (HumanFogVisionUtility.IsHumanPlayer(viewer))
             {
                 if (!FactionFogSystemsRegistry.TryGet(viewer, out IFogMapQuery query))
                 {
@@ -60,7 +59,7 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         public static bool IsWorldExploredFor(Owner viewer, Vector3 worldPosition)
         {
-            if (OwnerTeamMapping.IsHumanPlayer(viewer))
+            if (HumanFogVisionUtility.IsHumanPlayer(viewer))
             {
                 if (!FactionFogSystemsRegistry.TryGet(viewer, out IFogMapQuery query))
                 {

@@ -69,8 +69,7 @@ namespace ProjectRTS.Netplay
             Quaternion rot = start != null ? start.rotation : Quaternion.identity;
             GameObject player = Instantiate(playerPrefab, pos, rot);
             var lobby = player.GetComponent<RtsLobbyPlayer>();
-            // connectionId 0 = host, 1 = client thứ hai — tránh Count-1 gán nhầm cả hai slot 1 (Player2).
-            int slot = Mathf.Clamp(conn.connectionId, 0, 1);
+            int slot = NetworkServer.connections.Count - 1;
             if (lobby != null)
                 lobby.ServerInitSlot(slot);
             NetworkServer.AddPlayerForConnection(conn, player);
@@ -79,27 +78,32 @@ namespace ProjectRTS.Netplay
         public override void OnServerSceneChanged(string sceneName)
         {
             base.OnServerSceneChanged(sceneName);
-            OnEnteredGameplayScene();
-        }
+            string active = SceneManager.GetActiveScene().name;
+            if (active != gameScene || unitPrefab == null)
+                return;
 
-        public override void OnClientSceneChanged()
-        {
-            base.OnClientSceneChanged();
-            OnEnteredGameplayScene();
-        }
-
-        void OnEnteredGameplayScene()
-        {
-            if (SceneManager.GetActiveScene().name != gameScene)
+            var setup = Object.FindFirstObjectByType<RtsGameSceneSetup>();
+            if (setup == null || setup.teamSpawnPoints == null || setup.teamSpawnPoints.Length < 2)
             {
+                Debug.LogError("[RtsNetworkManager] RtsGameSceneSetup missing or spawn points < 2.");
                 return;
             }
 
-            RtsLobbyUI.HideLobbyCanvasForGameplay();
-
-            if (NetworkServer.active)
+            foreach (var kvp in NetworkServer.connections)
             {
-                RtsServerGameplayNotifier.NotifyMatchSceneLoaded();
+                NetworkConnectionToClient c = kvp.Value;
+                if (c == null || c.identity == null)
+                    continue;
+                var lp = c.identity.GetComponent<RtsLobbyPlayer>();
+                if (lp == null)
+                    continue;
+                int team = Mathf.Clamp(lp.PlayerTeamIndex, 0, 1);
+                Vector3 p = setup.teamSpawnPoints[team].position;
+                GameObject u = Instantiate(unitPrefab, p, Quaternion.identity);
+                var unit = u.GetComponent<RtsUnit>();
+                if (unit != null)
+                    unit.ServerAssignOwner(c.connectionId, team, c.identity.netId);
+                NetworkServer.Spawn(u);
             }
         }
 
@@ -115,12 +119,6 @@ namespace ProjectRTS.Netplay
             if (!AllPlayersReady())
             {
                 Debug.LogWarning("[RtsNetworkManager] Chưa đủ người hoặc chưa Ready.");
-                return;
-            }
-
-            if (NetworkServer.isLoadingScene)
-            {
-                Debug.LogWarning("[RtsNetworkManager] Đang chuyển scene — không gọi Start trận lần nữa.");
                 return;
             }
 

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
 using UnityEngine;
@@ -34,7 +33,7 @@ namespace GameDevTV.RTS.AI
         /// </summary>
         public static void RefreshFromSnapshot(AIWorldStateSnapshot snapshot)
         {
-            if (snapshot == null || OwnerTeamMapping.IsHumanPlayer(snapshot.Owner))
+            if (snapshot == null || HumanFogVisionUtility.IsHumanPlayer(snapshot.Owner))
             {
                 return;
             }
@@ -71,7 +70,7 @@ namespace GameDevTV.RTS.AI
         /// </summary>
         public static bool IsWorldVisibleTo(Owner viewer, Vector3 worldPosition)
         {
-            if (OwnerTeamMapping.IsHumanPlayer(viewer))
+            if (HumanFogVisionUtility.IsHumanPlayer(viewer))
             {
                 return FactionFogQuery.IsWorldVisibleTo(viewer, worldPosition);
             }
@@ -99,7 +98,7 @@ namespace GameDevTV.RTS.AI
                 return true;
             }
 
-            if (OwnerTeamMapping.IsHumanPlayer(viewer))
+            if (HumanFogVisionUtility.IsHumanPlayer(viewer))
             {
                 return FactionFogQuery.IsVisibleTo(viewer, hideable);
             }

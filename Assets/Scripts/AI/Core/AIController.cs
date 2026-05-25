@@ -3,7 +3,7 @@ using System.Text;
 using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.Minimap;
-using GameDevTV.RTS.Netplay;
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.UI.GameEventLog;
 using GameDevTV.RTS.Units;
 using UnityEngine;
@@ -89,7 +89,7 @@ namespace GameDevTV.RTS.AI
         {
             militaryManager = new AIMilitaryManager(militarySettings, baseSettings, fogSystemReference);
 
-            if (OwnerTeamMapping.IsHumanPlayer(aiOwner))
+            if (HumanFogVisionUtility.IsHumanPlayer(aiOwner))
             {
                 Debug.LogError(
                     $"[AIController] aiOwner={aiOwner} là phe human — gây điều khiển worker/người chơi sai. Đặt AI2+ trên bot (menu ProjectRTS/PvAI/M5 Fix).",

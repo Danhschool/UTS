@@ -1,5 +1,4 @@
 using System;
-using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
 using Mirror;
 using UnityEngine;
@@ -39,13 +38,17 @@ namespace GameDevTV.RTS.Player
         public static LocalHumanOwnerService EnsureExists()
         {
             if (Instance != null)
+            {
                 return Instance;
+            }
 
-            var existing = FindFirstObjectByType<LocalHumanOwnerService>();
+            LocalHumanOwnerService existing = FindFirstObjectByType<LocalHumanOwnerService>(FindObjectsInactive.Include);
             if (existing != null)
+            {
                 return existing;
+            }
 
-            var go = new GameObject(nameof(LocalHumanOwnerService));
+            GameObject go = new GameObject(nameof(LocalHumanOwnerService));
             return go.AddComponent<LocalHumanOwnerService>();
         }
 
@@ -53,20 +56,70 @@ namespace GameDevTV.RTS.Player
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                ResolveDuplicateInstance();
                 return;
             }
 
+            ClaimInstance();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Tránh xóa nhầm Main Camera khi có bản LocalHumanOwnerService DontDestroyOnLoad tạo sớm.
+        /// Cách hoạt động: Ưu tiên giữ service gắn trên camera rig; hủy bản trống trùng lặp.
+        /// </summary>
+        void ResolveDuplicateInstance()
+        {
+            bool thisIsCameraRig = IsGameplayCameraRig();
+            bool otherIsCameraRig = Instance.IsGameplayCameraRig();
+
+            if (thisIsCameraRig && !otherIsCameraRig)
+            {
+                InheritStateFrom(Instance);
+                Destroy(Instance.gameObject);
+                ClaimInstance();
+
+                if (_isInitialized)
+                {
+                    LocalOwnerChanged?.Invoke(_localOwner);
+                }
+
+                return;
+            }
+
+            Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Giữ team/owner đã gán ở lobby khi chuyển sang service trên Main Camera.
+        /// Cách hoạt động: Copy LocalOwner đã init từ instance cũ trước khi Destroy.
+        /// </summary>
+        void InheritStateFrom(LocalHumanOwnerService source)
+        {
+            if (source == null || !source._isInitialized)
+            {
+                return;
+            }
+
+            _localOwner = source._localOwner;
+            _isInitialized = true;
+            RefreshInspectorDebugFields();
+        }
+
+        void ClaimInstance()
+        {
             Instance = this;
 
-            // Không DDOL cả Main Camera — gây "Display 1 No cameras rendering" khi chuyển Lobby → Game.
-            if (persistAcrossScenes && GetComponent<Camera>() == null)
+            if (persistAcrossScenes && !IsGameplayCameraRig())
             {
                 DontDestroyOnLoad(gameObject);
             }
 
             TryBootstrapOfflineDefault();
         }
+
+        bool IsGameplayCameraRig() =>
+            GetComponent<Camera>() != null
+            || GetComponent<PlayerInput>() != null;
 
         void OnDestroy()
         {
@@ -80,7 +133,7 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         public void SetLocalOwner(Owner owner)
         {
-            if (!OwnerTeamMapping.IsHumanPlayer(owner))
+            if (!HumanFogVisionUtility.IsHumanPlayer(owner))
             {
                 Debug.LogError($"[LocalHumanOwnerService] Owner {owner} không phải human player.");
                 return;

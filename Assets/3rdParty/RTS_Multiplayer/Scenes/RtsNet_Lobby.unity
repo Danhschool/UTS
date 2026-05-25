@@ -1011,6 +1011,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: RtsNet_Player
       objectReference: {fileID: 0}
+    - target: {fileID: 7246239684106989896, guid: 7e3751e41b0de65438a9019b1b0eb9cc, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8101205794501902219, guid: 7e3751e41b0de65438a9019b1b0eb9cc, type: 3}
       propertyPath: sceneId
       value: 2892329613
@@ -1439,7 +1443,7 @@ MonoBehaviour:
   headlessStartMode: 0
   editorAutoStart: 0
   sendRate: 60
-  offlineScene: RtsNet_Lobby
+  offlineScene: Assets/3rdParty/RTS_Multiplayer/Scenes/RtsNet_Lobby.unity
   onlineScene: 
   offlineSceneLoadDelay: 0
   transport: {fileID: 800230923}
@@ -1470,8 +1474,8 @@ MonoBehaviour:
   evaluationMethod: 0
   evaluationInterval: 3
   timeInterpolationGui: 0
-  lobbyScene: RtsNet_Lobby
-  gameScene: RtsNet_Game
+  lobbyScene: Assets/3rdParty/RTS_Multiplayer/Scenes/RtsNet_Lobby.unity
+  gameScene: Assets/3rdParty/RTS_Multiplayer/Scenes/RtsNet_Game.unity
   unitPrefab: {fileID: 5630659975226918516, guid: a8afb7e0df2cdbb4e99b38cb119eef79, type: 3}
 --- !u!114 &800230923
 MonoBehaviour:
@@ -1563,6 +1567,10 @@ PrefabInstance:
     - target: {fileID: 5630659975226918516, guid: a8afb7e0df2cdbb4e99b38cb119eef79, type: 3}
       propertyPath: m_Name
       value: RtsNet_Unit
+      objectReference: {fileID: 0}
+    - target: {fileID: 5630659975226918516, guid: a8afb7e0df2cdbb4e99b38cb119eef79, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8497678080393393989, guid: a8afb7e0df2cdbb4e99b38cb119eef79, type: 3}
       propertyPath: sceneId
