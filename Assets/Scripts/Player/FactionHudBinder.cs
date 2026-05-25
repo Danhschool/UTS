@@ -72,16 +72,48 @@ namespace GameDevTV.RTS.Player
         /// Mục tiêu: Client chỉ thấy tài nguyên, log sự kiện và minimap của phe mình.
         /// Cách hoạt động: Bind Supplies + event log + minimap filter; fog minimap từ registry nhánh active.
         /// </summary>
-        public void Apply(Owner localOwner)
+        public void Apply(Owner localOwner, Supplies ownerSupplies = null)
+        {
+            Apply(localOwner, ownerSupplies, minimapUnitIcons, minimapFog);
+        }
+
+        /// <summary>
+        /// Mục tiêu: HUD/minimap đúng nhánh P1 hoặc P2 (không FindFirstObjectByType luôn lấy P1).
+        /// </summary>
+        public void Apply(
+            Owner localOwner,
+            Supplies ownerSupplies,
+            MinimapUnitIconsController rigMinimapIcons,
+            MinimapFogSystemReference rigMinimapFog)
         {
             if (!HumanFogVisionUtility.EmitsFogVision(localOwner))
             {
                 return;
             }
 
-            supplies?.BindHudOwner(localOwner);
+            Supplies hud = ownerSupplies ?? MpHudSuppliesResolver.FindForOwner(localOwner) ?? supplies;
+            if (hud != null)
+            {
+                supplies = hud;
+                hud.gameObject.SetActive(true);
+                hud.BindHudOwner(localOwner);
+            }
+
             gameEventLogListener?.SetListenOwner(localOwner);
-            minimapUnitIcons?.BindLocalOwner(localOwner);
+
+            MinimapUnitIconsController icons = rigMinimapIcons ?? minimapUnitIcons;
+            if (icons != null)
+            {
+                minimapUnitIcons = icons;
+                icons.BindLocalOwner(localOwner);
+            }
+
+            MinimapFogSystemReference fogRef = rigMinimapFog ?? minimapFog;
+            if (fogRef != null)
+            {
+                minimapFog = fogRef;
+            }
+
             BindMinimapFog(localOwner);
         }
 

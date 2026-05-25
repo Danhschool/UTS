@@ -55,12 +55,32 @@ namespace GameDevTV.RTS.Player
             SetLayerRecursive(root.transform, layer);
         }
 
+        /// <summary>
+        /// Mục tiêu: Gán layer cho mọi con Vision (kể cả inactive) — prefab Vision.prefab mặc định layer 14.
+        /// Cách hoạt động: GetComponentsInChildren(true) trên VisionTransform rồi set layer theo owner.
+        /// </summary>
+        public static void ApplyToCommandableVision(AbstractCommandable commandable)
+        {
+            if (commandable == null || !HumanFogVisionUtility.EmitsFogVision(commandable.Owner))
+            {
+                return;
+            }
+
+            Transform visionRoot = commandable.VisionTransformRoot;
+            if (visionRoot == null)
+            {
+                return;
+            }
+
+            ApplyToHierarchy(visionRoot.gameObject, commandable.Owner);
+        }
+
         static void SetLayerRecursive(Transform root, int layer)
         {
-            root.gameObject.layer = layer;
-            for (int i = 0; i < root.childCount; i++)
+            Transform[] transforms = root.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < transforms.Length; i++)
             {
-                SetLayerRecursive(root.GetChild(i), layer);
+                transforms[i].gameObject.layer = layer;
             }
         }
     }

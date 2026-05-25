@@ -33,18 +33,26 @@ namespace ProjectRTS.Netplay
                 networkAddress = "localhost";
         }
 
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+            RtsPlayerSlotRegistry.Reset();
+        }
+
         public override void OnServerDisconnect(NetworkConnectionToClient conn)
         {
             if (conn.authenticationData is string name && !string.IsNullOrEmpty(name))
                 RtsUniqueNameAuthenticator.PlayerNames.Remove(name);
 
             RtsLobbyChat.ClearConnectionName(conn);
+            RtsPlayerSlotRegistry.Release(conn.connectionId);
             base.OnServerDisconnect(conn);
         }
 
         public override void OnClientDisconnect()
         {
             base.OnClientDisconnect();
+            RtsLocalHumanOwnerNotifier.ClearCachedTeamIndex();
             RtsLobbyUI.Instance?.ShowLoginAgain();
         }
 
@@ -69,42 +77,49 @@ namespace ProjectRTS.Netplay
             Quaternion rot = start != null ? start.rotation : Quaternion.identity;
             GameObject player = Instantiate(playerPrefab, pos, rot);
             var lobby = player.GetComponent<RtsLobbyPlayer>();
-            int slot = NetworkServer.connections.Count - 1;
+            int slot = RtsPlayerSlotRegistry.AssignOrGet(conn);
             if (lobby != null)
+            {
                 lobby.ServerInitSlot(slot);
+            }
+
             NetworkServer.AddPlayerForConnection(conn, player);
         }
 
         public override void OnServerSceneChanged(string sceneName)
         {
             base.OnServerSceneChanged(sceneName);
-            string active = SceneManager.GetActiveScene().name;
-            if (active != gameScene || unitPrefab == null)
-                return;
 
-            var setup = Object.FindFirstObjectByType<RtsGameSceneSetup>();
-            if (setup == null || setup.teamSpawnPoints == null || setup.teamSpawnPoints.Length < 2)
+            if (!RtsNetSceneUtility.MatchesActiveScene(gameScene))
             {
-                Debug.LogError("[RtsNetworkManager] RtsGameSceneSetup missing or spawn points < 2.");
+                RtsServerGameplayNotifier.ResetMatchSpawnState();
                 return;
             }
 
-            foreach (var kvp in NetworkServer.connections)
+            OnEnteredGameplayScene();
+
+            if (NetworkServer.active)
             {
-                NetworkConnectionToClient c = kvp.Value;
-                if (c == null || c.identity == null)
-                    continue;
-                var lp = c.identity.GetComponent<RtsLobbyPlayer>();
-                if (lp == null)
-                    continue;
-                int team = Mathf.Clamp(lp.PlayerTeamIndex, 0, 1);
-                Vector3 p = setup.teamSpawnPoints[team].position;
-                GameObject u = Instantiate(unitPrefab, p, Quaternion.identity);
-                var unit = u.GetComponent<RtsUnit>();
-                if (unit != null)
-                    unit.ServerAssignOwner(c.connectionId, team, c.identity.netId);
-                NetworkServer.Spawn(u);
+                RtsServerGameplayNotifier.ResetMatchSpawnState();
+                RtsServerGameplayNotifier.NotifyMatchSceneLoaded();
             }
+        }
+
+        public override void OnClientSceneChanged()
+        {
+            base.OnClientSceneChanged();
+            OnEnteredGameplayScene();
+        }
+
+        void OnEnteredGameplayScene()
+        {
+            if (!RtsNetSceneUtility.MatchesActiveScene(gameScene))
+            {
+                return;
+            }
+
+            RtsLobbyUI.HideLobbyCanvasForGameplay();
+            RtsMatchSceneClientNotifier.NotifyGameSceneLoaded();
         }
 
         /// <summary>Gọi từ UI host khi cả hai người đã Ready.</summary>

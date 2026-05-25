@@ -83,6 +83,21 @@ namespace GameDevTV.RTS.Player
             {
                 fogSystemReference.ConfigureFaction(presentationOwner);
             }
+
+            ApplyFogPlaneLayer();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Plane P2 không dùng chung layer 13 với P1 — overlay đổi mask theo owner, không cần LateUpdate.
+        /// </summary>
+        public void ApplyFogPlaneLayer()
+        {
+            if (fogPlaneRenderer == null)
+            {
+                return;
+            }
+
+            OwnerFogPlaneLayers.ApplyToPlane(fogPlaneRenderer.gameObject, presentationOwner);
         }
 
         /// <summary>
@@ -113,13 +128,64 @@ namespace GameDevTV.RTS.Player
 
             if (active)
             {
+                fogSystemReference?.EnsureReferences();
+                ApplyFogPlaneLayer();
+                ApplyOwnerCameraMasks();
                 SyncFogPlaneMaterial();
             }
         }
 
         /// <summary>
+        /// Mục tiêu: P2 fog camera phải nhìn layer Fog Vision Player2 — không dùng mask P1 (16384).
+        /// Cách hoạt động: Vision + explored camera chỉ culling đúng layer theo presentationOwner.
+        /// </summary>
+        public void ApplyOwnerCameraMasks()
+        {
+            if (!HumanFogVisionUtility.EmitsFogVision(presentationOwner))
+            {
+                return;
+            }
+
+            int visionLayer = OwnerFogVisionLayers.GetLayer(presentationOwner);
+            if (visionLayer < 0)
+            {
+                return;
+            }
+
+            int visionMask = 1 << visionLayer;
+
+            if (visionFogCamera != null)
+            {
+                visionFogCamera.cullingMask = visionMask;
+            }
+
+            if (exploredFogCamera != null)
+            {
+                exploredFogCamera.cullingMask = visionMask;
+            }
+
+            fogSystemReference?.EnsureReferences();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Sau spawn unit/building — vision RT mới có dữ liệu, plane fog cần gán lại texture.
+        /// </summary>
+        public void RefreshFogTextures()
+        {
+            if (presentationRoot != null && !presentationRoot.activeInHierarchy)
+            {
+                return;
+            }
+
+            fogSystemReference?.EnsureReferences();
+            ApplyOwnerCameraMasks();
+            ApplyFogPlaneLayer();
+            SyncFogPlaneMaterial();
+        }
+
+        /// <summary>
         /// Mục tiêu: Fog plane luôn sample đúng RT explored/vision của nhánh P1 hoặc P2.
-        /// Cách hoạt động: Gán texture từ <see cref="FactionFogSystemReference"/> lên material instance của plane.
+        /// Cách hoạt động: Play → material instance; Editor → sharedMaterial (tránh leak khi setup prefab).
         /// </summary>
         void SyncFogPlaneMaterial()
         {
@@ -137,7 +203,15 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
-            Material material = fogPlaneRenderer.material;
+            Material material = Application.isPlaying
+                ? fogPlaneRenderer.material
+                : fogPlaneRenderer.sharedMaterial;
+
+            if (material == null)
+            {
+                return;
+            }
+
             material.SetTexture(ExploredTextureId, explored);
             material.SetTexture(VisionTextureId, vision);
             material.SetTexture(BaseMapId, vision);

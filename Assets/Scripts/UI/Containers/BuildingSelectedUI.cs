@@ -1,5 +1,6 @@
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.TechTree;
 using GameDevTV.RTS.Units;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace GameDevTV.RTS.UI.Containers
         [SerializeField] private BuildingUnderConstructionUI buildingUnderConstructionUI;
 
         private BaseBuilding selectedBuilding;
+        private Owner subscribedBusOwner = Owner.Invalid;
 
         public void EnableFor(BaseBuilding building)
         {
@@ -30,7 +32,7 @@ namespace GameDevTV.RTS.UI.Containers
                 buildingUnderConstructionUI.EnableFor(building);
                 buildingBuildingUI.Disable();
                 singleUnitSelectedUI.Disable();
-                Bus<BuildingSpawnEvent>.OnEvent[Owner.Player1] += HandleBuildingSpawn;
+                SubscribeBuildingSpawnBus();
             }
         }
 
@@ -39,7 +41,7 @@ namespace GameDevTV.RTS.UI.Containers
             buildingBuildingUI.Disable();
             singleUnitSelectedUI.Disable();
             buildingUnderConstructionUI.Disable();
-            Bus<BuildingSpawnEvent>.OnEvent[Owner.Player1] -= HandleBuildingSpawn;
+            UnsubscribeBuildingSpawnBus();
             if (selectedBuilding != null)
             {
                 selectedBuilding.OnQueueUpdated -= OnBuildingQueueUpdated;
@@ -61,11 +63,29 @@ namespace GameDevTV.RTS.UI.Containers
             }
         }
 
+        void SubscribeBuildingSpawnBus()
+        {
+            UnsubscribeBuildingSpawnBus();
+            subscribedBusOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            Bus<BuildingSpawnEvent>.OnEvent[subscribedBusOwner] += HandleBuildingSpawn;
+        }
+
+        void UnsubscribeBuildingSpawnBus()
+        {
+            if (subscribedBusOwner == Owner.Invalid)
+            {
+                return;
+            }
+
+            Bus<BuildingSpawnEvent>.OnEvent[subscribedBusOwner] -= HandleBuildingSpawn;
+            subscribedBusOwner = Owner.Invalid;
+        }
+
         private void HandleBuildingSpawn(BuildingSpawnEvent evt)
         {
             if (evt.Building == selectedBuilding)
             {
-                Bus<BuildingSpawnEvent>.OnEvent[Owner.Player1] -= HandleBuildingSpawn;
+                UnsubscribeBuildingSpawnBus();
                 OnBuildingQueueUpdated();
                 buildingUnderConstructionUI.Disable();
             }

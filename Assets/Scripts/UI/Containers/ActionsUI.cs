@@ -8,6 +8,7 @@ using UnityEngine.Events;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using System;
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.TechTree;
 
 namespace GameDevTV.RTS.UI.Containers
@@ -46,9 +47,17 @@ namespace GameDevTV.RTS.UI.Containers
 
         public void Disable()
         {
-            foreach(UIActionButton button in actionButtons)
+            if (actionButtons == null)
             {
-                button.Disable();
+                return;
+            }
+
+            foreach (UIActionButton button in actionButtons)
+            {
+                if (button != null)
+                {
+                    button.Disable();
+                }
             }
 
             foreach (BaseBuilding building in selectedBuildings)
@@ -83,9 +92,10 @@ namespace GameDevTV.RTS.UI.Containers
             AbstractCommandable first = selectedUnits.First();
             IEnumerable<BaseCommand> firstCommands = first.AvailableCommands ?? Array.Empty<BaseCommand>();
 
+            Owner busOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
             IEnumerable<BaseCommand> availableCommands = firstCommands.Where(action => action.IsAvailable(
                 new CommandContext(
-                    Owner.Player1,
+                    busOwner,
                     first,
                     new RaycastHit()
                 )
@@ -119,7 +129,8 @@ namespace GameDevTV.RTS.UI.Containers
 
         private UnityAction HandleClick(BaseCommand action)
         {
-            return () => Bus<CommandSelectedEvent>.Raise(Owner.Player1, new CommandSelectedEvent(action));
+            Owner busOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            return () => Bus<CommandSelectedEvent>.Raise(busOwner, new CommandSelectedEvent(action));
         }
     }
 }

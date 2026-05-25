@@ -31,13 +31,31 @@ namespace GameDevTV.RTS.UI.Components
 
         private void Awake()
         {
-            button = GetComponent<Button>();
-            rectTransform = GetComponent<RectTransform>();
+            EnsureComponentsCached();
             Disable();
+        }
+
+        void EnsureComponentsCached()
+        {
+            if (button == null)
+            {
+                button = GetComponent<Button>();
+            }
+
+            if (rectTransform == null)
+            {
+                rectTransform = GetComponent<RectTransform>();
+            }
         }
 
         public void EnableFor(BaseCommand command, IEnumerable<AbstractCommandable> selectedUnits, UnityAction onClick)
         {
+            EnsureComponentsCached();
+            if (button == null)
+            {
+                return;
+            }
+
             currentCommand = command;
             currentUnits = selectedUnits.ToArray();
 
@@ -62,11 +80,17 @@ namespace GameDevTV.RTS.UI.Components
 
         public void Disable()
         {
+            EnsureComponentsCached();
             currentCommand = null;
             currentUnits = System.Array.Empty<AbstractCommandable>();
             SetIcon(null);
-            button.interactable = false;
-            button.onClick.RemoveAllListeners();
+
+            if (button != null)
+            {
+                button.interactable = false;
+                button.onClick.RemoveAllListeners();
+            }
+
             isActive = false;
             CancelInvoke();
         }
@@ -174,16 +198,18 @@ namespace GameDevTV.RTS.UI.Components
                     tooltipText += string.Format(FOOD_FORMAT, supplyCost.Food);
                 }
 
-                if (!SupplyAffordability.HasEnough(Owner.Player1, supplyCost))
+                Owner hudOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+                if (!SupplyAffordability.HasEnough(hudOwner, supplyCost))
                 {
                     tooltipText += "\n<color=#FF8800>Không đủ tài nguyên!</color>";
                 }
             }
 
-            if (command.IsLocked(new CommandContext(Owner.Player1, null, new RaycastHit()))
+            Owner tooltipOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            if (command.IsLocked(new CommandContext(tooltipOwner, null, new RaycastHit()))
                 && command is IUnlockableCommand unlockableCommand)
             {
-                UnlockableSO[] dependencies = unlockableCommand.GetUnmetDependencies(Owner.Player1);
+                UnlockableSO[] dependencies = unlockableCommand.GetUnmetDependencies(tooltipOwner);
 
                 if (dependencies.Length > 0)
                 {

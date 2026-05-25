@@ -2,12 +2,16 @@ using System.Collections.Generic;
 using System.Linq;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.UI.Containers;
 using GameDevTV.RTS.Units;
 using UnityEngine;
 
 namespace GameDevTV.RTS.UI
 {
+    /// <summary>
+    /// SRP: Panel lệnh / selection UI — subscribe Bus theo một <see cref="Owner"/> (P1 hoặc P2).
+    /// </summary>
     public class RuntimeUI : MonoBehaviour
     {
         [SerializeField] private ActionsUI actionsUI;
@@ -17,45 +21,105 @@ namespace GameDevTV.RTS.UI
         [SerializeField] private MultiUnitSelectionUI multiUnitSelectionUI;
         [SerializeField] private UnitTransportUI unitTransportUI;
 
-        private HashSet<AbstractCommandable> selectedUnits = new(12);
+        [SerializeField] Owner eventBusOwner = Owner.Invalid;
 
-        private void Awake()
+        readonly HashSet<AbstractCommandable> selectedUnits = new(12);
+        bool busSubscribed;
+
+        void Awake()
         {
-            Bus<UnitSelectedEvent>.OnEvent[Owner.Player1] += HandleUnitSelected;
-            Bus<UnitDeselectedEvent>.OnEvent[Owner.Player1] += HandleUnitDeselected;
-            Bus<UnitDeathEvent>.OnEvent[Owner.Player1] += HandleUnitDeath;
-            Bus<SupplyEvent>.OnEvent[Owner.Player1] += HandleSupplyChange;
-            Bus<UnitLoadEvent>.OnEvent[Owner.Player1] += HandleLoadUnit;
-            Bus<UnitUnloadEvent>.OnEvent[Owner.Player1] += HandleUnloadUnit;
-            Bus<BuildingSpawnEvent>.OnEvent[Owner.Player1] += HandleBuildingSpawn;
-            Bus<UpgradeResearchedEvent>.OnEvent[Owner.Player1] += HandleUpgradeResearched;
-            Bus<BuildingDeathEvent>.OnEvent[Owner.Player1] += HandleBuildingDeath;
+            if (eventBusOwner == Owner.Invalid)
+            {
+                eventBusOwner = InferBusOwnerFromHierarchy();
+            }
         }
 
-        private void Start()
+        void Start()
         {
-            actionsUI.Disable();
-            buildingSelectedUI.Disable();
-            unitIconUI.Disable();
-            singleUnitSelectedUI.Disable();
-            multiUnitSelectionUI?.Disable();
-            unitTransportUI.Disable();
+            ConfigureBusOwner(eventBusOwner);
         }
 
-        private void OnDestroy()
+        void OnDestroy()
         {
-            Bus<UnitSelectedEvent>.OnEvent[Owner.Player1] -= HandleUnitSelected;
-            Bus<UnitDeselectedEvent>.OnEvent[Owner.Player1] -= HandleUnitDeselected;
-            Bus<UnitDeathEvent>.OnEvent[Owner.Player1] -= HandleUnitDeath;
-            Bus<SupplyEvent>.OnEvent[Owner.Player1] -= HandleSupplyChange;
-            Bus<UnitLoadEvent>.OnEvent[Owner.Player1] -= HandleLoadUnit;
-            Bus<UnitUnloadEvent>.OnEvent[Owner.Player1] -= HandleUnloadUnit;
-            Bus<BuildingSpawnEvent>.OnEvent[Owner.Player1] -= HandleBuildingSpawn;
-            Bus<UpgradeResearchedEvent>.OnEvent[Owner.Player1] -= HandleUpgradeResearched;
-            Bus<BuildingDeathEvent>.OnEvent[Owner.Player1] -= HandleBuildingDeath;
+            UnsubscribeBus();
         }
 
-        private void HandleUnitSelected(UnitSelectedEvent evt)
+        /// <summary>
+        /// Mục tiêu: MP — HUD P2 nghe Bus Player2; P1 nghe Player1.
+        /// Cách hoạt động: Hủy owner cũ, đăng ký owner mới, reset selection.
+        /// </summary>
+        public void ConfigureBusOwner(Owner owner)
+        {
+            if (!HumanFogVisionUtility.IsHumanPlayer(owner))
+            {
+                return;
+            }
+
+            if (!busSubscribed || eventBusOwner != owner)
+            {
+                UnsubscribeBus();
+                eventBusOwner = owner;
+                SubscribeBus(owner);
+                selectedUnits.Clear();
+            }
+
+            if (isActiveAndEnabled)
+            {
+                DisableAllContainers();
+            }
+        }
+
+        Owner InferBusOwnerFromHierarchy()
+        {
+            Transform t = transform;
+            while (t != null)
+            {
+                if (t.name.Contains("(1)"))
+                {
+                    return Owner.Player2;
+                }
+
+                t = t.parent;
+            }
+
+            return Owner.Player1;
+        }
+
+        void SubscribeBus(Owner owner)
+        {
+            Bus<UnitSelectedEvent>.OnEvent[owner] += HandleUnitSelected;
+            Bus<UnitDeselectedEvent>.OnEvent[owner] += HandleUnitDeselected;
+            Bus<UnitDeathEvent>.OnEvent[owner] += HandleUnitDeath;
+            Bus<SupplyEvent>.OnEvent[owner] += HandleSupplyChange;
+            Bus<UnitLoadEvent>.OnEvent[owner] += HandleLoadUnit;
+            Bus<UnitUnloadEvent>.OnEvent[owner] += HandleUnloadUnit;
+            Bus<BuildingSpawnEvent>.OnEvent[owner] += HandleBuildingSpawn;
+            Bus<UpgradeResearchedEvent>.OnEvent[owner] += HandleUpgradeResearched;
+            Bus<BuildingDeathEvent>.OnEvent[owner] += HandleBuildingDeath;
+            busSubscribed = true;
+        }
+
+        void UnsubscribeBus()
+        {
+            if (!busSubscribed || !HumanFogVisionUtility.IsHumanPlayer(eventBusOwner))
+            {
+                return;
+            }
+
+            Owner owner = eventBusOwner;
+            Bus<UnitSelectedEvent>.OnEvent[owner] -= HandleUnitSelected;
+            Bus<UnitDeselectedEvent>.OnEvent[owner] -= HandleUnitDeselected;
+            Bus<UnitDeathEvent>.OnEvent[owner] -= HandleUnitDeath;
+            Bus<SupplyEvent>.OnEvent[owner] -= HandleSupplyChange;
+            Bus<UnitLoadEvent>.OnEvent[owner] -= HandleLoadUnit;
+            Bus<UnitUnloadEvent>.OnEvent[owner] -= HandleUnloadUnit;
+            Bus<BuildingSpawnEvent>.OnEvent[owner] -= HandleBuildingSpawn;
+            Bus<UpgradeResearchedEvent>.OnEvent[owner] -= HandleUpgradeResearched;
+            Bus<BuildingDeathEvent>.OnEvent[owner] -= HandleBuildingDeath;
+            busSubscribed = false;
+        }
+
+        void HandleUnitSelected(UnitSelectedEvent evt)
         {
             if (evt.Unit is AbstractCommandable commandable)
             {
@@ -64,24 +128,24 @@ namespace GameDevTV.RTS.UI
             }
         }
 
-        private void HandleUnitDeath(UnitDeathEvent evt)
+        void HandleUnitDeath(UnitDeathEvent evt)
         {
             selectedUnits.Remove(evt.Unit);
             RefreshUI();
         }
 
-        private void HandleBuildingDeath(BuildingDeathEvent evt)
+        void HandleBuildingDeath(BuildingDeathEvent evt)
         {
             selectedUnits.Remove(evt.Building);
             RefreshUI();
         }
 
-        private void HandleUpgradeResearched(UpgradeResearchedEvent args)
+        void HandleUpgradeResearched(UpgradeResearchedEvent args)
         {
             RefreshUI();
         }
 
-        private void HandleBuildingSpawn(BuildingSpawnEvent args)
+        void HandleBuildingSpawn(BuildingSpawnEvent args)
         {
             if (selectedUnits.Count == 1 && selectedUnits.First() is Worker)
             {
@@ -89,7 +153,7 @@ namespace GameDevTV.RTS.UI
             }
         }
 
-        private void HandleLoadUnit(UnitLoadEvent evt)
+        void HandleLoadUnit(UnitLoadEvent evt)
         {
             if (selectedUnits.Count == 1 && selectedUnits.First() is ITransporter)
             {
@@ -97,11 +161,11 @@ namespace GameDevTV.RTS.UI
             }
             else if (evt.Unit is AbstractCommandable commandable && selectedUnits.Contains(commandable))
             {
-                commandable.Deselect(); // RefreshUI will be called because of the UnitDeselectedEvent raised from this.
+                commandable.Deselect();
             }
         }
 
-        private void HandleUnloadUnit(UnitUnloadEvent evt)
+        void HandleUnloadUnit(UnitUnloadEvent evt)
         {
             if (selectedUnits.Count == 1 && selectedUnits.First() is ITransporter)
             {
@@ -109,17 +173,16 @@ namespace GameDevTV.RTS.UI
             }
         }
 
-        private void HandleUnitDeselected(UnitDeselectedEvent evt)
+        void HandleUnitDeselected(UnitDeselectedEvent evt)
         {
             if (evt.Unit is AbstractCommandable commandable)
             {
                 selectedUnits.Remove(commandable);
-
                 RefreshUI();
             }
         }
 
-        private void RefreshUI()
+        void RefreshUI()
         {
             if (selectedUnits.Count > 0)
             {
@@ -144,17 +207,37 @@ namespace GameDevTV.RTS.UI
             }
         }
 
-        private void DisableAllContainers()
+        void DisableAllContainers()
         {
-            actionsUI.Disable();
-            buildingSelectedUI.Disable();
-            unitIconUI.Disable();
-            singleUnitSelectedUI.Disable();
+            if (actionsUI != null)
+            {
+                actionsUI.Disable();
+            }
+
+            if (buildingSelectedUI != null)
+            {
+                buildingSelectedUI.Disable();
+            }
+
+            if (unitIconUI != null)
+            {
+                unitIconUI.Disable();
+            }
+
+            if (singleUnitSelectedUI != null)
+            {
+                singleUnitSelectedUI.Disable();
+            }
+
             multiUnitSelectionUI?.Disable();
-            unitTransportUI.Disable();
+
+            if (unitTransportUI != null)
+            {
+                unitTransportUI.Disable();
+            }
         }
 
-        private void ResolveSingleUnitSelectedUI()
+        void ResolveSingleUnitSelectedUI()
         {
             multiUnitSelectionUI?.Disable();
             AbstractCommandable commandable = selectedUnits.First();
@@ -180,7 +263,7 @@ namespace GameDevTV.RTS.UI
             }
         }
 
-        private void HandleSupplyChange(SupplyEvent evt)
+        void HandleSupplyChange(SupplyEvent evt)
         {
             actionsUI.EnableFor(selectedUnits);
         }

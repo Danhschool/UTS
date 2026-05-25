@@ -24,6 +24,9 @@ namespace GameDevTV.RTS.Units
         [SerializeField] protected DecalProjector decalProjector;
         [SerializeField] protected Transform VisionTransform;
 
+        /// <summary>Root vòng nhìn fog (Vision.prefab + con) — dùng khi gán layer MP.</summary>
+        public Transform VisionTransformRoot => VisionTransform;
+
         public delegate void HealthUpdatedEvent(AbstractCommandable commandable, int lastHealth, int newHealth);
         public event HealthUpdatedEvent OnHealthUpdated;
         
@@ -86,6 +89,16 @@ namespace GameDevTV.RTS.Units
         {
             Owner = owner;
             RefreshVisionFromSightConfig();
+            ApplyFogVisionLayersToVisionHierarchy();
+        }
+
+        /// <summary>
+        /// Mục tiêu: P2 spawn — con trong Vision.prefab không còn kẹt layer 14 (P1).
+        /// Cách hoạt động: Đệ quy mọi Transform dưới VisionTransform theo <see cref="Owner"/>.
+        /// </summary>
+        protected void ApplyFogVisionLayersToVisionHierarchy()
+        {
+            OwnerFogVisionLayers.ApplyToCommandableVision(this);
         }
 
         /// <summary>
@@ -93,17 +106,26 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         protected void RefreshVisionFromSightConfig()
         {
-            if (UnitSO != null && UnitSO.SightConfig != null && VisionTransform != null)
+            if (VisionTransform == null)
+            {
+                return;
+            }
+
+            bool emitsVision = HumanFogVisionUtility.EmitsFogVision(Owner);
+            VisionTransform.gameObject.SetActive(emitsVision);
+
+            if (!emitsVision)
+            {
+                return;
+            }
+
+            if (UnitSO != null && UnitSO.SightConfig != null)
             {
                 float size = UnitSO.SightConfig.SightRadius * 2;
                 VisionTransform.localScale = new Vector3(size, size, size);
-                bool emitsVision = HumanFogVisionUtility.EmitsFogVision(Owner);
-                VisionTransform.gameObject.SetActive(emitsVision);
-                if (emitsVision)
-                {
-                    OwnerFogVisionLayers.ApplyToHierarchy(VisionTransform.gameObject, Owner);
-                }
             }
+
+            ApplyFogVisionLayersToVisionHierarchy();
         }
 
         /// <summary>

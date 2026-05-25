@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4950983072513249765}
   - component: {fileID: 8075314103045795040}
   - component: {fileID: 4504551375993249616}
-  m_Layer: 13
+  m_Layer: 17
   m_Name: Fog of War Plane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -66,7 +66,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: b71310ee700055b4bace906fb7185c00, type: 2}
+  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -158,7 +158,7 @@ MonoBehaviour:
   exploredFogCamera: {fileID: 3762379450056402713}
   visionFogCamera: {fileID: 3272289577878407264}
   fogSystemReference: {fileID: 329568967210149131}
-  fogPlaneRenderer: {fileID: 0}
+  fogPlaneRenderer: {fileID: 4504551375993249616}
 --- !u!114 &329568967210149131
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -178,6 +178,7 @@ MonoBehaviour:
   visionTexture: {fileID: 8400000, guid: c2c57d8e612001e4eab90a32ce425337, type: 2}
   exploredThreshold: 0.1
   visionThreshold: 0.9
+  cacheReadIntervalFrames: 2
 --- !u!1 &8684912255927732792
 GameObject:
   m_ObjectHideFlags: 0
@@ -250,9 +251,9 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 16384
+    m_Bits: 32768
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 8400000, guid: 4a02c5810d9f4084c86767ced61de51a, type: 2}
+  m_TargetTexture: {fileID: 8400000, guid: 6e6d2fd0482f1db47a42b1858c5f629a, type: 2}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -379,9 +380,9 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 24576
+    m_Bits: 32768
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 8400000, guid: 52facb0f6e8b2564ba1e7adcc0e9d299, type: 2}
+  m_TargetTexture: {fileID: 8400000, guid: c2c57d8e612001e4eab90a32ce425337, type: 2}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -449,3 +450,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Player.FactionVisibilityUpdater
   visionFogCamera: {fileID: 3272289577878407264}
   localHumanOwnerService: {fileID: 0}
+  visionReadIntervalFrames: 2
+  hideablesUpdatedPerFrame: 250
+  pruneHideablesIntervalFrames: 90

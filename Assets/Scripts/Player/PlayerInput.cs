@@ -5,6 +5,7 @@ using GameDevTV.RTS.Minimap;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Units.Formation;
 using GameDevTV.RTS.Commands;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Utilities;
 using Unity.Cinemachine;
 using UnityEngine;
@@ -704,6 +705,23 @@ namespace GameDevTV.RTS.Player
                 CommandContext context = new(abstractUnits[i], hit, i, mouseButton);
                 if (!command.CanHandle(context))
                 {
+                    continue;
+                }
+
+                if (PlayerInputNetworkBridge.ShouldRelayCommands
+                    && PlayerInputNetworkBridge.TryRelayUnitCommand != null
+                    && PlayerInputNetworkBridge.TryRelayUnitCommand(
+                        abstractUnits[i],
+                        hit,
+                        command,
+                        mouseButton,
+                        i))
+                {
+                    if (command.IsSingleUnitCommand)
+                    {
+                        return true;
+                    }
+
                     continue;
                 }
 

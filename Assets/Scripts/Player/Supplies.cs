@@ -42,7 +42,7 @@ namespace GameDevTV.RTS.Player
 
         private Owner hudOwner = Owner.Player1;
 
-        private static Supplies activeInstance;
+        static readonly List<Supplies> EnabledHudInstances = new(4);
         static bool busHandlersRegistered;
 
         /// <summary>
@@ -50,7 +50,10 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         public static void RegisterPlayerUnit(AbstractUnit unit)
         {
-            activeInstance?.TrackPlayerUnitSpawn(unit);
+            for (int i = 0; i < EnabledHudInstances.Count; i++)
+            {
+                EnabledHudInstances[i]?.TrackPlayerUnitSpawn(unit);
+            }
         }
 
         /// <summary>
@@ -82,33 +85,120 @@ namespace GameDevTV.RTS.Player
 
         private void Awake()
         {
-            activeInstance = this;
             EnsureDictionariesInitialized();
-            RegisterBusHandlersIfNeeded();
-            hudOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
-            RegisterExistingHudOwnerUnits();
-            RefreshSupplyHud();
+            if (hudOwner == Owner.Player1)
+            {
+                hudOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            }
         }
 
         void OnEnable()
         {
             EnsureDictionariesInitialized();
+            RegisterHudInstance(this);
             RegisterBusHandlersIfNeeded();
             RegisterExistingHudOwnerUnits();
             RefreshSupplyHud();
         }
 
-        static void RegisterBusHandlersIfNeeded()
+        void OnDisable()
         {
-            if (busHandlersRegistered || activeInstance == null)
+            UnregisterHudInstance(this);
+        }
+
+        static void RegisterHudInstance(Supplies instance)
+        {
+            if (instance == null || EnabledHudInstances.Contains(instance))
             {
                 return;
             }
 
-            Bus<SupplyEvent>.RegisterForAll(activeInstance.HandleSupplyEvent);
-            Bus<UnitSpawnEvent>.RegisterForAll(activeInstance.HandleUnitSpawn);
-            Bus<UnitDeathEvent>.RegisterForAll(activeInstance.HandleUnitDeath);
+            EnabledHudInstances.Add(instance);
+        }
+
+        static void UnregisterHudInstance(Supplies instance)
+        {
+            if (instance == null)
+            {
+                return;
+            }
+
+            EnabledHudInstances.Remove(instance);
+            if (EnabledHudInstances.Count == 0)
+            {
+                UnregisterBusHandlers();
+            }
+        }
+
+        static void RegisterBusHandlersIfNeeded()
+        {
+            if (busHandlersRegistered)
+            {
+                return;
+            }
+
+            Bus<SupplyEvent>.RegisterForAll(DispatchSupplyEvent);
+            Bus<UnitSpawnEvent>.RegisterForAll(DispatchUnitSpawn);
+            Bus<UnitDeathEvent>.RegisterForAll(DispatchUnitDeath);
             busHandlersRegistered = true;
+        }
+
+        static void UnregisterBusHandlers()
+        {
+            if (!busHandlersRegistered)
+            {
+                return;
+            }
+
+            Bus<SupplyEvent>.UnregisterForAll(DispatchSupplyEvent);
+            Bus<UnitSpawnEvent>.UnregisterForAll(DispatchUnitSpawn);
+            Bus<UnitDeathEvent>.UnregisterForAll(DispatchUnitDeath);
+            busHandlersRegistered = false;
+        }
+
+        static void DispatchSupplyEvent(SupplyEvent evt)
+        {
+            for (int i = EnabledHudInstances.Count - 1; i >= 0; i--)
+            {
+                Supplies hud = EnabledHudInstances[i];
+                if (hud == null)
+                {
+                    EnabledHudInstances.RemoveAt(i);
+                    continue;
+                }
+
+                hud.HandleSupplyEvent(evt);
+            }
+        }
+
+        static void DispatchUnitSpawn(UnitSpawnEvent evt)
+        {
+            for (int i = EnabledHudInstances.Count - 1; i >= 0; i--)
+            {
+                Supplies hud = EnabledHudInstances[i];
+                if (hud == null)
+                {
+                    EnabledHudInstances.RemoveAt(i);
+                    continue;
+                }
+
+                hud.HandleUnitSpawn(evt);
+            }
+        }
+
+        static void DispatchUnitDeath(UnitDeathEvent evt)
+        {
+            for (int i = EnabledHudInstances.Count - 1; i >= 0; i--)
+            {
+                Supplies hud = EnabledHudInstances[i];
+                if (hud == null)
+                {
+                    EnabledHudInstances.RemoveAt(i);
+                    continue;
+                }
+
+                hud.HandleUnitDeath(evt);
+            }
         }
 
         /// <summary>
@@ -130,6 +220,8 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
+            RegisterHudInstance(this);
+            RegisterBusHandlersIfNeeded();
             RegisterExistingHudOwnerUnits();
             RefreshSupplyHud();
         }
@@ -257,21 +349,9 @@ namespace GameDevTV.RTS.Player
         }
 #endif
 
-        private void OnDestroy()
+        void OnDestroy()
         {
-            if (activeInstance == this)
-            {
-                activeInstance = null;
-                busHandlersRegistered = false;
-            }
-
-            if (busHandlersRegistered)
-            {
-                Bus<SupplyEvent>.UnregisterForAll(HandleSupplyEvent);
-                Bus<UnitSpawnEvent>.UnregisterForAll(HandleUnitSpawn);
-                Bus<UnitDeathEvent>.UnregisterForAll(HandleUnitDeath);
-                busHandlersRegistered = false;
-            }
+            UnregisterHudInstance(this);
         }
 
         private void HandleSupplyEvent(SupplyEvent evt)

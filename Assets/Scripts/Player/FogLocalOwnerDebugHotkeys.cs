@@ -23,20 +23,14 @@ namespace GameDevTV.RTS.Player
             if (Input.GetKeyDown(player1Key))
             {
                 service.SetLocalOwner(Owner.Player1);
-                RefreshPresentation();
+                LocalHumanPresentationRefresh.RefreshFromLocalOwner();
             }
             else if (Input.GetKeyDown(player2Key))
             {
                 service.SetLocalOwner(Owner.Player2);
-                RefreshPresentation();
+                LocalHumanPresentationRefresh.RefreshFromLocalOwner();
             }
 #endif
-        }
-
-        static void RefreshPresentation()
-        {
-            PlayerViewBinder binder = Object.FindFirstObjectByType<PlayerViewBinder>(FindObjectsInactive.Include);
-            binder?.RefreshFromLocalOwner();
         }
     }
 }

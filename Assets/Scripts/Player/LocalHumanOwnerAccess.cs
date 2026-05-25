@@ -1,4 +1,6 @@
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
+using Mirror;
 
 namespace GameDevTV.RTS.Player
 {
@@ -8,8 +10,7 @@ namespace GameDevTV.RTS.Player
     public static class LocalHumanOwnerAccess
     {
         /// <summary>
-        /// Mục tiêu: Owner human đang điều khiển trên máy này (offline mặc định Player1).
-        /// Cách hoạt động: Đọc <see cref="LocalHumanOwnerService"/> nếu đã init; ngược lại Player1.
+        /// Mục tiêu: Owner human trên máy này; MP chưa init thì dùng team cache lobby, không ép P1.
         /// </summary>
         public static Owner GetLocalOwnerOrDefault()
         {
@@ -17,6 +18,15 @@ namespace GameDevTV.RTS.Player
             if (service != null && service.IsInitialized)
             {
                 return service.LocalOwner;
+            }
+
+            if (NetworkClient.active)
+            {
+                int team = MpLocalOwnerSceneSync.ResolveLocalTeamIndex();
+                if (team >= 0)
+                {
+                    return OwnerTeamMapping.FromTeamIndex(team);
+                }
             }
 
             return Owner.Player1;

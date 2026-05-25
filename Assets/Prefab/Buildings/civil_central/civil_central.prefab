@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 8395517768350979603}
   - component: {fileID: 5788190384831448055}
   - component: {fileID: 3689305159895156171}
+  - component: {fileID: 3838490845711359649}
   m_Layer: 7
   m_Name: civil_central
   m_TagString: Untagged
@@ -162,6 +163,21 @@ MonoBehaviour:
   positionSensitivity: 0.01
   rotationSensitivity: 0.01
   scaleSensitivity: 0.01
+--- !u!114 &3838490845711359649
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2665764001411241133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33b57de20edc31046a3f95c630f5e6dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsNetworkEntity
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
 --- !u!1 &8321338625966038123
 GameObject:
   m_ObjectHideFlags: 0
