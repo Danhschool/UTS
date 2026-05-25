@@ -194,44 +194,24 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         private HoverCursorEvaluation EvaluateHoverCursorForUnit(AbstractUnit unit, RaycastHit hit)
         {
-            CommandContext context = new(unit.Owner, unit, hit, 0, MouseButton.Right);
-            List<BaseCommand> commands = AvailableCommandsResolver.GetFlattened(unit);
-            bool canGather = false;
-            bool canAttack = false;
-
-            foreach (BaseCommand command in commands)
+            if (!AvailableCommandsResolver.TryPickPrimaryRightClickCommand(
+                    unit,
+                    hit,
+                    0,
+                    MouseButton.Right,
+                    out BaseCommand picked))
             {
-                if (!command.CanHandle(context))
-                {
-                    continue;
-                }
-
-                if (command is GatherCommand)
-                {
-                    if (PassesOptionalLayerMask(gatherCursorLayerFilter, hit.collider.gameObject.layer))
-                    {
-                        canGather = true;
-                    }
-
-                    continue;
-                }
-
-                if (command is AttackCommand)
-                {
-                    // AttackCommand.CanHandle đã kiểm tra IDamageable + địch + visible; không lọc layer để tránh miss collider con.
-                    canAttack = true;
-                    continue;
-                }
-
-                // Move, Stop, Load… — bỏ qua, không chặn Attack/Gather phía sau trong danh sách.
+                return HoverCursorEvaluation.SystemDefault;
             }
 
-            if (canGather)
+            if (picked is GatherCommand)
             {
-                return HoverCursorEvaluation.Gather;
+                return PassesOptionalLayerMask(gatherCursorLayerFilter, hit.collider.gameObject.layer)
+                    ? HoverCursorEvaluation.Gather
+                    : HoverCursorEvaluation.SystemDefault;
             }
 
-            if (canAttack)
+            if (picked is AttackCommand)
             {
                 return HoverCursorEvaluation.Attack;
             }

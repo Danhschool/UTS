@@ -139,6 +139,11 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
+            if (_isInitialized && _localOwner == owner)
+            {
+                return;
+            }
+
             _localOwner = owner;
             _isInitialized = true;
             RefreshInspectorDebugFields();

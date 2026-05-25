@@ -73,6 +73,28 @@ namespace GameDevTV.RTS.Player
             return cpuTexture.GetPixelBilinear(uv.x, uv.y).r > threshold;
         }
 
+        /// <summary>
+        /// Mục tiêu: Debug/visibility — lấy kênh R tại world (không ngưỡng).
+        /// Cách hoạt động: Map UV ortho rồi GetPixelBilinear; trả 0 nếu ngoài frustum.
+        /// </summary>
+        public float SampleWorldChannel(
+            Camera fogCamera,
+            Vector3 worldPosition,
+            bool requireInsideUv = true)
+        {
+            if (cpuTexture == null || fogCamera == null)
+            {
+                return 0f;
+            }
+
+            if (!FogOrthographicUvUtility.TryWorldToFogUv(fogCamera, worldPosition, out Vector2 uv))
+            {
+                return requireInsideUv ? 0f : cpuTexture.GetPixelBilinear(0.5f, 0.5f).r;
+            }
+
+            return cpuTexture.GetPixelBilinear(uv.x, uv.y).r;
+        }
+
         public bool HasCpuTexture => cpuTexture != null;
 
         public void Release()

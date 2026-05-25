@@ -24,7 +24,6 @@ namespace GameDevTV.RTS.Netplay
 
             LocalHumanOwnerService.EnsureExists();
             RtsLobbyUI.HideLobbyCanvasForGameplay();
-            MpLocalOwnerSceneSync.RefreshAfterGameSceneLoad();
         }
 
         void Start()
@@ -44,11 +43,13 @@ namespace GameDevTV.RTS.Netplay
                 RtsMatchServerSpawnRunner.EnsureScheduled();
             }
 
-            MpLocalOwnerSceneSync.RefreshAfterGameSceneLoad();
-            MpFogVisionSpawnRefresh.SchedulePresentationRetries();
-
             yield return null;
+
             MpLocalOwnerSceneSync.RefreshAfterGameSceneLoad();
+            if (!NetworkServer.active)
+            {
+                MpFogVisionSpawnRefresh.SchedulePresentationRetries();
+            }
 
             if (disableCapsuleGameInput && NetworkClient.localPlayer != null)
             {

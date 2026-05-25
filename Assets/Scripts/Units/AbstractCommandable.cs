@@ -111,7 +111,7 @@ namespace GameDevTV.RTS.Units
                 return;
             }
 
-            bool emitsVision = HumanFogVisionUtility.EmitsFogVision(Owner);
+            bool emitsVision = HumanFogVisionUtility.EmitsFogVisionOnThisClient(Owner);
             VisionTransform.gameObject.SetActive(emitsVision);
 
             if (!emitsVision)

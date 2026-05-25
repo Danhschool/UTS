@@ -144,19 +144,53 @@ namespace GameDevTV.RTS.Player
             }
         }
 
-        public bool IsWorldExplored(Vector3 worldPosition) =>
-            exploredMirror.SampleWorldVisible(
+        public bool IsWorldExplored(Vector3 worldPosition)
+        {
+            EnsureFogMirrorsFresh();
+            return exploredMirror.SampleWorldVisible(
                 exploredFogCamera,
                 worldPosition,
                 exploredThreshold,
                 requireInsideUv: true);
+        }
 
-        public bool IsWorldVisible(Vector3 worldPosition) =>
-            visionMirror.SampleWorldVisible(
+        public bool IsWorldVisible(Vector3 worldPosition)
+        {
+            EnsureFogMirrorsFresh();
+            return visionMirror.SampleWorldVisible(
                 visionFogCamera,
                 worldPosition,
                 visionThreshold,
                 requireInsideUv: true);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Query gather/explored không gọi Camera.Render() mỗi lần (gây lag nặng).
+        /// Cách hoạt động: Chỉ TryRefresh mirror theo interval — fog camera tự render mỗi frame.
+        /// </summary>
+        void EnsureFogMirrorsFresh()
+        {
+            int frame = Time.frameCount;
+            int interval = Mathf.Max(1, cacheReadIntervalFrames);
+
+            if (visionFogCamera != null
+                && visionFogCamera.isActiveAndEnabled
+                && visionTexture != null
+                && (lastVisionReadFrame < 0 || frame - lastVisionReadFrame >= interval))
+            {
+                visionMirror.TryRefresh(visionTexture, interval);
+                lastVisionReadFrame = frame;
+            }
+
+            if (exploredFogCamera != null
+                && exploredFogCamera.isActiveAndEnabled
+                && exploredTexture != null
+                && (lastExploredReadFrame < 0 || frame - lastExploredReadFrame >= interval))
+            {
+                exploredMirror.TryRefresh(exploredTexture, interval);
+                lastExploredReadFrame = frame;
+            }
+        }
 
         void OnDestroy()
         {

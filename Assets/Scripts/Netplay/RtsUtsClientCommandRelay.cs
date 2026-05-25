@@ -120,17 +120,7 @@ namespace GameDevTV.RTS.Netplay
 
 
 
-            if (command is GatherCommand)
-
-            {
-
-                commands.RequestUtsGather(identity.netId, hit.point, unitIndex);
-
-                return true;
-
-            }
-
-
+            // Gather/Attack: Handle trên client (cùng luồng UI); CmdUtsGather raycast server dễ miss supply.
 
             return false;
 

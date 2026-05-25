@@ -103,6 +103,17 @@ namespace GameDevTV.RTS.Player
             {
                 WireRuntimeUiBusOwner();
             }
+
+            FactionVisibilityUpdater[] visibilityUpdaters =
+                GetComponentsInChildren<FactionVisibilityUpdater>(true);
+            for (int i = 0; i < visibilityUpdaters.Length; i++)
+            {
+                FactionVisibilityUpdater updater = visibilityUpdaters[i];
+                if (updater != null)
+                {
+                    updater.enabled = active;
+                }
+            }
         }
 
         /// <summary>

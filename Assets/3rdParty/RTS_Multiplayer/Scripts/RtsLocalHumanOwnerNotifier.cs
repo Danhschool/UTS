@@ -14,6 +14,11 @@ namespace ProjectRTS.Netplay
 
         public static void NotifyLocalTeamIndex(int teamIndex)
         {
+            if (CachedLocalTeamIndex == teamIndex)
+            {
+                return;
+            }
+
             CachedLocalTeamIndex = teamIndex;
             OnLocalTeamIndex?.Invoke(teamIndex);
         }

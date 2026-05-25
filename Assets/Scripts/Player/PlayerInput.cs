@@ -5,6 +5,7 @@ using GameDevTV.RTS.Minimap;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Units.Formation;
 using GameDevTV.RTS.Commands;
+using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Utilities;
 using Unity.Cinemachine;
@@ -667,38 +668,28 @@ namespace GameDevTV.RTS.Player
                 BaseCommand command = commandBeingActivated;
                 if (command == null)
                 {
-                    List<BaseCommand> availableCommands = GetAvailableCommands(abstractUnits[i]);
-                    bool dispatched = false;
-                    foreach (ICommand candidate in availableCommands)
+                    if (!AvailableCommandsResolver.TryPickPrimaryRightClickCommand(
+                            abstractUnits[i],
+                            hit,
+                            i,
+                            mouseButton,
+                            out command))
                     {
-                        CommandContext probe = new(abstractUnits[i], hit, i, mouseButton);
-                        if (candidate is not BaseCommand baseCommand || !baseCommand.CanHandle(probe))
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
 
-                        if (baseCommand is MoveCommand move && abstractUnits.Count > 1)
-                        {
-                            if (GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, move))
-                            {
-                                return true;
-                            }
-                        }
-
-                        if (baseCommand is RallyAreaCommand rally
-                            && RallyAreaCommand.TryApplyRally(abstractUnits[0], hit, rally))
+                    if (command is MoveCommand move && abstractUnits.Count > 1)
+                    {
+                        if (GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, move))
                         {
                             return true;
                         }
-
-                        command = baseCommand;
-                        dispatched = true;
-                        break;
                     }
 
-                    if (!dispatched)
+                    if (command is RallyAreaCommand rally
+                        && RallyAreaCommand.TryApplyRally(abstractUnits[0], hit, rally))
                     {
-                        continue;
+                        return true;
                     }
                 }
 
@@ -708,7 +699,11 @@ namespace GameDevTV.RTS.Player
                     continue;
                 }
 
-                if (PlayerInputNetworkBridge.ShouldRelayCommands
+                bool relayGatherOrAttackLocally =
+                    command is GatherCommand or AttackCommand;
+
+                if (!relayGatherOrAttackLocally
+                    && PlayerInputNetworkBridge.ShouldRelayCommands
                     && PlayerInputNetworkBridge.TryRelayUnitCommand != null
                     && PlayerInputNetworkBridge.TryRelayUnitCommand(
                         abstractUnits[i],

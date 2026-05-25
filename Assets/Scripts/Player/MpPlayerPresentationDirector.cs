@@ -1,7 +1,7 @@
 using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
+using Mirror;
 using UnityEngine;
-
 namespace GameDevTV.RTS.Player
 {
     /// <summary>
@@ -19,6 +19,9 @@ namespace GameDevTV.RTS.Player
         [SerializeField] Transform gameplayCameraAnchor;
 
         PlayerInput _sharedPlayerInput;
+        Owner _lastAppliedOwner = Owner.Invalid;
+        int _lastP2UnitsSynced = -1;
+        bool _inactiveFogPresentationsSuppressed;
 
         public bool HasConfiguredRigs => player1Rig != null || player2Rig != null;
 
@@ -66,6 +69,15 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
+            bool ownerChanged = localOwner != _lastAppliedOwner;
+            if (!MpFogRefreshThrottle.ShouldRunPresentationApply(ownerChanged))
+            {
+                TryRefreshP2VisionLayersOnly(localOwner);
+                return;
+            }
+
+            _lastAppliedOwner = localOwner;
+
             bool usePlayer1 = localOwner == Owner.Player1;
 
             if (player2Rig == null && localOwner == Owner.Player2)
@@ -74,7 +86,12 @@ namespace GameDevTV.RTS.Player
                     "[MpPlayerPresentationDirector] player2Rig chưa gán — chạy ProjectRTS/Netplay/★ Prepare RtsNet_Game Scene.");
             }
 
-            SuppressInactiveFogPresentations(localOwner);
+            if (ownerChanged || !_inactiveFogPresentationsSuppressed)
+            {
+                SuppressInactiveFogPresentations(localOwner);
+                _inactiveFogPresentationsSuppressed = true;
+            }
+
             AnchorSharedGameplayCamera();
 
             player1Rig?.SetRigActive(usePlayer1);
@@ -100,18 +117,126 @@ namespace GameDevTV.RTS.Player
                     visibilityUpdater = updater;
                     updater.BindVisionCamera(activeFog.VisionFogCamera);
                     updater.BindLocalOwner(localOwner);
-                    updater.RebuildHideablesForLocalOwner();
                 }
             }
 
-            hudBinder ??= FindFirstObjectByType<FactionHudBinder>(FindObjectsInactive.Include);
-            hudBinder?.Apply(
-                localOwner,
-                activeRig?.SuppliesHud,
-                activeRig?.MinimapUnitIcons,
-                activeRig?.MinimapFog);
+            if (localOwner == Owner.Player2)
+            {
+                int p2Units = RefreshP2UnitFogVisionLayers();
+                if (p2Units > _lastP2UnitsSynced)
+                {
+                    _lastP2UnitsSynced = p2Units;
+                    visibilityUpdater?.RefreshVisibilityAfterVisionLayers();
+                }
+            }
 
-            ApplyGameplayFogOverlayForOwner(localOwner);
+            if (ownerChanged)
+            {
+                hudBinder ??= FindFirstObjectByType<FactionHudBinder>(FindObjectsInactive.Include);
+                hudBinder?.Apply(
+                    localOwner,
+                    activeRig?.SuppliesHud,
+                    activeRig?.MinimapUnitIcons,
+                    activeRig?.MinimapFog);
+
+                ApplyGameplayFogOverlayForOwner(localOwner);
+
+                if (localOwner == Owner.Player2)
+                {
+                    ValidatePlayer2PresentationSetup(activeRig, activeFog);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Apply bị throttle — vẫn sync layer vision khi unit P2 spawn thêm.
+        /// </summary>
+        void TryRefreshP2VisionLayersOnly(Owner localOwner)
+        {
+            if (localOwner != Owner.Player2)
+            {
+                return;
+            }
+
+            int p2Units = RefreshP2UnitFogVisionLayers();
+            if (p2Units <= _lastP2UnitsSynced)
+            {
+                return;
+            }
+
+            _lastP2UnitsSynced = p2Units;
+            visibilityUpdater?.RefreshVisibilityAfterVisionLayers();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client P2 — unit replicate trước presentation; gán layer 14 + chỉ local P2 bật Vision.
+        /// </summary>
+        int RefreshP2UnitFogVisionLayers()
+        {
+            int p2Units = 0;
+
+            AbstractCommandable[] commandables = Object.FindObjectsByType<AbstractCommandable>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            for (int i = 0; i < commandables.Length; i++)
+            {
+                AbstractCommandable commandable = commandables[i];
+                if (commandable == null || commandable.Owner != Owner.Player2)
+                {
+                    continue;
+                }
+
+                commandable.SyncOwnerAndFogVision(Owner.Player2);
+                p2Units++;
+            }
+
+            return p2Units;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client P2 — báo lỗi cấu hình rig/RT/mask khi setup scene sai.
+        /// </summary>
+        void ValidatePlayer2PresentationSetup(MpPlayerPresentationRig activeRig, FactionFogPresentation activeFog)
+        {
+            FactionFogSystemReference fogRef = activeFog?.FogSystemReference;
+            fogRef?.EnsureReferences();
+
+            Camera visionCam = activeFog?.VisionFogCamera;
+            int expectedVisionMask = 1 << OwnerFogVisionLayers.GetLayer(Owner.Player2);
+            int expectedOverlayMask = 1 << OwnerFogPlaneLayers.GetLayer(Owner.Player2);
+            int visionMask = visionCam != null ? visionCam.cullingMask : -1;
+            string visionRtName = fogRef?.VisionRenderTexture != null ? fogRef.VisionRenderTexture.name : "null";
+            string exploredRtName = fogRef?.ExploredRenderTexture != null ? fogRef.ExploredRenderTexture.name : "null";
+            bool rtNamesOk = visionRtName.Contains("P2") && exploredRtName.Contains("P2");
+            bool visionMaskOk = visionMask == expectedVisionMask;
+
+            Camera overlayCam = sharedGameplayCamera != null
+                ? sharedGameplayCamera.transform.Find("Fog of War Rendering Camera")?.GetComponent<Camera>()
+                : null;
+            int overlayMask = overlayCam != null ? overlayCam.cullingMask : -1;
+            bool overlayMaskOk = overlayMask == expectedOverlayMask;
+
+            if (player2Rig == null)
+            {
+                Debug.LogError("[P2 Fog] player2Rig NULL — chạy Prepare RtsNet_Game Scene.");
+            }
+            else if (activeRig != player2Rig)
+            {
+                Debug.LogError($"[P2 Fog] activeRig sai: {activeRig?.name} (cần player2Rig).");
+            }
+            else if (!rtNamesOk)
+            {
+                Debug.LogError($"[P2 Fog] RT sai: vision={visionRtName}, explored={exploredRtName} (cần *P2*).");
+            }
+            else if (!visionMaskOk)
+            {
+                Debug.LogError($"[P2 Fog] Vision mask={visionMask}, cần {expectedVisionMask} (layer Fog of War Vision / 14).");
+            }
+            else if (!overlayMaskOk)
+            {
+                Debug.LogError($"[P2 Fog] Overlay mask={overlayMask}, cần {expectedOverlayMask} (layer Fog of War Plane P2).");
+            }
         }
 
         void ApplyGameplayFogOverlayForOwner(Owner localOwner)

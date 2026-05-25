@@ -1,4 +1,5 @@
 using GameDevTV.RTS.Units;
+using Mirror;
 
 namespace GameDevTV.RTS.Player
 {
@@ -19,5 +20,25 @@ namespace GameDevTV.RTS.Player
         /// Cách hoạt động: Alias của <see cref="IsHumanPlayer"/>.
         /// </summary>
         public static bool EmitsFogVision(Owner owner) => IsHumanPlayer(owner);
+
+        /// <summary>
+        /// Mục tiêu: MP — chỉ phe local vẽ vision lên RT fog của mình (P2 client không bật vision P1).
+        /// Cách hoạt động: Khi có NetworkClient, so khớp <see cref="LocalHumanOwnerService.LocalOwner"/>.
+        /// </summary>
+        public static bool EmitsFogVisionOnThisClient(Owner owner)
+        {
+            if (!IsHumanPlayer(owner))
+            {
+                return false;
+            }
+
+            if (!NetworkClient.active)
+            {
+                return true;
+            }
+
+            LocalHumanOwnerService service = LocalHumanOwnerService.Instance;
+            return service != null && service.IsInitialized && service.LocalOwner == owner;
+        }
     }
 }

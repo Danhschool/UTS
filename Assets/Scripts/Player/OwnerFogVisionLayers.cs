@@ -16,20 +16,14 @@ namespace GameDevTV.RTS.Player
 
         /// <summary>
         /// Mục tiêu: Layer index cho VisionTransform và culling mask camera fog.
-        /// Cách hoạt động: NameToLayer với fallback 14/15 nếu chưa khai báo trong Project Settings.
+        /// Cách hoạt động: P1/P2 dùng chung layer 14 (course); tách phe bằng RT + chỉ local unit phát vision.
         /// </summary>
         public static int GetLayer(Owner owner)
         {
-            if (owner == Owner.Player1)
+            if (owner == Owner.Player1 || owner == Owner.Player2)
             {
                 int layer = LayerMask.NameToLayer(Player1LayerName);
                 return layer >= 0 ? layer : DefaultPlayer1VisionLayer;
-            }
-
-            if (owner == Owner.Player2)
-            {
-                int layer = LayerMask.NameToLayer(Player2LayerName);
-                return layer >= 0 ? layer : DefaultPlayer2VisionLayer;
             }
 
             return -1;
@@ -41,7 +35,7 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         public static void ApplyToHierarchy(GameObject root, Owner owner)
         {
-            if (root == null || !HumanFogVisionUtility.EmitsFogVision(owner))
+            if (root == null || !HumanFogVisionUtility.EmitsFogVisionOnThisClient(owner))
             {
                 return;
             }
@@ -61,7 +55,7 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         public static void ApplyToCommandableVision(AbstractCommandable commandable)
         {
-            if (commandable == null || !HumanFogVisionUtility.EmitsFogVision(commandable.Owner))
+            if (commandable == null || !HumanFogVisionUtility.EmitsFogVisionOnThisClient(commandable.Owner))
             {
                 return;
             }

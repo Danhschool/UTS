@@ -20,7 +20,7 @@ namespace GameDevTV.RTS.Player
             }
 
             MpPlayerPresentationDirector director =
-                Object.FindFirstObjectByType<MpPlayerPresentationDirector>(FindObjectsInactive.Include);
+                GameDevTV.RTS.Netplay.MpFogRefreshThrottle.ResolvePresentationDirector();
 
             if (director != null && director.HasConfiguredRigs)
             {

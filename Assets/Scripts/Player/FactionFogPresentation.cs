@@ -1,6 +1,6 @@
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
 using UnityEngine;
-
 namespace GameDevTV.RTS.Player
 {
     /// <summary>
@@ -136,8 +136,8 @@ namespace GameDevTV.RTS.Player
         }
 
         /// <summary>
-        /// Mục tiêu: P2 fog camera phải nhìn layer Fog Vision Player2 — không dùng mask P1 (16384).
-        /// Cách hoạt động: Vision + explored camera chỉ culling đúng layer theo presentationOwner.
+        /// Mục tiêu: Fog camera nhìn layer Fog of War Vision (14) — P1/P2 tách RT, không tách layer vision.
+        /// Cách hoạt động: Vision + explored camera culling mask theo <see cref="OwnerFogVisionLayers"/>.
         /// </summary>
         public void ApplyOwnerCameraMasks()
         {

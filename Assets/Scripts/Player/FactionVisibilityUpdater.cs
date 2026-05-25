@@ -28,6 +28,8 @@ namespace GameDevTV.RTS.Player
         readonly HashSet<IHideable> hideableLookup = new(1024);
         int hideableCursor;
         int lastPruneFrame = -1;
+        int _deferredRebuildFramesRemaining = -1;
+        const int DeferredRebuildFrameDelay = 5;
 
         void Awake()
         {
@@ -84,7 +86,29 @@ namespace GameDevTV.RTS.Player
             boundVisionCamera = camera != null ? camera : visionFogCamera;
             visionMirror.Release();
             hideableCursor = 0;
-            RefreshAllHideableVisibility(forceFullPass: true);
+            _cachedLocalVisionSampleRoot = null;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Rig P1 tắt nhưng updater vẫn LateUpdate — tránh log P2-E với RT P1.
+        /// Cách hoạt động: Chỉ chạy khi branch fog khớp localOwner và component enabled.
+        /// </summary>
+        bool IsActivePresentationBranch()
+        {
+            if (!isActiveAndEnabled || !gameObject.activeInHierarchy)
+            {
+                return false;
+            }
+
+            FactionFogPresentation presentation = GetComponentInParent<FactionFogPresentation>(true);
+            if (presentation == null)
+            {
+                return true;
+            }
+
+            return presentation.PresentationOwner == localOwner
+                   && presentation.isActiveAndEnabled
+                   && presentation.gameObject.activeInHierarchy;
         }
 
         public void BindLocalOwner(Owner owner)
@@ -94,8 +118,27 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
+            bool ownerChanged = localOwner != owner;
             localOwner = owner;
-            RebuildHideablesForLocalOwner();
+
+            if (ownerChanged)
+            {
+                _cachedLocalVisionSampleRoot = null;
+            }
+
+            if (ownerChanged || hideables.Count == 0)
+            {
+                _deferredRebuildFramesRemaining = DeferredRebuildFrameDelay;
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Sau khi SyncOwnerAndFogVision — vision RT đã có blob layer 15, cập nhật lại hideables.
+        /// Cách hoạt động: Read vision RT rồi full-pass ApplyVisibility (không quét lại toàn scene).
+        /// </summary>
+        public void RefreshVisibilityAfterVisionLayers()
+        {
+            RefreshAllHideableVisibility(forceFullPass: true);
         }
 
         void HandleLocalOwnerChanged(Owner owner) => BindLocalOwner(owner);
@@ -159,11 +202,87 @@ namespace GameDevTV.RTS.Player
                 }
             }
 
-            RefreshAllHideableVisibility(forceFullPass: true);
+            if (TryIsVisionRtReadyForMassUpdate())
+            {
+                RefreshAllHideableVisibility(forceFullPass: true);
+            }
+            else
+            {
+                SchedulePostRebuildVisibilityRefresh();
+                ScheduleVisionMassUpdateRetry();
+            }
+        }
+
+        int _postRebuildRefreshFramesRemaining = -1;
+        int _visionMassUpdateRetryAttemptsRemaining = -1;
+        int _visionMassUpdateRetryNextCheckFrame = -1;
+        const int VisionMassUpdateRetryMaxAttempts = 15;
+        const int VisionMassUpdateRetryIntervalFrames = 6;
+        const float VisionReadyThreshold = 0.1f;
+        Transform _cachedLocalVisionSampleRoot;
+
+        void SchedulePostRebuildVisibilityRefresh() =>
+            _postRebuildRefreshFramesRemaining = 2;
+
+        void ScheduleVisionMassUpdateRetry()
+        {
+            _visionMassUpdateRetryAttemptsRemaining = VisionMassUpdateRetryMaxAttempts;
+            _visionMassUpdateRetryNextCheckFrame = Time.frameCount + VisionMassUpdateRetryIntervalFrames;
         }
 
         void LateUpdate()
         {
+            if (!IsActivePresentationBranch())
+            {
+                return;
+            }
+
+            if (_deferredRebuildFramesRemaining >= 0)
+            {
+                if (_deferredRebuildFramesRemaining == 0)
+                {
+                    RebuildHideablesForLocalOwner();
+                    _deferredRebuildFramesRemaining = -1;
+                }
+                else
+                {
+                    _deferredRebuildFramesRemaining--;
+                }
+            }
+            else if (_postRebuildRefreshFramesRemaining >= 0)
+            {
+                if (_postRebuildRefreshFramesRemaining == 0)
+                {
+                    if (TryIsVisionRtReadyForMassUpdate())
+                    {
+                        RefreshVisibilityAfterVisionLayers();
+                    }
+                    else
+                    {
+                        ScheduleVisionMassUpdateRetry();
+                    }
+
+                    _postRebuildRefreshFramesRemaining = -1;
+                }
+                else
+                {
+                    _postRebuildRefreshFramesRemaining--;
+                }
+            }
+            else if (_visionMassUpdateRetryAttemptsRemaining > 0
+                     && Time.frameCount >= _visionMassUpdateRetryNextCheckFrame)
+            {
+                _visionMassUpdateRetryNextCheckFrame =
+                    Time.frameCount + VisionMassUpdateRetryIntervalFrames;
+                _visionMassUpdateRetryAttemptsRemaining--;
+
+                if (TryIsVisionRtReadyForMassUpdate())
+                {
+                    RefreshAllHideableVisibility(forceFullPass: true);
+                    _visionMassUpdateRetryAttemptsRemaining = -1;
+                }
+            }
+
             if (boundVisionCamera == null
                 || !boundVisionCamera.isActiveAndEnabled
                 || boundVisionCamera.targetTexture == null)
@@ -188,7 +307,24 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
+            if (forceFullPass && !TryIsVisionRtReadyForMassUpdate())
+            {
+                SchedulePostRebuildVisibilityRefresh();
+                ScheduleVisionMassUpdateRetry();
+                return;
+            }
+
+            if (forceFullPass)
+            {
+                ForceVisionCameraRender();
+            }
+
             visionMirror.TryRefresh(boundVisionCamera.targetTexture, 1);
+
+            if (!visionMirror.HasCpuTexture)
+            {
+                return;
+            }
 
             if (forceFullPass)
             {
@@ -201,6 +337,97 @@ namespace GameDevTV.RTS.Player
             }
 
             UpdateHideablesRoundRobin();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Vision RT cập nhật trước ReadPixels — fog camera không nằm trong stack Main Camera.
+        /// Cách hoạt động: Gọi Camera.Render() khi camera active và có targetTexture.
+        /// </summary>
+        void ForceVisionCameraRender()
+        {
+            if (boundVisionCamera == null
+                || !boundVisionCamera.isActiveAndEnabled
+                || boundVisionCamera.targetTexture == null)
+            {
+                return;
+            }
+
+            boundVisionCamera.Render();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Tránh ẩn 1184 supply khi vision RT còn đen (unit chưa spawn / layer chưa sync).
+        /// Cách hoạt động: Cần VisionTransform active của local owner và sample R trên ngưỡng sau Render().
+        /// </summary>
+        bool TryIsVisionRtReadyForMassUpdate()
+        {
+            if (!TryGetLocalVisionEmitterState(out bool hasEmitter, out float sampleR))
+            {
+                return false;
+            }
+
+            if (!hasEmitter)
+            {
+                return false;
+            }
+
+            ForceVisionCameraRender();
+            visionMirror.TryRefresh(boundVisionCamera.targetTexture, 1);
+
+            if (!visionMirror.HasCpuTexture)
+            {
+                return false;
+            }
+
+            return sampleR > VisionReadyThreshold;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Một lần quét scene cho emitter + sample R (tránh 2× FindObjects mỗi retry frame).
+        /// </summary>
+        bool TryGetLocalVisionEmitterState(out bool hasEmitter, out float sampleR)
+        {
+            hasEmitter = false;
+            sampleR = 0f;
+
+            if (_cachedLocalVisionSampleRoot != null)
+            {
+                hasEmitter = true;
+                sampleR = visionMirror.SampleWorldChannel(
+                    boundVisionCamera,
+                    _cachedLocalVisionSampleRoot.position,
+                    requireInsideUv: true);
+                return true;
+            }
+
+            AbstractCommandable[] commandables = FindObjectsByType<AbstractCommandable>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+
+            for (int i = 0; i < commandables.Length; i++)
+            {
+                AbstractCommandable commandable = commandables[i];
+                if (commandable == null || commandable.Owner != localOwner)
+                {
+                    continue;
+                }
+
+                Transform visionRoot = commandable.VisionTransformRoot;
+                if (visionRoot == null || !visionRoot.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
+                _cachedLocalVisionSampleRoot = visionRoot;
+                hasEmitter = true;
+                sampleR = visionMirror.SampleWorldChannel(
+                    boundVisionCamera,
+                    visionRoot.position,
+                    requireInsideUv: true);
+                return true;
+            }
+
+            return false;
         }
 
         void MaybePruneHideables()
@@ -267,11 +494,20 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
-            bool visible = visionMirror.SampleWorldVisible(
+            bool visibleNow = visionMirror.SampleWorldVisible(
                 boundVisionCamera,
                 hideable.Transform.position,
                 VisionThreshold,
                 requireInsideUv: true);
+
+            bool visible = visibleNow;
+            if (!visibleNow
+                && hideable is GatherableSupply
+                && FactionFogSystemsRegistry.TryGet(localOwner, out IFogMapQuery fogQuery))
+            {
+                visible = fogQuery.IsWorldExplored(hideable.Transform.position);
+            }
+
             hideable.SetVisible(visible);
         }
 

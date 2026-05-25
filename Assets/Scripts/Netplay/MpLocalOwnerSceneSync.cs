@@ -11,12 +11,19 @@ namespace GameDevTV.RTS.Netplay
     /// </summary>
     public static class MpLocalOwnerSceneSync
     {
+        const int MinFramesBetweenSceneRefresh = 90;
+        static int _lastSceneRefreshFrame = -1;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Register()
         {
             RtsMatchSceneClientNotifier.OnGameSceneLoaded += RefreshAfterGameSceneLoad;
         }
 
+        /// <summary>
+        /// Mục tiêu: Tránh gọi Apply presentation 3–4 lần khi load scene (lag + log trùng).
+        /// Cách hoạt động: Debounce theo frame; bootstrap coroutine gọi một lần sau network ready.
+        /// </summary>
         public static void RefreshAfterGameSceneLoad()
         {
             if (!NetworkClient.active)
@@ -24,11 +31,31 @@ namespace GameDevTV.RTS.Netplay
                 return;
             }
 
-            if (TryApplyTeamIndex(ResolveLocalTeamIndex()))
+            int frame = Time.frameCount;
+            if (_lastSceneRefreshFrame >= 0 && frame - _lastSceneRefreshFrame < MinFramesBetweenSceneRefresh)
             {
                 return;
             }
 
+            _lastSceneRefreshFrame = frame;
+
+            int teamIndex = ResolveLocalTeamIndex();
+            ApplyTeamAndPresentation(teamIndex);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client P2 vào RtsNet_Game — team đã cache ở lobby nhưng LocalOwnerService mới chưa init.
+        /// Cách hoạt động: Notify team; ép SetLocalOwner nếu chưa khớp; luôn refresh presentation (không return sớm).
+        /// </summary>
+        public static void ApplyTeamAndPresentation(int teamIndex)
+        {
+            if (teamIndex < 0)
+            {
+                return;
+            }
+
+            TryApplyTeamIndex(teamIndex);
+            EnsureLocalOwnerMatchesTeam(teamIndex);
             LocalHumanPresentationRefresh.RefreshFromLocalOwner();
         }
 
@@ -44,6 +71,24 @@ namespace GameDevTV.RTS.Netplay
         }
 
         /// <summary>
+        /// Mục tiêu: NotifyLocalTeamIndex bỏ qua khi cache trùng — scene mới vẫn phải gán lại Player2.
+        /// </summary>
+        public static void EnsureLocalOwnerMatchesTeam(int teamIndex)
+        {
+            if (teamIndex < 0)
+            {
+                return;
+            }
+
+            Owner expected = OwnerTeamMapping.FromTeamIndex(teamIndex);
+            LocalHumanOwnerService service = LocalHumanOwnerService.EnsureExists();
+            if (!service.IsInitialized || service.LocalOwner != expected)
+            {
+                service.SetLocalOwner(expected);
+            }
+        }
+
+        /// <summary>
         /// Mục tiêu: Đảm bảo LocalOwner đã init trước khi Director/UI/fog chạy.
         /// </summary>
         public static bool EnsureLocalOwnerInitialized(out Owner localOwner)
@@ -52,9 +97,10 @@ namespace GameDevTV.RTS.Netplay
             LocalHumanOwnerService service = LocalHumanOwnerService.EnsureExists();
             int resolvedTeam = ResolveLocalTeamIndex();
 
-            if (!service.IsInitialized)
+            if (resolvedTeam >= 0)
             {
                 TryApplyTeamIndex(resolvedTeam);
+                EnsureLocalOwnerMatchesTeam(resolvedTeam);
             }
 
             if (!service.IsInitialized)
@@ -83,6 +129,12 @@ namespace GameDevTV.RTS.Netplay
             if (RtsLocalHumanOwnerNotifier.CachedLocalTeamIndex >= 0)
             {
                 return RtsLocalHumanOwnerNotifier.CachedLocalTeamIndex;
+            }
+
+            // Client thuần (ParrelSync clone) trong 1v1 luôn là slot 1 / Player2.
+            if (NetworkClient.active && !NetworkServer.active)
+            {
+                return 1;
             }
 
             return -1;

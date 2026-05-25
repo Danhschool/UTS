@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using GameDevTV.RTS.Environment;
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Utilities;
 using UnityEngine;
@@ -39,7 +40,14 @@ namespace GameDevTV.RTS.Commands
             GatherableSupply supply = collider.GetComponentInParent<GatherableSupply>();
             if (supply != null && supply.Amount > 0)
             {
-                if (IsHitColliderVisible(context))
+                bool visibleNow = IsHitColliderVisible(context)
+                    || FactionFogQuery.IsWorldVisibleTo(context.Owner, supply.transform.position);
+                bool explored = FactionFogQuery.IsWorldExploredFor(
+                    context.Owner,
+                    supply.transform.position);
+                bool canGatherSupply = visibleNow || explored;
+
+                if (canGatherSupply)
                 {
                     worker.Gather(supply);
                 }
