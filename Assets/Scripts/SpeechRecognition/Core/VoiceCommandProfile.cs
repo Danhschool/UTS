@@ -32,10 +32,41 @@ namespace ProjectRTS.SpeechRecognition.Core
         [Range(0.35f, 1f)]
         [SerializeField] private float _minSimilarity = 0.72f;
 
+        [Tooltip("Ngưỡng thấp hơn: câu tương tự vẫn chuyển về PrimaryPhrase mẫu (không kích hoạt lệnh).")]
+        [Range(0.35f, 1f)]
+        [SerializeField] private float _phraseSnapMinSimilarity = 0.58f;
+
         [SerializeField] private List<VoiceCommandEntry> _commands = new List<VoiceCommandEntry>();
 
         public float MinSimilarity => _minSimilarity;
+        public float PhraseSnapMinSimilarity => _phraseSnapMinSimilarity;
         public IReadOnlyList<VoiceCommandEntry> Commands => _commands;
+
+        /// <summary>
+        /// Mục tiêu: Lấy PrimaryPhrase của lệnh ở dạng dataset (không dấu, chữ thường).
+        /// Cách hoạt động: Tìm entry theo CommandId, chuẩn hóa PrimaryPhrase.
+        /// </summary>
+        public bool TryGetCanonicalPhraseDatasetForm(string commandId, out string canonicalPhrase)
+        {
+            canonicalPhrase = null;
+            if (string.IsNullOrWhiteSpace(commandId))
+            {
+                return false;
+            }
+
+            foreach (var entry in _commands)
+            {
+                if (entry == null || !string.Equals(entry.CommandId, commandId.Trim(), StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                canonicalPhrase = RecognizedSpeechPhraseNormalizer.ToDatasetPhraseForm(entry.PrimaryPhrase);
+                return canonicalPhrase.Length > 0;
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// Mục tiêu: Nạp toàn bộ lệnh từ file JSON (VoiceCommandDatasetFile) vào profile runtime/editor.
@@ -78,16 +109,19 @@ namespace ProjectRTS.SpeechRecognition.Core
         }
 
         /// <summary>
-        /// Chuẩn hóa để so khớp: trim, gộp khoảng trắng, chữ thường.
+        /// Chuẩn hóa để so khớp — cùng dạng với mẫu câu trong dataset.
         /// </summary>
         public static string NormalizeForMatch(string raw)
         {
-            if (string.IsNullOrWhiteSpace(raw))
-            {
-                return string.Empty;
-            }
+            return RecognizedSpeechPhraseNormalizer.ToDatasetPhraseForm(raw);
+        }
 
-            return Regex.Replace(raw.Trim().ToLowerInvariant(), @"\s+", " ");
+        /// <summary>
+        /// Chuẩn hóa cụm cho grammar Vosk.
+        /// </summary>
+        public static string NormalizeForGrammar(string raw)
+        {
+            return RecognizedSpeechPhraseNormalizer.ToDatasetPhraseForm(raw);
         }
 
         /// <summary>
@@ -108,6 +142,42 @@ namespace ProjectRTS.SpeechRecognition.Core
                 {
                     AddPhrase(phrases, a);
                 }
+            }
+
+            if (phrases.Count == 0)
+            {
+                return "[]";
+            }
+
+            var sb = new StringBuilder(phrases.Count * 16);
+            sb.Append('[');
+            var first = true;
+            foreach (var p in phrases)
+            {
+                if (!first)
+                {
+                    sb.Append(',');
+                }
+
+                first = false;
+                sb.Append('"');
+                sb.Append(EscapeJsonString(p));
+                sb.Append('"');
+            }
+
+            sb.Append(']');
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Grammar gọn (chỉ PrimaryPhrase) — dùng khi grammar đầy đủ quá lớn hoặc Vosk báo lỗi.
+        /// </summary>
+        public string BuildVoskGrammarJsonPrimaryOnly()
+        {
+            var phrases = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var e in _commands)
+            {
+                AddPhrase(phrases, e.PrimaryPhrase);
             }
 
             if (phrases.Count == 0)
@@ -163,7 +233,7 @@ namespace ProjectRTS.SpeechRecognition.Core
 
         private static void AddPhrase(ISet<string> set, string phrase)
         {
-            var n = NormalizeForMatch(phrase);
+            var n = NormalizeForGrammar(phrase);
             if (!string.IsNullOrEmpty(n))
             {
                 set.Add(n);

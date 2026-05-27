@@ -78,3 +78,9 @@ crashlytics-build.properties
 /dataSources.local.xml
 
 Assets/_ThirdParty/TerrainDemoScene_URP
+
+# Large STT/ASR models (>100MB — keep locally, see StreamingAssets/Whisper/README_WHISPER_MODEL.txt)
+Assets/StreamingAssets/Whisper/ggml-base.bin
+Assets/StreamingAssets/Whisper/ggml-small-q8_0.bin
+Assets/StreamingAssets/Whisper/ggml-small.bin
+Assets/StreamingAssets/VoskModels/vosk-model-vn-0.4/graph/HCLG.fst

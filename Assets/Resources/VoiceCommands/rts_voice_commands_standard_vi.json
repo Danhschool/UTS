@@ -1,0 +1,346 @@
+{
+    "schemaVersion": 1,
+    "minSimilarity": 0.7200000286102295,
+    "commands": [
+        {
+            "CommandId": "SELECT_ALL_ARMY",
+            "PrimaryPhrase": "Chon toan bo quan doi cua toi.",
+            "Aliases": [
+                "Chon het linh chien dau.",
+                "Lay toan bo quan ra cho toi.",
+                "Toi muon chon tat ca quan.",
+                "Chon ca dao quan hien tai."
+            ]
+        },
+        {
+            "CommandId": "SELECT_IDLE_VILLAGERS",
+            "PrimaryPhrase": "Chon dan dang ranh.",
+            "Aliases": [
+                "Tim va chon tat ca dan khong lam gi.",
+                "Chon nhung dan dang dung yen.",
+                "Lay cho toi nhom dan ranh.",
+                "Toi can chon dan nhan roi."
+            ]
+        },
+        {
+            "CommandId": "SELECT_UNIT_TYPE",
+            "PrimaryPhrase": "Chon toan bo cung thu.",
+            "Aliases": [
+                "Chon tat ca bo binh.",
+                "Toi muon chon ky binh.",
+                "Chon het dan lang.",
+                "Lay cho toi toan bo xe cong thanh."
+            ]
+        },
+        {
+            "CommandId": "MOVE_TO_LOCATION",
+            "PrimaryPhrase": "Di chuyen den diem A.",
+            "Aliases": [
+                "Cho quan tien toi cong chinh.",
+                "Tat ca quan qua khu mo vang ben phai.",
+                "Tien quan toi goc trai tren ban do.",
+                "Dan nhom nay den vi tri danh dau."
+            ]
+        },
+        {
+            "CommandId": "ATTACK_MOVE_TO_LOCATION",
+            "PrimaryPhrase": "Vua di chuyen vua tan cong den diem B.",
+            "Aliases": [
+                "A move len cua bac.",
+                "Quet sach duong toi khu rung giua ban do.",
+                "Tien quan danh doc theo canh phai.",
+                "Tan cong di chuyen vao khu vuc doi thu."
+            ]
+        },
+        {
+            "CommandId": "ATTACK_TARGET",
+            "PrimaryPhrase": "Tan cong nha chinh cua doi thu.",
+            "Aliases": [
+                "Danh vao thap phong thu kia.",
+                "Toan doi tap trung danh cung thu ben kia.",
+                "Ha guc xe cong thanh cua doi thu.",
+                "Danh sap cong trinh dang xay do."
+            ]
+        },
+        {
+            "CommandId": "FOCUS_FIRE",
+            "PrimaryPhrase": "Tap trung ban vao phap su dich.",
+            "Aliases": [
+                "Doi hinh cung thu focus ky binh.",
+                "Don sat thuong vao xe da cua doi thu.",
+                "Tat ca cung thu ban cung mot muc tieu.",
+                "Uu tien ha don vi tam xa truoc."
+            ]
+        },
+        {
+            "CommandId": "STOP_CURRENT_ACTION",
+            "PrimaryPhrase": "Dung lai ngay.",
+            "Aliases": [
+                "Huy lenh hien tai.",
+                "Tat ca dung hanh dong.",
+                "Ngung di chuyen va dung yen.",
+                "Dung toan bo thao tac."
+            ]
+        },
+        {
+            "CommandId": "HOLD_POSITION",
+            "PrimaryPhrase": "Giu vi tri tai day.",
+            "Aliases": [
+                "Dong chot o cong chinh.",
+                "Dung thu va khong truy duoi.",
+                "Lap phong tuyen tai vi tri hien tai.",
+                "Quan nay giu vung diem nay."
+            ]
+        },
+        {
+            "CommandId": "PATROL_BETWEEN_POINTS",
+            "PrimaryPhrase": "Tuan tra tu cong nam den mo vang.",
+            "Aliases": [
+                "Cho nhom nay di tuan giua hai diem nay.",
+                "Di tuan tra tu thap canh den rung.",
+                "Patrol qua lai giua diem A va diem B.",
+                "Canh gac tu cua trai qua cua phai."
+            ]
+        },
+        {
+            "CommandId": "RETREAT_TO_LOCATION",
+            "PrimaryPhrase": "Rut quan ve can cu.",
+            "Aliases": [
+                "Lui ngay ve thap phong thu.",
+                "Don vi nay fallback ve nha chinh.",
+                "Quan bi thuong, rut ve diem hoi mau.",
+                "Toan doi lui ve cua bac."
+            ]
+        },
+        {
+            "CommandId": "GATHER_RESOURCE",
+            "PrimaryPhrase": "Dan ra chong go o rung ben trai.",
+            "Aliases": [
+                "Cho dan dao vang o mo gan can cu.",
+                "Tap trung thu thap da o doi phia bac.",
+                "Dan di lay luong thuc tu trang trai.",
+                "Nhanh len, cho dan ra mo vang."
+            ]
+        },
+        {
+            "CommandId": "RETURN_RESOURCES",
+            "PrimaryPhrase": "Mang tai nguyen ve kho ngay.",
+            "Aliases": [
+                "Dan nop hang vao nha chinh.",
+                "Dem go vua chat ve diem tap ket.",
+                "Quay lai kho de giao tai nguyen.",
+                "Nop toan bo tai nguyen dang mang."
+            ]
+        },
+        {
+            "CommandId": "BUILD_STRUCTURE",
+            "PrimaryPhrase": "Xay nha dan tai vi tri nay.",
+            "Aliases": [
+                "Dung doanh trai o gan nha chinh.",
+                "Dat nha quan o cua ben trai.",
+                "Lam mot cai thap phong thu o cong chinh.",
+                "Xay nha go sat khu rung."
+            ]
+        },
+        {
+            "CommandId": "BUILD_WALL",
+            "PrimaryPhrase": "Xay tuong tu doi nay den bo song.",
+            "Aliases": [
+                "Bo tuong chan cong chinh.",
+                "Keo tuong tu diem A sang diem B.",
+                "Dan dung tuong de khoa loi vao.",
+                "Xay hang rao bao ve can cu."
+            ]
+        },
+        {
+            "CommandId": "REPAIR_STRUCTURE",
+            "PrimaryPhrase": "Dan sua thap phong thu kia.",
+            "Aliases": [
+                "Sua nha chinh ngay lap tuc.",
+                "Cong trinh nay sap sap, di sua no.",
+                "Nhanh tay sua nha quan bi tan cong.",
+                "Cho dan den repair cong trinh do."
+            ]
+        },
+        {
+            "CommandId": "CANCEL_CONSTRUCTION",
+            "PrimaryPhrase": "Huy xay cong trinh nay.",
+            "Aliases": [
+                "Bo nha dang dung kia.",
+                "Dung xay nha quan do lai.",
+                "Cancel cong trinh vua dat.",
+                "Huy du an xay dung hien tai."
+            ]
+        },
+        {
+            "CommandId": "TRAIN_UNIT",
+            "PrimaryPhrase": "Huan luyen 5 cung thu.",
+            "Aliases": [
+                "Ra them 3 ky binh.",
+                "Xep hang san xuat bo binh.",
+                "Doanh trai train lien tuc linh giao.",
+                "Toi can them dan lang."
+            ]
+        },
+        {
+            "CommandId": "SET_RALLY_POINT",
+            "PrimaryPhrase": "Dat diem tap ket tai cong chinh.",
+            "Aliases": [
+                "Linh moi sinh ra se den diem A.",
+                "Rally den mo vang phia dong.",
+                "Tat ca don vi moi ve khu trung tam.",
+                "Doi diem tap ket sang cua ben phai."
+            ]
+        },
+        {
+            "CommandId": "RESEARCH_TECH",
+            "PrimaryPhrase": "Nghien cuu nang cap giap bo binh.",
+            "Aliases": [
+                "Mo khoa cong nghe toc do chat go.",
+                "Nang cap sat thuong tam xa.",
+                "Bat dau nghien cuu nang cap xe cong thanh.",
+                "Lam ngay cong nghe tang toc di chuyen."
+            ]
+        },
+        {
+            "CommandId": "AGE_UP",
+            "PrimaryPhrase": "Len doi 2 ngay bay gio.",
+            "Aliases": [
+                "Nang cap len thoi dai tiep theo.",
+                "Tien hoa len doi 3.",
+                "Toi muon len doi that nhanh.",
+                "Bat dau len doi ngay khi du tai nguyen."
+            ]
+        },
+        {
+            "CommandId": "CREATE_CONTROL_GROUP",
+            "PrimaryPhrase": "Gan dao quan nay vao nhom 1.",
+            "Aliases": [
+                "Tao control group so 2.",
+                "Dat doi ky binh vao phim 3.",
+                "Cho nhom nay thanh dao so 4.",
+                "Luu don vi vua chon vao nhom 5."
+            ]
+        },
+        {
+            "CommandId": "SELECT_CONTROL_GROUP",
+            "PrimaryPhrase": "Chon nhom 1.",
+            "Aliases": [
+                "Goi dao so 2 ra.",
+                "Select group 3.",
+                "Lay nhom chien dau so 4.",
+                "Mo lai nhom 5."
+            ]
+        },
+        {
+            "CommandId": "ADD_TO_CONTROL_GROUP",
+            "PrimaryPhrase": "Them don vi nay vao nhom 1.",
+            "Aliases": [
+                "Append dao nay vao group 2.",
+                "Bo sung quan vua sinh vao nhom 3.",
+                "Nhap nhom hien tai vao so 4.",
+                "Them nhom dang chon vao phim 5."
+            ]
+        },
+        {
+            "CommandId": "CAMERA_GO_TO_LOCATION",
+            "PrimaryPhrase": "Dua camera den can cu chinh.",
+            "Aliases": [
+                "Nhay toi khu vuc giao tranh.",
+                "Cho toi xem mo vang ben trai.",
+                "Camera ve dao quan chinh.",
+                "Di den vi tri dang bi tan cong."
+            ]
+        },
+        {
+            "CommandId": "PING_MAP",
+            "PrimaryPhrase": "Ping tai cong ben phai.",
+            "Aliases": [
+                "Danh dau khu nay cho dong minh.",
+                "Bao dong tai diem A.",
+                "Gui tin hieu o mo vang phia bac.",
+                "Ping ngay cho nay de tap ket."
+            ]
+        },
+        {
+            "CommandId": "ALLY_ATTACK",
+            "PrimaryPhrase": "Dong minh tan cong cua chinh doi thu.",
+            "Aliases": [
+                "Team day manh ben canh trai.",
+                "Tat ca all in khu trung tam.",
+                "Ho tro toi danh vao mo vang ben phai.",
+                "Mo dot tan cong tong luc vao can cu dich."
+            ]
+        },
+        {
+            "CommandId": "ALLY_DEFEND",
+            "PrimaryPhrase": "Dong minh ve thu nha chinh.",
+            "Aliases": [
+                "Team phong thu cong ben trai.",
+                "Moi nguoi giu vi tri tai mo vang.",
+                "Ho tro phong thu khu trung tam.",
+                "Ve de bao ve nha quan ngay."
+            ]
+        },
+        {
+            "CommandId": "ALLY_SEND_RESOURCE",
+            "PrimaryPhrase": "Gui cho toi 300 go.",
+            "Aliases": [
+                "Cho xin 200 vang de len doi.",
+                "Dong minh chuyen 150 da cho minh.",
+                "Can gap 100 luong thuc.",
+                "Ban gui giup toi 250 go nhe."
+            ]
+        },
+        {
+            "CommandId": "GAME_PAUSE",
+            "PrimaryPhrase": "Tam dung tran dau.",
+            "Aliases": [
+                "Pause game.",
+                "Dung game mot chut.",
+                "Cho toi nghi tay, tam dung lai.",
+                "Tam dung ngay bay gio."
+            ]
+        },
+        {
+            "CommandId": "GAME_RESUME",
+            "PrimaryPhrase": "Tiep tuc tran dau.",
+            "Aliases": [
+                "Resume game.",
+                "Choi tiep di.",
+                "Bo tam dung va vao lai tran.",
+                "Bat dau lai ngay."
+            ]
+        },
+        {
+            "CommandId": "GAME_SPEED_CONTROL",
+            "PrimaryPhrase": "Tang toc do game len nhanh.",
+            "Aliases": [
+                "Giam toc do game xuong cham.",
+                "Dat toc do ve binh thuong.",
+                "Cho game chay nhanh hon.",
+                "Chuyen sang che do toc do vua."
+            ]
+        },
+        {
+            "CommandId": "SAVE_GAME",
+            "PrimaryPhrase": "Luu tran dau hien tai.",
+            "Aliases": [
+                "Save game voi ten ThuThach_01.",
+                "Luu nhanh game ngay bay gio.",
+                "Toi muon tao ban luu moi.",
+                "Luu game truoc khi tan cong tong."
+            ]
+        },
+        {
+            "CommandId": "SURRENDER",
+            "PrimaryPhrase": "Toi dau hang.",
+            "Aliases": [
+                "GG, ket thuc tran nay.",
+                "Xin thua tran.",
+                "Thoat tran va chap nhan thua.",
+                "Khong danh nua, dau hang."
+            ]
+        }
+    ]
+}

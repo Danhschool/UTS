@@ -4,12 +4,12 @@ using System.Collections.Generic;
 namespace ProjectRTS.SpeechRecognition.Core
 {
     /// <summary>
-    /// So khớp chuỗi STT với primary/alias bằng độ tương đồng Levenshtein chuẩn hóa (SRP: fuzzy map).
+    /// So khớp chuỗi STT với primary/alias; câu tương tự được ánh xạ về PrimaryPhrase mẫu (SRP: fuzzy map).
     /// </summary>
     public sealed class FuzzyVoiceCommandResolver : IVoiceCommandResolver
     {
         private readonly VoiceCommandProfile _profile;
-        private readonly List<(string CommandId, string Phrase)> _candidates = new List<(string, string)>();
+        private readonly List<(string CommandId, string PhraseNormalized)> _candidates = new List<(string, string)>();
 
         public FuzzyVoiceCommandResolver(VoiceCommandProfile profile)
         {
@@ -41,49 +41,49 @@ namespace ProjectRTS.SpeechRecognition.Core
             }
         }
 
-        /// <summary>
-        /// Mục tiêu: chọn CommandId có cụm gần nhất. Logic: NormalizedSimilarity với mọi cụm, lấy max nếu ≥ MinSimilarity.
-        /// </summary>
-        public bool TryResolve(string recognizedText, out string commandId, out float similarity01)
+        public bool TryResolve(
+            string recognizedText,
+            out string commandId,
+            out string canonicalPhraseInDatasetForm,
+            out float similarity01)
         {
-            commandId = null;
-            similarity01 = 0f;
-            if (string.IsNullOrWhiteSpace(recognizedText) || _candidates.Count == 0)
+            if (!TryMapToCanonicalPhrase(
+                    recognizedText,
+                    out commandId,
+                    out canonicalPhraseInDatasetForm,
+                    out similarity01,
+                    out var isCommandMatch)
+                || !isCommandMatch)
             {
+                commandId = null;
+                canonicalPhraseInDatasetForm = null;
+                similarity01 = 0f;
                 return false;
             }
 
-            var input = VoiceCommandProfile.NormalizeForMatch(recognizedText);
-            if (input.Length == 0)
-            {
-                return false;
-            }
+            return true;
+        }
 
-            var bestSim = 0f;
-            string bestId = null;
-            foreach (var (cid, phrase) in _candidates)
-            {
-                var sim = StringSimilarity.NormalizedSimilarity(input, phrase);
-                if (sim > bestSim)
-                {
-                    bestSim = sim;
-                    bestId = cid;
-                }
-            }
-
-            if (bestId != null && bestSim >= _profile.MinSimilarity)
-            {
-                commandId = bestId;
-                similarity01 = bestSim;
-                return true;
-            }
-
-            return false;
+        public bool TryMapToCanonicalPhrase(
+            string recognizedText,
+            out string commandId,
+            out string canonicalPhraseInDatasetForm,
+            out float similarity01,
+            out bool isCommandMatch)
+        {
+            return RecognizedSpeechPhraseMapper.TryMapToCanonicalPhrase(
+                _profile,
+                _candidates,
+                recognizedText,
+                out commandId,
+                out canonicalPhraseInDatasetForm,
+                out similarity01,
+                out isCommandMatch);
         }
 
         private void AddCandidate(string commandId, string phrase)
         {
-            var n = VoiceCommandProfile.NormalizeForMatch(phrase);
+            var n = RecognizedSpeechPhraseNormalizer.ToDatasetPhraseForm(phrase);
             if (n.Length == 0)
             {
                 return;

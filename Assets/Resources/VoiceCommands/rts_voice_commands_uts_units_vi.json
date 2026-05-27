@@ -1,0 +1,1117 @@
+{
+    "schemaVersion": 1,
+    "minSimilarity": 0.72,
+    "description": "UTS voice: dan/nong dan cho worker. Chon khong so = 1 unit. Voice V one-shot.",
+    "commands": [
+        {
+            "CommandId": "stop",
+            "PrimaryPhrase": "dung lai",
+            "Aliases": [
+                "dung yen",
+                "dừng lại",
+                "huy lenh",
+                "hủy lệnh",
+                "đứng yên"
+            ]
+        },
+        {
+            "CommandId": "move",
+            "PrimaryPhrase": "di chuyen",
+            "Aliases": [
+                "di chuyển",
+                "di den do",
+                "lenh di chuyen",
+                "đi đến đó"
+            ]
+        },
+        {
+            "CommandId": "attack",
+            "PrimaryPhrase": "tan cong",
+            "Aliases": [
+                "danh",
+                "khai hoa",
+                "khai hỏa",
+                "tấn công",
+                "đánh"
+            ]
+        },
+        {
+            "CommandId": "attack_move",
+            "PrimaryPhrase": "tan cong di chuyen",
+            "Aliases": [
+                "a move",
+                "danh doc duong",
+                "tấn công di chuyển",
+                "vua di vua danh"
+            ]
+        },
+        {
+            "CommandId": "hold_position",
+            "PrimaryPhrase": "giu vi tri",
+            "Aliases": [
+                "dung im",
+                "giữ vị trí",
+                "stand ground",
+                "đứng im bắn"
+            ]
+        },
+        {
+            "CommandId": "select_all_military",
+            "PrimaryPhrase": "chon toan bo quan",
+            "Aliases": [
+                "chon het quan",
+                "chon tat ca quan doi",
+                "chọn hết quân",
+                "chọn toàn bộ quân"
+            ]
+        },
+        {
+            "CommandId": "select_idle_workers",
+            "PrimaryPhrase": "chon dan ranh",
+            "Aliases": [
+                "chon dan ranh",
+                "chon nong dan ranh",
+                "chọn dân rảnh",
+                "dan dang ranh",
+                "dan nhan roi",
+                "nong dan ranh"
+            ]
+        },
+        {
+            "CommandId": "select_1_worker",
+            "PrimaryPhrase": "chon 1 dan",
+            "Aliases": [
+                "chon 1 dan",
+                "chon 1 mot dan",
+                "chon 1 một dan",
+                "chon mot dan",
+                "chon mot nong dan",
+                "chon một dan",
+                "chon một dân",
+                "chọn 1 dân",
+                "chọn mot dân",
+                "chọn một dân",
+                "dan",
+                "dân",
+                "nong dan",
+                "nông dân"
+            ]
+        },
+        {
+            "CommandId": "select_2_worker",
+            "PrimaryPhrase": "chon 2 dan",
+            "Aliases": [
+                "chon 2 dan",
+                "chon 2 hai dan",
+                "chon hai dan",
+                "chọn 2 dân",
+                "chọn hai dân",
+                "dan",
+                "dân",
+                "nong dan",
+                "nông dân"
+            ]
+        },
+        {
+            "CommandId": "select_3_worker",
+            "PrimaryPhrase": "chon 3 dan",
+            "Aliases": [
+                "chon 3 ba dan",
+                "chon 3 dan",
+                "chon ba dan",
+                "chọn 3 dân",
+                "chọn ba dân",
+                "dan",
+                "dân",
+                "nong dan",
+                "nông dân"
+            ]
+        },
+        {
+            "CommandId": "select_4_worker",
+            "PrimaryPhrase": "chon 4 dan",
+            "Aliases": [
+                "chon 4 bon dan",
+                "chon 4 bốn dan",
+                "chon 4 dan",
+                "chon bon dan",
+                "chon bốn dan",
+                "chọn 4 dân",
+                "chọn bon dân",
+                "chọn bốn dân",
+                "dan",
+                "dân",
+                "nong dan",
+                "nông dân"
+            ]
+        },
+        {
+            "CommandId": "select_5_worker",
+            "PrimaryPhrase": "chon 5 dan",
+            "Aliases": [
+                "chon 5 dan",
+                "chon 5 nam dan",
+                "chon 5 năm dan",
+                "chon nam dan",
+                "chon năm dan",
+                "chọn 5 dân",
+                "chọn nam dân",
+                "chọn năm dân",
+                "dan",
+                "dân",
+                "nong dan",
+                "nông dân"
+            ]
+        },
+        {
+            "CommandId": "select_6_worker",
+            "PrimaryPhrase": "chon 6 dan",
+            "Aliases": [
+                "chon 6 dan",
+                "chon 6 sau dan",
+                "chon 6 sáu dan",
+                "chon sau dan",
+                "chon sáu dan",
+                "chọn 6 dân",
+                "chọn sau dân",
+                "chọn sáu dân",
+                "dan",
+                "dân",
+                "nong dan",
+                "nông dân"
+            ]
+        },
+        {
+            "CommandId": "select_7_worker",
+            "PrimaryPhrase": "chon 7 dan",
+            "Aliases": [
+                "chon 7 bay dan",
+                "chon 7 bảy dan",
+                "chon 7 dan",
+                "chon bay dan",
+                "chon bảy dan",
+                "chọn 7 dân",
+                "chọn bay dân",
+                "chọn bảy dân",
+                "dan",
+                "dân",
+                "nong dan",
+                "nông dân"
+            ]
+        },
+        {
+            "CommandId": "select_8_worker",
+            "PrimaryPhrase": "chon 8 dan",
+            "Aliases": [
+                "chon 8 dan",
+                "chon 8 tam dan",
+                "chon 8 tám dan",
+                "chon tam dan",
+                "chon tám dan",
+                "chọn 8 dân",
+                "chọn tam dân",
+                "chọn tám dân",
+                "dan",
+                "dân",
+                "nong dan",
+                "nông dân"
+            ]
+        },
+        {
+            "CommandId": "select_9_worker",
+            "PrimaryPhrase": "chon 9 dan",
+            "Aliases": [
+                "chon 9 chin dan",
+                "chon 9 chín dan",
+                "chon 9 dan",
+                "chon chin dan",
+                "chon chín dan",
+                "chọn 9 dân",
+                "chọn chin dân",
+                "chọn chín dân",
+                "dan",
+                "dân",
+                "nong dan",
+                "nông dân"
+            ]
+        },
+        {
+            "CommandId": "select_10_worker",
+            "PrimaryPhrase": "chon 10 dan",
+            "Aliases": [
+                "chon 10 dan",
+                "chon 10 muoi dan",
+                "chon 10 mười dan",
+                "chon muoi dan",
+                "chon mười dan",
+                "chọn 10 dân",
+                "chọn muoi dân",
+                "chọn mười dân",
+                "dan",
+                "dân",
+                "nong dan",
+                "nông dân"
+            ]
+        },
+        {
+            "CommandId": "select_1_warrior",
+            "PrimaryPhrase": "chon 1 warrior",
+            "Aliases": [
+                "chon 1 bo binh",
+                "chon 1 bộ binh",
+                "chon 1 warrior",
+                "chon bo binh",
+                "chon het warrior",
+                "chon mot bo binh",
+                "chon mot bộ binh",
+                "chon mot warrior",
+                "chon một bo binh",
+                "chon một bộ binh",
+                "chon một warrior",
+                "chon warrior",
+                "chọn 1 bo binh",
+                "chọn 1 bộ binh",
+                "chọn 1 warrior",
+                "chọn bộ binh",
+                "chọn hết warrior",
+                "chọn một bo binh",
+                "chọn một bộ binh",
+                "chọn một warrior",
+                "chọn warrior"
+            ]
+        },
+        {
+            "CommandId": "select_2_warrior",
+            "PrimaryPhrase": "chon 2 warrior",
+            "Aliases": [
+                "chon 2 bo binh",
+                "chon 2 bộ binh",
+                "chon 2 warrior",
+                "chon hai bo binh",
+                "chon hai bộ binh",
+                "chon hai warrior",
+                "chọn 2 bo binh",
+                "chọn 2 bộ binh",
+                "chọn 2 warrior",
+                "chọn hai bo binh",
+                "chọn hai bộ binh",
+                "chọn hai warrior"
+            ]
+        },
+        {
+            "CommandId": "select_3_warrior",
+            "PrimaryPhrase": "chon 3 warrior",
+            "Aliases": [
+                "chon 3 bo binh",
+                "chon 3 bộ binh",
+                "chon 3 warrior",
+                "chon ba bo binh",
+                "chon ba bộ binh",
+                "chon ba warrior",
+                "chọn 3 bo binh",
+                "chọn 3 bộ binh",
+                "chọn 3 warrior",
+                "chọn ba bo binh",
+                "chọn ba bộ binh",
+                "chọn ba warrior"
+            ]
+        },
+        {
+            "CommandId": "select_4_warrior",
+            "PrimaryPhrase": "chon 4 warrior",
+            "Aliases": [
+                "chon 4 bo binh",
+                "chon 4 bộ binh",
+                "chon 4 warrior",
+                "chon bon bo binh",
+                "chon bon bộ binh",
+                "chon bon warrior",
+                "chon bốn bo binh",
+                "chon bốn bộ binh",
+                "chon bốn warrior",
+                "chọn 4 bo binh",
+                "chọn 4 bộ binh",
+                "chọn 4 warrior",
+                "chọn bốn bo binh",
+                "chọn bốn bộ binh",
+                "chọn bốn warrior"
+            ]
+        },
+        {
+            "CommandId": "select_5_warrior",
+            "PrimaryPhrase": "chon 5 warrior",
+            "Aliases": [
+                "chon 5 bo binh",
+                "chon 5 bộ binh",
+                "chon 5 warrior",
+                "chon nam bo binh",
+                "chon nam bộ binh",
+                "chon nam warrior",
+                "chon năm bo binh",
+                "chon năm bộ binh",
+                "chon năm warrior",
+                "chọn 5 bo binh",
+                "chọn 5 bộ binh",
+                "chọn 5 warrior",
+                "chọn năm bo binh",
+                "chọn năm bộ binh",
+                "chọn năm warrior"
+            ]
+        },
+        {
+            "CommandId": "select_6_warrior",
+            "PrimaryPhrase": "chon 6 warrior",
+            "Aliases": [
+                "chon 6 bo binh",
+                "chon 6 bộ binh",
+                "chon 6 warrior",
+                "chon sau bo binh",
+                "chon sau bộ binh",
+                "chon sau warrior",
+                "chon sáu bo binh",
+                "chon sáu bộ binh",
+                "chon sáu warrior",
+                "chọn 6 bo binh",
+                "chọn 6 bộ binh",
+                "chọn 6 warrior",
+                "chọn sáu bo binh",
+                "chọn sáu bộ binh",
+                "chọn sáu warrior"
+            ]
+        },
+        {
+            "CommandId": "select_7_warrior",
+            "PrimaryPhrase": "chon 7 warrior",
+            "Aliases": [
+                "chon 7 bo binh",
+                "chon 7 bộ binh",
+                "chon 7 warrior",
+                "chon bay bo binh",
+                "chon bay bộ binh",
+                "chon bay warrior",
+                "chon bảy bo binh",
+                "chon bảy bộ binh",
+                "chon bảy warrior",
+                "chọn 7 bo binh",
+                "chọn 7 bộ binh",
+                "chọn 7 warrior",
+                "chọn bảy bo binh",
+                "chọn bảy bộ binh",
+                "chọn bảy warrior"
+            ]
+        },
+        {
+            "CommandId": "select_8_warrior",
+            "PrimaryPhrase": "chon 8 warrior",
+            "Aliases": [
+                "chon 8 bo binh",
+                "chon 8 bộ binh",
+                "chon 8 warrior",
+                "chon tam bo binh",
+                "chon tam bộ binh",
+                "chon tam warrior",
+                "chon tám bo binh",
+                "chon tám bộ binh",
+                "chon tám warrior",
+                "chọn 8 bo binh",
+                "chọn 8 bộ binh",
+                "chọn 8 warrior",
+                "chọn tám bo binh",
+                "chọn tám bộ binh",
+                "chọn tám warrior"
+            ]
+        },
+        {
+            "CommandId": "select_9_warrior",
+            "PrimaryPhrase": "chon 9 warrior",
+            "Aliases": [
+                "chon 9 bo binh",
+                "chon 9 bộ binh",
+                "chon 9 warrior",
+                "chon chin bo binh",
+                "chon chin bộ binh",
+                "chon chin warrior",
+                "chon chín bo binh",
+                "chon chín bộ binh",
+                "chon chín warrior",
+                "chọn 9 bo binh",
+                "chọn 9 bộ binh",
+                "chọn 9 warrior",
+                "chọn chín bo binh",
+                "chọn chín bộ binh",
+                "chọn chín warrior"
+            ]
+        },
+        {
+            "CommandId": "select_10_warrior",
+            "PrimaryPhrase": "chon 10 warrior",
+            "Aliases": [
+                "chon 10 bo binh",
+                "chon 10 bộ binh",
+                "chon 10 warrior",
+                "chon muoi bo binh",
+                "chon muoi bộ binh",
+                "chon muoi warrior",
+                "chon mười bo binh",
+                "chon mười bộ binh",
+                "chon mười warrior",
+                "chọn 10 bo binh",
+                "chọn 10 bộ binh",
+                "chọn 10 warrior",
+                "chọn mười bo binh",
+                "chọn mười bộ binh",
+                "chọn mười warrior"
+            ]
+        },
+        {
+            "CommandId": "select_1_archer",
+            "PrimaryPhrase": "chon 1 archer",
+            "Aliases": [
+                "chon 1 archer",
+                "chon 1 cung thu",
+                "chon 1 cung thủ",
+                "chon archer",
+                "chon cung thu",
+                "chon het archer",
+                "chon mot archer",
+                "chon mot cung thu",
+                "chon mot cung thủ",
+                "chon một archer",
+                "chon một cung thu",
+                "chon một cung thủ",
+                "chọn 1 archer",
+                "chọn 1 cung thu",
+                "chọn 1 cung thủ",
+                "chọn archer",
+                "chọn cung thủ",
+                "chọn hết archer",
+                "chọn một archer",
+                "chọn một cung thu",
+                "chọn một cung thủ"
+            ]
+        },
+        {
+            "CommandId": "select_2_archer",
+            "PrimaryPhrase": "chon 2 archer",
+            "Aliases": [
+                "chon 2 archer",
+                "chon 2 cung thu",
+                "chon 2 cung thủ",
+                "chon hai archer",
+                "chon hai cung thu",
+                "chon hai cung thủ",
+                "chọn 2 archer",
+                "chọn 2 cung thu",
+                "chọn 2 cung thủ",
+                "chọn hai archer",
+                "chọn hai cung thu",
+                "chọn hai cung thủ"
+            ]
+        },
+        {
+            "CommandId": "select_3_archer",
+            "PrimaryPhrase": "chon 3 archer",
+            "Aliases": [
+                "chon 3 archer",
+                "chon 3 cung thu",
+                "chon 3 cung thủ",
+                "chon ba archer",
+                "chon ba cung thu",
+                "chon ba cung thủ",
+                "chọn 3 archer",
+                "chọn 3 cung thu",
+                "chọn 3 cung thủ",
+                "chọn ba archer",
+                "chọn ba cung thu",
+                "chọn ba cung thủ"
+            ]
+        },
+        {
+            "CommandId": "select_4_archer",
+            "PrimaryPhrase": "chon 4 archer",
+            "Aliases": [
+                "chon 4 archer",
+                "chon 4 cung thu",
+                "chon 4 cung thủ",
+                "chon bon archer",
+                "chon bon cung thu",
+                "chon bon cung thủ",
+                "chon bốn archer",
+                "chon bốn cung thu",
+                "chon bốn cung thủ",
+                "chọn 4 archer",
+                "chọn 4 cung thu",
+                "chọn 4 cung thủ",
+                "chọn bốn archer",
+                "chọn bốn cung thu",
+                "chọn bốn cung thủ"
+            ]
+        },
+        {
+            "CommandId": "select_5_archer",
+            "PrimaryPhrase": "chon 5 archer",
+            "Aliases": [
+                "chon 5 archer",
+                "chon 5 cung thu",
+                "chon 5 cung thủ",
+                "chon nam archer",
+                "chon nam cung thu",
+                "chon nam cung thủ",
+                "chon năm archer",
+                "chon năm cung thu",
+                "chon năm cung thủ",
+                "chọn 5 archer",
+                "chọn 5 cung thu",
+                "chọn 5 cung thủ",
+                "chọn năm archer",
+                "chọn năm cung thu",
+                "chọn năm cung thủ"
+            ]
+        },
+        {
+            "CommandId": "select_6_archer",
+            "PrimaryPhrase": "chon 6 archer",
+            "Aliases": [
+                "chon 6 archer",
+                "chon 6 cung thu",
+                "chon 6 cung thủ",
+                "chon sau archer",
+                "chon sau cung thu",
+                "chon sau cung thủ",
+                "chon sáu archer",
+                "chon sáu cung thu",
+                "chon sáu cung thủ",
+                "chọn 6 archer",
+                "chọn 6 cung thu",
+                "chọn 6 cung thủ",
+                "chọn sáu archer",
+                "chọn sáu cung thu",
+                "chọn sáu cung thủ"
+            ]
+        },
+        {
+            "CommandId": "select_7_archer",
+            "PrimaryPhrase": "chon 7 archer",
+            "Aliases": [
+                "chon 7 archer",
+                "chon 7 cung thu",
+                "chon 7 cung thủ",
+                "chon bay archer",
+                "chon bay cung thu",
+                "chon bay cung thủ",
+                "chon bảy archer",
+                "chon bảy cung thu",
+                "chon bảy cung thủ",
+                "chọn 7 archer",
+                "chọn 7 cung thu",
+                "chọn 7 cung thủ",
+                "chọn bảy archer",
+                "chọn bảy cung thu",
+                "chọn bảy cung thủ"
+            ]
+        },
+        {
+            "CommandId": "select_8_archer",
+            "PrimaryPhrase": "chon 8 archer",
+            "Aliases": [
+                "chon 8 archer",
+                "chon 8 cung thu",
+                "chon 8 cung thủ",
+                "chon tam archer",
+                "chon tam cung thu",
+                "chon tam cung thủ",
+                "chon tám archer",
+                "chon tám cung thu",
+                "chon tám cung thủ",
+                "chọn 8 archer",
+                "chọn 8 cung thu",
+                "chọn 8 cung thủ",
+                "chọn tám archer",
+                "chọn tám cung thu",
+                "chọn tám cung thủ"
+            ]
+        },
+        {
+            "CommandId": "select_9_archer",
+            "PrimaryPhrase": "chon 9 archer",
+            "Aliases": [
+                "chon 9 archer",
+                "chon 9 cung thu",
+                "chon 9 cung thủ",
+                "chon chin archer",
+                "chon chin cung thu",
+                "chon chin cung thủ",
+                "chon chín archer",
+                "chon chín cung thu",
+                "chon chín cung thủ",
+                "chọn 9 archer",
+                "chọn 9 cung thu",
+                "chọn 9 cung thủ",
+                "chọn chín archer",
+                "chọn chín cung thu",
+                "chọn chín cung thủ"
+            ]
+        },
+        {
+            "CommandId": "select_10_archer",
+            "PrimaryPhrase": "chon 10 archer",
+            "Aliases": [
+                "chon 10 archer",
+                "chon 10 cung thu",
+                "chon 10 cung thủ",
+                "chon muoi archer",
+                "chon muoi cung thu",
+                "chon muoi cung thủ",
+                "chon mười archer",
+                "chon mười cung thu",
+                "chon mười cung thủ",
+                "chọn 10 archer",
+                "chọn 10 cung thu",
+                "chọn 10 cung thủ",
+                "chọn mười archer",
+                "chọn mười cung thu",
+                "chọn mười cung thủ"
+            ]
+        },
+        {
+            "CommandId": "select_1_rockwarrior",
+            "PrimaryPhrase": "chon 1 rockwarrior",
+            "Aliases": [
+                "chon 1 da binh",
+                "chon 1 rock warrior",
+                "chon 1 rockwarrior",
+                "chon da binh",
+                "chon het rockwarrior",
+                "chon mot da binh",
+                "chon mot rock warrior",
+                "chon mot rockwarrior",
+                "chon một da binh",
+                "chon một rock warrior",
+                "chon một rockwarrior",
+                "chon rock warrior",
+                "chon rockwarrior",
+                "chọn 1 da binh",
+                "chọn 1 rock warrior",
+                "chọn 1 rockwarrior",
+                "chọn một da binh",
+                "chọn một rock warrior",
+                "chọn một rockwarrior",
+                "chọn rockwarrior",
+                "chọn đá binh"
+            ]
+        },
+        {
+            "CommandId": "select_2_rockwarrior",
+            "PrimaryPhrase": "chon 2 rockwarrior",
+            "Aliases": [
+                "chon 2 da binh",
+                "chon 2 rock warrior",
+                "chon 2 rockwarrior",
+                "chon hai da binh",
+                "chon hai rock warrior",
+                "chon hai rockwarrior",
+                "chọn 2 da binh",
+                "chọn 2 rock warrior",
+                "chọn 2 rockwarrior",
+                "chọn hai da binh",
+                "chọn hai rock warrior",
+                "chọn hai rockwarrior"
+            ]
+        },
+        {
+            "CommandId": "select_3_rockwarrior",
+            "PrimaryPhrase": "chon 3 rockwarrior",
+            "Aliases": [
+                "chon 3 da binh",
+                "chon 3 rock warrior",
+                "chon 3 rockwarrior",
+                "chon ba da binh",
+                "chon ba rock warrior",
+                "chon ba rockwarrior",
+                "chọn 3 da binh",
+                "chọn 3 rock warrior",
+                "chọn 3 rockwarrior",
+                "chọn ba da binh",
+                "chọn ba rock warrior",
+                "chọn ba rockwarrior"
+            ]
+        },
+        {
+            "CommandId": "select_4_rockwarrior",
+            "PrimaryPhrase": "chon 4 rockwarrior",
+            "Aliases": [
+                "chon 4 da binh",
+                "chon 4 rock warrior",
+                "chon 4 rockwarrior",
+                "chon bon da binh",
+                "chon bon rock warrior",
+                "chon bon rockwarrior",
+                "chon bốn da binh",
+                "chon bốn rock warrior",
+                "chon bốn rockwarrior",
+                "chọn 4 da binh",
+                "chọn 4 rock warrior",
+                "chọn 4 rockwarrior",
+                "chọn bốn da binh",
+                "chọn bốn rock warrior",
+                "chọn bốn rockwarrior"
+            ]
+        },
+        {
+            "CommandId": "select_5_rockwarrior",
+            "PrimaryPhrase": "chon 5 rockwarrior",
+            "Aliases": [
+                "chon 5 da binh",
+                "chon 5 rock warrior",
+                "chon 5 rockwarrior",
+                "chon nam da binh",
+                "chon nam rock warrior",
+                "chon nam rockwarrior",
+                "chon năm da binh",
+                "chon năm rock warrior",
+                "chon năm rockwarrior",
+                "chọn 5 da binh",
+                "chọn 5 rock warrior",
+                "chọn 5 rockwarrior",
+                "chọn năm da binh",
+                "chọn năm rock warrior",
+                "chọn năm rockwarrior"
+            ]
+        },
+        {
+            "CommandId": "select_6_rockwarrior",
+            "PrimaryPhrase": "chon 6 rockwarrior",
+            "Aliases": [
+                "chon 6 da binh",
+                "chon 6 rock warrior",
+                "chon 6 rockwarrior",
+                "chon sau da binh",
+                "chon sau rock warrior",
+                "chon sau rockwarrior",
+                "chon sáu da binh",
+                "chon sáu rock warrior",
+                "chon sáu rockwarrior",
+                "chọn 6 da binh",
+                "chọn 6 rock warrior",
+                "chọn 6 rockwarrior",
+                "chọn sáu da binh",
+                "chọn sáu rock warrior",
+                "chọn sáu rockwarrior"
+            ]
+        },
+        {
+            "CommandId": "select_7_rockwarrior",
+            "PrimaryPhrase": "chon 7 rockwarrior",
+            "Aliases": [
+                "chon 7 da binh",
+                "chon 7 rock warrior",
+                "chon 7 rockwarrior",
+                "chon bay da binh",
+                "chon bay rock warrior",
+                "chon bay rockwarrior",
+                "chon bảy da binh",
+                "chon bảy rock warrior",
+                "chon bảy rockwarrior",
+                "chọn 7 da binh",
+                "chọn 7 rock warrior",
+                "chọn 7 rockwarrior",
+                "chọn bảy da binh",
+                "chọn bảy rock warrior",
+                "chọn bảy rockwarrior"
+            ]
+        },
+        {
+            "CommandId": "select_8_rockwarrior",
+            "PrimaryPhrase": "chon 8 rockwarrior",
+            "Aliases": [
+                "chon 8 da binh",
+                "chon 8 rock warrior",
+                "chon 8 rockwarrior",
+                "chon tam da binh",
+                "chon tam rock warrior",
+                "chon tam rockwarrior",
+                "chon tám da binh",
+                "chon tám rock warrior",
+                "chon tám rockwarrior",
+                "chọn 8 da binh",
+                "chọn 8 rock warrior",
+                "chọn 8 rockwarrior",
+                "chọn tám da binh",
+                "chọn tám rock warrior",
+                "chọn tám rockwarrior"
+            ]
+        },
+        {
+            "CommandId": "select_9_rockwarrior",
+            "PrimaryPhrase": "chon 9 rockwarrior",
+            "Aliases": [
+                "chon 9 da binh",
+                "chon 9 rock warrior",
+                "chon 9 rockwarrior",
+                "chon chin da binh",
+                "chon chin rock warrior",
+                "chon chin rockwarrior",
+                "chon chín da binh",
+                "chon chín rock warrior",
+                "chon chín rockwarrior",
+                "chọn 9 da binh",
+                "chọn 9 rock warrior",
+                "chọn 9 rockwarrior",
+                "chọn chín da binh",
+                "chọn chín rock warrior",
+                "chọn chín rockwarrior"
+            ]
+        },
+        {
+            "CommandId": "select_10_rockwarrior",
+            "PrimaryPhrase": "chon 10 rockwarrior",
+            "Aliases": [
+                "chon 10 da binh",
+                "chon 10 rock warrior",
+                "chon 10 rockwarrior",
+                "chon muoi da binh",
+                "chon muoi rock warrior",
+                "chon muoi rockwarrior",
+                "chon mười da binh",
+                "chon mười rock warrior",
+                "chon mười rockwarrior",
+                "chọn 10 da binh",
+                "chọn 10 rock warrior",
+                "chọn 10 rockwarrior",
+                "chọn mười da binh",
+                "chọn mười rock warrior",
+                "chọn mười rockwarrior"
+            ]
+        },
+        {
+            "CommandId": "gather_wood",
+            "PrimaryPhrase": "thu go",
+            "Aliases": [
+                "chat cay",
+                "chặt cây",
+                "khai thac go",
+                "thu gỗ"
+            ]
+        },
+        {
+            "CommandId": "gather_stone",
+            "PrimaryPhrase": "thu da",
+            "Aliases": [
+                "dao da",
+                "khai da",
+                "thu đá",
+                "đào đá"
+            ]
+        },
+        {
+            "CommandId": "build_storehouse",
+            "PrimaryPhrase": "xay nha kho",
+            "Aliases": [
+                "dung nha kho",
+                "nha kho",
+                "xay kho",
+                "xây kho",
+                "xây nhà kho"
+            ]
+        },
+        {
+            "CommandId": "build_forge",
+            "PrimaryPhrase": "xay lo ren",
+            "Aliases": [
+                "dung lo ren",
+                "lo ren",
+                "lò rèn",
+                "xay lo ren",
+                "xây lò rèn"
+            ]
+        },
+        {
+            "CommandId": "build_barracks",
+            "PrimaryPhrase": "xay nha linh",
+            "Aliases": [
+                "doanh trại",
+                "nha linh",
+                "xay barrack",
+                "xay doanh trai",
+                "xây barrack",
+                "xây nhà lính"
+            ]
+        },
+        {
+            "CommandId": "build_corral",
+            "PrimaryPhrase": "xay corral",
+            "Aliases": [
+                "chuồng nuôi",
+                "dung corral",
+                "xay chuong",
+                "xây chuồng",
+                "xây corral"
+            ]
+        },
+        {
+            "CommandId": "build_defense_tower",
+            "PrimaryPhrase": "xay thap canh",
+            "Aliases": [
+                "dung thap",
+                "thap canh",
+                "tháp canh",
+                "xay thap canh",
+                "xây tháp canh"
+            ]
+        },
+        {
+            "CommandId": "train_worker",
+            "PrimaryPhrase": "tuyen dan",
+            "Aliases": [
+                "huan luyen dan",
+                "huấn luyện dân",
+                "san xuat dan",
+                "tao dan",
+                "tuyen dan",
+                "tuyen nong dan",
+                "tuyển dân",
+                "tuyển nông dân",
+                "tạo dân"
+            ]
+        },
+        {
+            "CommandId": "train_warrior",
+            "PrimaryPhrase": "tuyen warrior",
+            "Aliases": [
+                "huan luyen warrior",
+                "huấn luyện warrior",
+                "san xuat warrior",
+                "tao warrior",
+                "tuyển warrior",
+                "tạo warrior"
+            ]
+        },
+        {
+            "CommandId": "train_archer",
+            "PrimaryPhrase": "tuyen archer",
+            "Aliases": [
+                "huan luyen archer",
+                "huan luyen cung thu",
+                "huấn luyện archer",
+                "tao archer",
+                "tuyển archer",
+                "tạo archer"
+            ]
+        },
+        {
+            "CommandId": "train_rockwarrior",
+            "PrimaryPhrase": "tuyen rockwarrior",
+            "Aliases": [
+                "huan luyen rockwarrior",
+                "san xuat rockwarrior",
+                "tao rockwarrior",
+                "tuyển rockwarrior",
+                "tạo rock warrior"
+            ]
+        },
+        {
+            "CommandId": "research_damage",
+            "PrimaryPhrase": "nang cap sat thuong",
+            "Aliases": [
+                "nang cap damage",
+                "nghien cuu damage",
+                "nghien cuu sat thuong",
+                "nâng cấp sát thương",
+                "tang sat thuong",
+                "upgrade damage"
+            ]
+        },
+        {
+            "CommandId": "research_health",
+            "PrimaryPhrase": "nang cap mau",
+            "Aliases": [
+                "nang cap health",
+                "nang cap sinh luc",
+                "nghien cuu mau",
+                "nghien cuu sinh luc",
+                "nâng cấp máu",
+                "tang mau",
+                "upgrade health"
+            ]
+        },
+        {
+            "CommandId": "research_move_speed",
+            "PrimaryPhrase": "nang cap toc do di chuyen",
+            "Aliases": [
+                "nang cap move speed",
+                "nang cap toc do",
+                "nghien cuu toc do di chuyen",
+                "nâng cấp tốc độ",
+                "tang toc do",
+                "upgrade move speed"
+            ]
+        },
+        {
+            "CommandId": "research_attack_delay",
+            "PrimaryPhrase": "nang cap toc do danh",
+            "Aliases": [
+                "danh nhanh hon",
+                "nang cap attack delay",
+                "nghien cuu toc do danh",
+                "nâng cấp tốc độ đánh",
+                "tan cong nhanh hon",
+                "upgrade attack delay"
+            ]
+        },
+        {
+            "CommandId": "research_gather_amount",
+            "PrimaryPhrase": "nang cap luong thu thap",
+            "Aliases": [
+                "nang cap gather amount",
+                "nghien cuu thu thap",
+                "nâng cấp thu thập",
+                "tang san luong thu thap",
+                "thu thap nhieu hon",
+                "upgrade gather amount"
+            ]
+        },
+        {
+            "CommandId": "research_gather_time",
+            "PrimaryPhrase": "nang cap toc do thu thap",
+            "Aliases": [
+                "chat go nhanh hon",
+                "nang cap gather time",
+                "nghien cuu toc do thu thap",
+                "nâng cấp tốc độ thu thập",
+                "thu thap nhanh hon",
+                "upgrade gather time"
+            ]
+        },
+        {
+            "CommandId": "cancel_research",
+            "PrimaryPhrase": "huy nghien cuu",
+            "Aliases": [
+                "cancel research",
+                "dung nghien cuu",
+                "huy nghien cuu",
+                "hủy nghiên cứu"
+            ]
+        },
+        {
+            "CommandId": "cancel_production",
+            "PrimaryPhrase": "huy san xuat",
+            "Aliases": [
+                "dung san xuat",
+                "huy hang doi",
+                "hủy hàng đợi",
+                "hủy sản xuất"
+            ]
+        },
+        {
+            "CommandId": "cancel_building",
+            "PrimaryPhrase": "huy xay dung",
+            "Aliases": [
+                "dung xay",
+                "huy cong trinh",
+                "hủy công trình",
+                "hủy xây dựng"
+            ]
+        }
+    ],
+    "selectCountDefault": 1
+}

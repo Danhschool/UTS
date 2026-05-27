@@ -6,6 +6,7 @@ namespace ProjectRTS.SpeechRecognition.Core
     /// <summary>
     /// Nối STT → resolver → sự kiện Unity cho gameplay (SRP: không chứa logic Vosk).
     /// </summary>
+    [DefaultExecutionOrder(-200)]
     [DisallowMultipleComponent]
     public sealed class VoiceCommandRouter : MonoBehaviour
     {
@@ -24,7 +25,16 @@ namespace ProjectRTS.SpeechRecognition.Core
 
         [SerializeField] private UnityEvent<string, float> _onCommandMatchedWithScore;
 
+        [Tooltip("Phát sau khi chuẩn hóa câu STT (dạng dataset: không dấu, chữ thường). Chỉ câu final.")]
+        [SerializeField] private UnityEvent<string> _onPhraseNormalized;
+
+        [Tooltip("commandId, cụm mẫu đã khớp (dạng dataset), điểm fuzzy.")]
+        [SerializeField] private UnityEvent<string, string, float> _onCommandMatchedWithPhrase;
+
         [SerializeField] private UnityEvent<string> _onNoCommandMatch;
+
+        [Tooltip("Câu đủ gần mẫu (≥ Phrase Snap) nhưng chưa đủ ngưỡng lệnh — vẫn trả cụm PrimaryPhrase chuẩn.")]
+        [SerializeField] private UnityEvent<string, string, float> _onPhraseSnappedToSample;
 
         private IVoiceCommandResolver _resolver;
 
@@ -92,27 +102,50 @@ namespace ProjectRTS.SpeechRecognition.Core
             TryEmit(text, isFinal: false);
         }
 
-        private void TryEmit(string text, bool isFinal)
+        private void TryEmit(string rawText, bool isFinal)
         {
-            if (_resolver == null || string.IsNullOrWhiteSpace(text))
+            if (_resolver == null || string.IsNullOrWhiteSpace(rawText))
             {
                 return;
             }
 
-            if (!_resolver.TryResolve(text, out var commandId, out var sim))
+            var normalized = RecognizedSpeechPhraseNormalizer.ToDatasetPhraseForm(rawText);
+            if (normalized.Length == 0)
+            {
+                return;
+            }
+
+            if (!_resolver.TryMapToCanonicalPhrase(
+                    normalized,
+                    out var commandId,
+                    out var canonicalPhrase,
+                    out var sim,
+                    out var isCommandMatch))
             {
                 if (isFinal)
                 {
-                    _onNoCommandMatch?.Invoke(text);
+                    _onPhraseNormalized?.Invoke(normalized);
+                    _onNoCommandMatch?.Invoke(normalized);
                 }
 
                 return;
             }
 
-            if (isFinal || _resolvePartialsForPreview)
+            var phraseForEvents = canonicalPhrase;
+            _onPhraseNormalized?.Invoke(phraseForEvents);
+
+            if (isCommandMatch && (isFinal || _resolvePartialsForPreview))
             {
                 _onCommandMatched?.Invoke(commandId);
                 _onCommandMatchedWithScore?.Invoke(commandId, sim);
+                _onCommandMatchedWithPhrase?.Invoke(commandId, phraseForEvents, sim);
+                return;
+            }
+
+            if (isFinal)
+            {
+                _onPhraseSnappedToSample?.Invoke(commandId, phraseForEvents, sim);
+                _onNoCommandMatch?.Invoke(phraseForEvents);
             }
         }
     }
