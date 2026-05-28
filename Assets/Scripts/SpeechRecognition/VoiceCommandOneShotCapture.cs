@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using GameDevTV.RTS.UI.GameEventLog;
+using ProjectRTS.SpeechRecognition.Core;
 using ProjectRTS.SpeechRecognition.Whisper;
 using UnityEngine;
 using Whisper;
@@ -58,6 +59,11 @@ namespace ProjectRTS.SpeechRecognition
             if (GetComponent<VoiceCommandRuntimeDiagnostics>() == null)
             {
                 gameObject.AddComponent<VoiceCommandRuntimeDiagnostics>();
+            }
+
+            if (GetComponent<VoiceCommandOneShotTranscriptMapper>() == null)
+            {
+                gameObject.AddComponent<VoiceCommandOneShotTranscriptMapper>();
             }
         }
 
