@@ -1,23 +1,40 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace GameDevTV.RTS.UI.GameEventLog
+namespace GameDevTV.RTS.UI.Components
 {
     /// <summary>
-    /// Kéo thanh chat tự do trong vùng canvas cha.
+    /// Kéo panel UI tự do trong canvas cha (giống chat log).
+    /// Gắn lên vùng kéo (title bar / header); gán Panel = khung cần di chuyển.
     /// </summary>
-    public class GameEventLogPanelDragHandle : MonoBehaviour, IBeginDragHandler, IDragHandler
+    [DisallowMultipleComponent]
+    public class FreeDraggablePanel : MonoBehaviour, IBeginDragHandler, IDragHandler
     {
-        [SerializeField] private RectTransform panel;
-        [SerializeField] private bool clampInsideParent = true;
+        [SerializeField] RectTransform panel;
+        [SerializeField] bool clampInsideParent = true;
 
-        private RectTransform parentRect;
-        private Vector2 dragPointerOffset;
+        RectTransform parentRect;
+        Vector2 dragPointerOffset;
 
-        public void Initialize(RectTransform panelRect)
+        void Awake()
+        {
+            if (panel == null)
+            {
+                panel = transform.parent as RectTransform;
+            }
+
+            parentRect = panel != null ? panel.parent as RectTransform : null;
+        }
+
+        /// <summary>
+        /// Mục tiêu: gán panel từ code (GameEventLog, manual dialog, …).
+        /// Cách hoạt động: lưu RectTransform và parent để tính toạ độ khi kéo.
+        /// </summary>
+        public void Initialize(RectTransform panelRect, bool clampToParent = true)
         {
             panel = panelRect;
-            parentRect = panel.parent as RectTransform;
+            clampInsideParent = clampToParent;
+            parentRect = panel != null ? panel.parent as RectTransform : null;
         }
 
         public void OnBeginDrag(PointerEventData eventData)
@@ -63,11 +80,7 @@ namespace GameDevTV.RTS.UI.GameEventLog
             }
         }
 
-        /// <summary>
-        /// Mục tiêu: Giữ panel không bị kéo ra ngoài canvas.
-        /// Cách hoạt động: Clamp anchoredPosition theo kích thước panel và parent (pivot dưới-trái).
-        /// </summary>
-        private void ClampInsideParent()
+        void ClampInsideParent()
         {
             Vector2 panelSize = panel.rect.size;
             Vector2 parentSize = parentRect.rect.size;

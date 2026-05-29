@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Text;
+using GameDevTV.RTS.UI.Components;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,7 +28,7 @@ namespace GameDevTV.RTS.UI.GameEventLog
         [SerializeField] private bool allowFreeMove = true;
 
         private readonly StringBuilder stringBuilder = new(2048);
-        private GameEventLogPanelDragHandle dragBehaviour;
+        private FreeDraggablePanel dragBehaviour;
         private Coroutine scrollRoutine;
 
         private void Awake()
@@ -62,13 +63,13 @@ namespace GameDevTV.RTS.UI.GameEventLog
 
             if (allowFreeMove && dragHandle != null)
             {
-                dragBehaviour = dragHandle.GetComponent<GameEventLogPanelDragHandle>();
+                dragBehaviour = dragHandle.GetComponent<FreeDraggablePanel>();
                 if (dragBehaviour == null)
                 {
-                    dragBehaviour = dragHandle.gameObject.AddComponent<GameEventLogPanelDragHandle>();
+                    dragBehaviour = dragHandle.gameObject.AddComponent<FreeDraggablePanel>();
                 }
 
-                dragBehaviour.Initialize(panelRect);
+                dragBehaviour.Initialize(panelRect, clampToParent: true);
             }
         }
 

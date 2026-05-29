@@ -1,0 +1,572 @@
+{
+  "lines": [
+    {
+      "text": "0 A.D. Hướng dẫn trong game",
+      "bold": true
+    },
+    {
+      "text": "Thank you for installing 0 A.D.!\nTrang này sẽ cung cấp tổng quan ngắn gọn về các tính năng có sẵn trong phiên bản chưa hoàn chỉnh, đang phát triển, alpha của trò chơi.",
+      "bold": false
+    },
+    {
+      "text": "Cài đặt đồ họa",
+      "bold": true
+    },
+    {
+      "text": "Bạn có thể chuyển đổi giữa chế độ toàn màn hình và chế độ cửa sổ bằng cách nhấn Alt + Enter. Ở chế độ cửa sổ, bạn có thể thay đổi kích thước cửa sổ. Nếu trò chơi chạy quá chậm, bạn có thể thay đổi một số cài đặt trong cửa sổ tùy chọn: hãy thử tắt các tùy chọn “Hiệu ứng nước chất lượng cao” và “Bóng đổ”.",
+      "bold": false
+    },
+    {
+      "text": "Điều khiển trong game",
+      "bold": true
+    },
+    {
+      "text": "Giao diện và hệ thống điều khiển thân thiện cho tất cả người chơi truyền thống của dòng game chiến thuật thời gian thực (RTS). Hiện tại vẫn còn thiếu nhiều hiệu ứng và các chỉ số cân bằng chưa hoàn thiện – bạn sẽ cần đợi tới khi phiên bản beta được ra mắt để game được cải thiện tốt hơn.",
+      "bold": false
+    },
+    {
+      "text": "Các điều khiển cơ bản (mặc định):",
+      "bold": true
+    },
+    {
+      "text": "• Nhấn chuột trái để chọn các đơn vị lính",
+      "bold": false
+    },
+    {
+      "text": "• Nhấn chuột trái và kéo để chọn các nhóm lính",
+      "bold": false
+    },
+    {
+      "text": "• Nhấp chuột phải để ra lệnh đơn vị đến mục tiêu",
+      "bold": false
+    },
+    {
+      "text": "• Các phím mũi tên hoặc phím WASD để di chuyển camera",
+      "bold": false
+    },
+    {
+      "text": "• Ctrl + các phím mũi tên, hoặc Shift + con lăn chuột, để xoay camera",
+      "bold": false
+    },
+    {
+      "text": "• Con lăn chuột, hoặc các phím “hotkey.camera.zoom.in” và “hotkey.camera.zoom.out”, để phóng to/thu nhỏ",
+      "bold": false
+    },
+    {
+      "text": "Chế độ chơi",
+      "bold": true
+    },
+    {
+      "text": "Menu chính cung cấp quyền truy cập vào hai chế độ chơi:",
+      "bold": true
+    },
+    {
+      "text": "• Chơi đơn – Chơi một trò chơi sandbox hoặc đấu với một hoặc nhiều người chơi máy (AI). AI mặc định (Petra) đang được phát triển và có thể không phải lúc nào cũng được cập nhật các tính năng mới, nhưng bạn vẫn có thể chơi trò chơi với hoặc chống lại nó.",
+      "bold": false
+    },
+    {
+      "text": "• Chơi nhiều người – Chơi với đối thủ là người khác qua internet.",
+      "bold": false
+    },
+    {
+      "text": "Để thiết lập một trò chơi nhiều người chơi, một người chơi phải chọn tùy chọn “Tạo phòng chơi”. Trò chơi sử dụng cổng UDP 20595, vì vậy máy chủ phải cấu hình NAT/tường lửa/vv. của họ để cho phép điều này. Những người chơi khác sau đó có thể chọn “Tham gia phòng chơi” và nhập địa chỉ IP của máy chủ.",
+      "bold": false
+    },
+    {
+      "text": "Thiết lập trò chơi",
+      "bold": true
+    },
+    {
+      "text": "Trong trò chơi nhiều người chơi, chỉ máy chủ mới có thể thay đổi các tùy chọn thiết lập trò chơi.",
+      "bold": false
+    },
+    {
+      "text": "Đầu tiên, chọn loại bản đồ bạn muốn chơi:",
+      "bold": true
+    },
+    {
+      "text": "• Bản đồ ngẫu nhiên – Một bản đồ được tạo tự động từ một kịch bản",
+      "bold": false
+    },
+    {
+      "text": "• Bản đồ kịch bản – Một bản đồ được tạo bởi các nhà thiết kế bản đồ và với các nền văn minh cố định",
+      "bold": false
+    },
+    {
+      "text": "• Bản đồ Skirmish – Một bản đồ được tạo bởi các nhà thiết kế bản đồ nhưng nơi các nền văn minh có thể được chọn",
+      "bold": false
+    },
+    {
+      "text": "Sau đó, các bản đồ có thể được lọc thêm. Các bản đồ mặc định thường là các bản đồ có thể chơi được. Bản đồ hải quân là bản đồ mà không phải tất cả các đối thủ đều có thể tiếp cận được bằng đường bộ và bản đồ demo là bản đồ được sử dụng cho mục đích thử nghiệm (thường không hữu ích để chơi). Bộ lọc “Tất cả bản đồ” hiển thị tất cả các bản đồ cùng nhau trong một danh sách.",
+      "bold": false
+    },
+    {
+      "text": "Cuối cùng thay đổi các cài đặt. Đối với bản đồ ngẫu nhiên, điều này bao gồm số lượng người chơi, kích thước bản đồ, v.v. Đối với các kịch bản, bạn chỉ có thể chọn ai điều khiển người chơi nào (quyết định nơi bạn bắt đầu trên bản đồ, v.v.). Các tùy chọn là một người chơi, một AI hoặc không có người chơi nào cả (đối thủ sẽ chỉ ở trạng thái rảnh rỗi).",
+      "bold": false
+    },
+    {
+      "text": "Khi bạn đã sẵn sàng bắt đầu, hãy nhấp vào nút “Bắt đầu chơi”.",
+      "bold": false
+    },
+    {
+      "text": "Phím tắt",
+      "bold": true
+    },
+    {
+      "text": "Bạn có thể thay đổi các phím tắt trong Tùy chọn > Phím tắt để phù hợp với sở thích của bạn.",
+      "bold": false
+    },
+    {
+      "text": "Toàn chương trình",
+      "bold": true
+    },
+    {
+      "text": "hotkey.exit – Thoát game ngay lập tức, không hỏi xác nhận",
+      "bold": false
+    },
+    {
+      "text": "hotkey.togglefullscreen – Chuyển đổi giữa chế độ toàn màn hình và cửa sổ",
+      "bold": false
+    },
+    {
+      "text": "hotkey.console.toggle – Bật/tắt console",
+      "bold": false
+    },
+    {
+      "text": "hotkey.fps.toggle – Bật/tắt bộ đếm khung hình (FPS)",
+      "bold": false
+    },
+    {
+      "text": "hotkey.profile.toggle – Bật/tắt công cụ phân tích hiệu năng thời gian thực (chuyển qua các hiển thị thông tin)",
+      "bold": false
+    },
+    {
+      "text": "hotkey.profile.save – Lưu dữ liệu phân tích hiện tại vào “logs/profile.txt”",
+      "bold": false
+    },
+    {
+      "text": "hotkey.screenshot – Chụp ảnh màn hình (định dạng .png, vị trí lưu sẽ hiển thị ở góc trên bên trái giao diện sau khi tệp được lưu, và cũng có thể xem trong console/logs nếu bạn bỏ lỡ)",
+      "bold": false
+    },
+    {
+      "text": "hotkey.bigscreenshot – Chụp ảnh màn hình lớn (6400×4800 pixel, định dạng .bmp, vị trí lưu sẽ hiển thị ở góc trên bên trái giao diện sau khi tệp được lưu, và cũng có thể xem trong console/logs nếu bạn bỏ lỡ)",
+      "bold": false
+    },
+    {
+      "text": "hotkey.tab.next – Chuyển sang thẻ tiếp theo",
+      "bold": false
+    },
+    {
+      "text": "hotkey.tab.prev – Chuyển sang thẻ trước đó",
+      "bold": false
+    },
+    {
+      "text": "hotkey.item.next – Chuyển sang mục tiếp theo trong danh sách",
+      "bold": false
+    },
+    {
+      "text": "hotkey.item.prev – Chuyển sang mục trước đó trong danh sách",
+      "bold": false
+    },
+    {
+      "text": "Trong trò chơi",
+      "bold": true
+    },
+    {
+      "text": "Double Left Click \\\\[on unit] – Chọn tất cả các đơn vị cùng loại của bạn trên màn hình (ngay cả khi chúng có cấp bậc khác nhau)",
+      "bold": false
+    },
+    {
+      "text": "Triple Left Click \\\\[on unit] – Chọn tất cả các đơn vị cùng loại và cùng cấp bậc của bạn trên màn hình",
+      "bold": false
+    },
+    {
+      "text": "Alt + Double Left Click \\\\[on unit] – Chọn tất cả các đơn vị cùng loại của bạn trên toàn bản đồ (ngay cả khi chúng có cấp bậc khác nhau)",
+      "bold": false
+    },
+    {
+      "text": "Alt + Triple Left Click \\\\[on unit] – Chọn tất cả các đơn vị cùng loại và cùng cấp bậc của bạn trên toàn bản đồ",
+      "bold": false
+    },
+    {
+      "text": "hotkey.quicksave – Lưu nhanh",
+      "bold": false
+    },
+    {
+      "text": "hotkey.quickload – Tải nhanh",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.gui.menu.toggle – Bật/tắt menu",
+      "bold": false
+    },
+    {
+      "text": "hotkey.timeelapsedcounter.toggle – Bật/tắt bộ đếm thời gian đã trôi qua",
+      "bold": false
+    },
+    {
+      "text": "hotkey.cancel – Đóng tất cả các hộp thoại (trò chuyện, menu)",
+      "bold": false
+    },
+    {
+      "text": "hotkey.confirm – Mở trò chuyện hoặc gửi tin nhắn",
+      "bold": false
+    },
+    {
+      "text": "hotkey.teamchat – Gửi tin nhắn trò chuyện đội",
+      "bold": false
+    },
+    {
+      "text": "hotkey.privatechat – Trò chuyện với đối tác trò chuyện riêng tư đã chọn trước đó",
+      "bold": false
+    },
+    {
+      "text": "hotkey.pause – Tạm dừng hoặc tiếp tục trò chơi",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.kill – Xóa (các) đơn vị/cấu trúc đang chọn, yêu cầu xác nhận",
+      "bold": false
+    },
+    {
+      "text": "• With hotkey.session.noconfirmation – Xóa ngay lập tức (các) đơn vị/cấu trúc đang chọn, không cần xác nhận",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.add – Bổ trợ – thêm vào lựa chọn (hoạt động với nhấp chuột và phím nóng, ví dụ: các phím nóng rảnh rỗi)",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.remove – Bổ trợ – xóa khỏi lựa chọn (hoạt động với nhấp chuột và phím nóng, ví dụ: các phím nóng rảnh rỗi)",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.offscreen – Bổ trợ – thêm tất cả các đơn vị, bao gồm các đơn vị ngoài màn hình, vào lựa chọn",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.cancel – Bỏ chọn tất cả các đơn vị, hủy đặt công trình",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.idlebuilder – Chọn thợ xây rảnh rỗi",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.idlewarrior – Chọn chiến binh rảnh rỗi",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.idleworker – Chọn công nhân rảnh rỗi (bao gồm cả lính công dân)",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.idleunit - Chọn đơn vị rảnh rỗi.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.stop - Dừng (ngừng) các đơn vị đang chọn.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.backtowork - Đơn vị sẽ quay lại làm việc.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.unload - Dỡ bỏ các đơn vị đồn trú khỏi (các) công trình đang chọn.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.group.save.1 - Tạo nhóm điều khiển 1 (mặc định, tương ứng 2, 3, ...) từ (các) đơn vị/công trình đang chọn.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.group.select.1 - Chọn (các) đơn vị/công trình trong nhóm điều khiển 1.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.group.add.1 - Thêm nhóm điều khiển 1 (vào 0) vào (các) đơn vị/công trình đang chọn.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.jump.set.1 - Đánh dấu vị trí camera hiện tại, để sau này quay lại (mặc định có 4 vị trí khả dụng).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.jump.1 - Di chuyển camera đến vị trí đã đánh dấu. Quay lại vị trí cuối cùng nếu camera đã ở trên vị trí đã đánh dấu.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.queueunit.1, hotkey.session.queueunit.2, hotkey.session.queueunit.3, hotkey.session.queueunit.4, hotkey.session.queueunit.5, hotkey.session.queueunit.6, hotkey.session.queueunit.7 - Khi đã chọn công trình huấn luyện. Thêm đơn vị thứ 1, thứ 2, ... được hiển thị vào hàng đợi huấn luyện cho tất cả các công trình đã chọn.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.highlightguarded (với đơn vị đã chọn) - Làm nổi bật (các) đơn vị/cấu trúc được bảo vệ bởi lựa chọn.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.highlightguarding (với đơn vị/cấu trúc đã chọn) - Làm nổi bật (các) đơn vị đang bảo vệ lựa chọn.",
+      "bold": false
+    },
+    {
+      "text": "highlightguarding.showstatusbars - Hiển thị tất cả thanh trạng thái (cũng hiển thị tiến độ xây dựng).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.summary - Bật/tắt cửa sổ tóm tắt.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.lobby - Hiển thị phòng chờ nhiều người chơi trong cửa sổ hộp thoại.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.gui.diplomacy.toggle - Bật/tắt bảng ngoại giao trong game.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.gui.barter.toggle - Bật/tắt bảng đổi chác và thương mại trong game.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.gui.matchsettings.toggle – Bật/tắt bảng cài đặt trận đấu trong trò chơi",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.gui.tutorial.toggle - Bật/tắt bảng hướng dẫn trong game.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.structree - Bật/tắt bảng cây công trình.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.civinfo - Bật/tắt bảng thông tin nền văn minh.",
+      "bold": false
+    },
+    {
+      "text": "Sửa đổi thao tác chuột",
+      "bold": true
+    },
+    {
+      "text": "hotkey.session.garrison + Nhấp chuột phải vào công trình - Đồn trú.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.repair + Nhấp chuột phải vào công trình - Sửa chữa.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.patrol + Nhấp chuột phải - Tuần tra.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.queue + Nhấp chuột phải - Xếp hàng lệnh di chuyển/xây dựng/thu thập/v.v.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.pushorderfront + Nhấp chuột phải - Bổ trợ để đẩy bất kỳ lệnh nào lên đầu hàng đợi lệnh.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.orderone + Nhấp chuột phải - Ra lệnh cho một đơn vị từ lựa chọn hiện tại di chuyển/xây dựng/thu thập/v.v. và bỏ chọn đơn vị đó. Được sử dụng để nhanh chóng điều động các đơn vị với các nhiệm vụ cụ thể.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.batchtrain + Nhấp chuột trái khi huấn luyện đơn vị - Thêm đơn vị theo lô (kích thước lô mặc định là 5 và có thể thay đổi trong tùy chọn).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.add + Nhấp chuột trái hoặc Kéo chuột trái qua đơn vị trên bản đồ - Thêm đơn vị vào lựa chọn.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.remove + Nhấp chuột trái hoặc Kéo chuột trái qua đơn vị trên bản đồ - Xóa đơn vị khỏi lựa chọn.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.militaryonly + Kéo chuột trái qua đơn vị trên bản đồ - Chỉ chọn các đơn vị quân sự.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.nonmilitaryonly + Kéo chuột trái qua đơn vị trên bản đồ - Chỉ chọn các đơn vị phi quân sự.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.idleonly + Kéo chuột trái qua đơn vị trên bản đồ - Chỉ chọn các đơn vị rảnh rỗi.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.woundedonly + Kéo chuột trái qua đơn vị trên bản đồ - Chỉ chọn các đơn vị bị thương.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.selection.singleselection - Bổ trợ để chọn từng đơn vị riêng lẻ, trái ngược với việc chọn theo đội hình.",
+      "bold": false
+    },
+    {
+      "text": "Nhấp chuột phải khi đã chọn (các) công trình - Đặt điểm tập kết cho các đơn vị được tạo/giải phóng khỏi công trình đó.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.garrison + Nhấp chuột phải khi đã chọn (các) đơn vị - Đồn trú (Nếu con trỏ chuột ở trên công trình của mình hoặc đồng minh).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.attack + Nhấp chuột phải khi đã chọn (các) đơn vị - Tấn công (thay vì hành động khác).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.attackmove + Nhấp chuột phải khi đã chọn (các) đơn vị - Di chuyển tấn công (mặc định tất cả đơn vị và công trình của đối phương trên đường đi đều bị nhắm mục tiêu).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.attackmoveUnit + Nhấp chuột phải khi đã chọn (các) đơn vị - Di chuyển tấn công, chỉ các đơn vị trên đường đi bị nhắm mục tiêu.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.capture + Nhấp chuột phải khi đã chọn (các) đơn vị - Chiếm giữ (thay vì hành động khác).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.snaptoedges + Di chuyển chuột gần công trình - Căn chỉnh công trình mới với công trình hiện có gần đó.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.flare + Nhấp chuột phải - Gửi pháo sáng cho đồng minh.",
+      "bold": false
+    },
+    {
+      "text": "Lớp phủ",
+      "bold": true
+    },
+    {
+      "text": "hotkey.session.gui.toggle - Bật/tắt giao diện người dùng (GUI).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.devcommands.toggle - Bật/tắt lớp phủ dành cho nhà phát triển (với các tùy chọn dành cho nhà phát triển).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.wireframe - Bật/tắt chế độ khung lưới (nhấn một lần để có khung lưới phủ lên mô hình có vân, hai lần để chỉ có khung lưới được tô màu theo vân, ba lần để trở lại chế độ vân bình thường).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.silhouettes - Bật/tắt hình bóng đơn vị (có thể tăng hiệu suất một chút).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.diplomacycolors - Bật/tắt màu sắc ngoại giao.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.toggleattackrange - Bật/tắt hiển thị phạm vi tấn công của các đơn vị và công trình đã chọn.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.toggleaurasrange - Bật/tắt hiển thị phạm vi hào quang của các đơn vị và công trình đã chọn.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.togglehealrange - Bật/tắt hiển thị phạm vi hồi máu của các đơn vị đã chọn.",
+      "bold": false
+    },
+    {
+      "text": "Thao tác camera",
+      "bold": true
+    },
+    {
+      "text": "hotkey.camera.up - Di chuyển màn hình lên trên.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.down - Di chuyển màn hình xuống dưới.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.left - Di chuyển màn hình sang trái.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.right - Di chuyển màn hình sang phải.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.rotate.up - Xoay camera nhìn lên trên.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.rotate.down - Xoay camera nhìn xuống dưới.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.rotate.cw - Xoay camera theo chiều kim đồng hồ quanh địa hình.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.rotate.ccw - Xoay camera ngược chiều kim đồng hồ quanh địa hình.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.rotate.wheel.cw - Xoay camera theo chiều kim đồng hồ quanh địa hình.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.rotate.wheel.ccw - Xoay camera ngược chiều kim đồng hồ quanh địa hình.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.follow - Theo dõi đơn vị đã chọn (di chuyển camera để ngừng theo dõi đơn vị).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.reset - Đặt lại độ phóng đại và hướng camera.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.zoom.in, hotkey.camera.zoom.wheel.in - Phóng to (giữ phím để phóng to liên tục).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.zoom.out, hotkey.camera.zoom.wheel.out - Thu nhỏ (giữ phím để thu nhỏ liên tục).",
+      "bold": false
+    },
+    {
+      "text": "hotkey.camera.pan - Giữ phím và di chuyển chuột để xoay màn hình.",
+      "bold": false
+    },
+    {
+      "text": "Trong quá trình đặt công trình",
+      "bold": true
+    },
+    {
+      "text": "hotkey.session.rotate.ccw - Xoay công trình 15 độ ngược chiều kim đồng hồ.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.rotate.cw - Xoay công trình 15 độ theo chiều kim đồng hồ.",
+      "bold": false
+    },
+    {
+      "text": "Left Drag - Xoay công trình bằng chuột (nền móng sẽ được đặt khi nhả chuột).",
+      "bold": false
+    },
+    {
+      "text": "Khi tải trò chơi đã lưu",
+      "bold": true
+    },
+    {
+      "text": "hotkey.cancel - Hủy bỏ.",
+      "bold": false
+    },
+    {
+      "text": "hotkey.session.savedgames.delete - Xóa game đã lưu đang chọn, yêu cầu xác nhận.",
+      "bold": false
+    },
+    {
+      "text": "Với hotkey.session.savedgames.noconfirmation - Không hỏi xác nhận.",
+      "bold": false
+    }
+  ]
+}
