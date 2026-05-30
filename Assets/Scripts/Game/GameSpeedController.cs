@@ -1,3 +1,4 @@
+using GameDevTV.RTS.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -30,6 +31,9 @@ namespace GameDevTV.RTS.Game
                 return;
             }
 
+            toggleFastSpeedKey = InputSystemKeyboardUtility.CoerceKeyboardKey(toggleFastSpeedKey, Key.NumpadPlus);
+            resetNormalSpeedKey = InputSystemKeyboardUtility.CoerceKeyboardKey(resetNormalSpeedKey, Key.NumpadMinus);
+
             Instance = this;
             ApplySpeed(normalSpeed);
         }
@@ -45,17 +49,17 @@ namespace GameDevTV.RTS.Game
 
         private void Update()
         {
-            if (!enableKeyboardToggle || Keyboard.current == null)
+            if (!enableKeyboardToggle)
             {
                 return;
             }
 
-            if (Keyboard.current[toggleFastSpeedKey].wasPressedThisFrame)
+            if (InputSystemKeyboardUtility.WasPressedThisFrame(toggleFastSpeedKey))
             {
                 SetFastSpeed();
             }
 
-            if (Keyboard.current[resetNormalSpeedKey].wasPressedThisFrame)
+            if (InputSystemKeyboardUtility.WasPressedThisFrame(resetNormalSpeedKey))
             {
                 SetNormalSpeed();
             }

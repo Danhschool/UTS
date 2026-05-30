@@ -1,31 +1,38 @@
+using GameDevTV.RTS.Utilities;
 using UnityEngine;
-#if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
-#endif
+using UnityEngine.Serialization;
 
 namespace ProjectRTS.SpeechRecognition
 {
     /// <summary>
-    /// Phím V (cấu hình được) → bắt đầu thu một câu thoại (SRP: chỉ input).
-    /// Dùng Input System giống <see cref="GameDevTV.RTS.Player.PlayerInput"/> trong scene chính.
+    /// Phím giữ để thu thoại (SRP: chỉ input qua Input System).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class VoiceCommandPushToTalkInput : MonoBehaviour
     {
-        [SerializeField] private VoiceCommandOneShotCapture _capture;
-        [SerializeField] private KeyCode _captureKey = KeyCode.V;
+        [SerializeField] VoiceCommandOneShotCapture _capture;
+        [FormerlySerializedAs("_captureKey")]
+        [SerializeField] Key captureKey = Key.V;
 
-        private void Awake()
+        void Awake()
         {
             if (_capture == null)
             {
                 _capture = GetComponent<VoiceCommandOneShotCapture>();
             }
+
+            captureKey = InputSystemKeyboardUtility.CoerceKeyboardKey(captureKey, Key.V);
         }
 
-        private void Update()
+        void Reset()
         {
-            if (_capture == null || !WasCaptureKeyPressedThisFrame())
+            captureKey = Key.V;
+        }
+
+        void Update()
+        {
+            if (_capture == null || !InputSystemKeyboardUtility.WasPressedThisFrame(captureKey))
             {
                 return;
             }
@@ -34,28 +41,6 @@ namespace ProjectRTS.SpeechRecognition
             {
                 _capture.BeginCapture();
             }
-        }
-
-        /// <summary>
-        /// Mục tiêu: Nhận phím V trong scene dùng New Input System (Game 1).
-        /// Cách hoạt động: Ưu tiên Keyboard.current; fallback Input.GetKeyDown khi Both/Legacy.
-        /// </summary>
-        private bool WasCaptureKeyPressedThisFrame()
-        {
-#if ENABLE_INPUT_SYSTEM
-            Keyboard keyboard = Keyboard.current;
-            if (keyboard != null)
-            {
-                return _captureKey switch
-                {
-                    KeyCode.V => keyboard.vKey.wasPressedThisFrame,
-                    KeyCode.B => keyboard.bKey.wasPressedThisFrame,
-                    KeyCode.Space => keyboard.spaceKey.wasPressedThisFrame,
-                    _ => keyboard.vKey.wasPressedThisFrame
-                };
-            }
-#endif
-            return Input.GetKeyDown(_captureKey);
         }
     }
 }
