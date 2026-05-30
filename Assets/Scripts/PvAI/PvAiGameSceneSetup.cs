@@ -1,3 +1,4 @@
+using GameDevTV.RTS.Utilities;
 using GameDevTV.RTS.Units;
 using UnityEngine;
 
@@ -14,25 +15,33 @@ namespace GameDevTV.RTS.PvAI
 
         [Header("Prefabs (cùng asset MP; runtime sẽ gỡ component Mirror)")]
         public GameObject civilCentralPrefab;
-        public GameObject startingWorkerPrefab;
 
         [Header("Owners")]
         public Owner humanOwner = Owner.Player1;
         public Owner aiOwner = Owner.AI2;
 
-        [Header("Starting workers")]
-        public bool spawnStartingWorker = true;
+        [Header("Starting units (spawn tại rìa CC)")]
+        [Tooltip("Bật spawn các unit khởi đầu sau khi Civil Central được tạo.")]
+        public bool spawnStartingUnits = true;
 
-        [Min(0)]
-        [Tooltip("Số worker spawn cạnh mỗi Civil Central (0 = không spawn).")]
-        public int startingWorkerCount = 1;
+        [Tooltip("Mỗi phần tử: prefab unit + số lượng. Unit đặt tại unitSpawnPoint của CC; các slot sau dàn theo unitSpawnSpacing.")]
+        public StartingUnitSpawnEntry[] startingUnits = System.Array.Empty<StartingUnitSpawnEntry>();
 
-        public Vector3 workerOffsetFromBase = new(2f, 0f, 2f);
+        [Tooltip("Offset local thêm cho slot đầu (0 = đúng rìa CC / unitSpawnPoint).")]
+        public Vector3 unitSpawnFirstOffsetLocal = Vector3.zero;
 
-        [Tooltip("Khoảng cách giữa worker thứ 2, 3, … (worker đầu dùng workerOffsetFromBase).")]
-        public Vector3 workerSpawnSpacing = new(2f, 0f, 0f);
+        [Min(0.1f)]
+        [Tooltip("Bán kính sphere giữ chỗ khi spawn. Khoảng cách tâm giữa hai unit = 2 × giá trị này (mặc định 3 → cách nhau 6).")]
+        public float unitSpawnSphereRadius = 3f;
 
         [Header("Scene cleanup")]
         public bool destroyScenePlacedCivilCentrals = true;
+
+        [Header("Legacy (chỉ dùng khi startingUnits trống)")]
+        [HideInInspector] public GameObject startingWorkerPrefab;
+        [HideInInspector] public bool spawnStartingWorker = true;
+        [HideInInspector] public int startingWorkerCount = 1;
+        [HideInInspector] public Vector3 workerOffsetFromBase = new(2f, 0f, 2f);
+        [HideInInspector] public Vector3 workerSpawnSpacing = new(2f, 0f, 0f);
     }
 }

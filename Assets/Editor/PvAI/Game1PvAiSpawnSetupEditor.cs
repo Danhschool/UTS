@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using GameDevTV.RTS.PvAI;
+using GameDevTV.RTS.Utilities;
 using GameDevTV.RTS.Units;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -88,12 +89,18 @@ namespace GameDevTV.RTS.Editor.PvAI
 
         static void WirePrefabs(PvAiGameSceneSetup setup)
         {
+            GameObject workerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(WorkerPrefabPath);
+
             setup.civilCentralPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CivilCentralPrefabPath);
-            setup.startingWorkerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(WorkerPrefabPath);
             setup.humanOwner = Owner.Player1;
             setup.aiOwner = Owner.AI2;
-            setup.spawnStartingWorker = true;
-            setup.startingWorkerCount = 1;
+            setup.spawnStartingUnits = true;
+            setup.startingUnits = new[]
+            {
+                new StartingUnitSpawnEntry { unitPrefab = workerPrefab, count = 3 }
+            };
+            setup.unitSpawnFirstOffsetLocal = Vector3.zero;
+            setup.unitSpawnSphereRadius = 3f;
             setup.destroyScenePlacedCivilCentrals = true;
             EditorUtility.SetDirty(setup);
         }

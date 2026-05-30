@@ -3,6 +3,7 @@ using System.Linq;
 using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.UI.Components;
+using GameDevTV.RTS.UI;
 using UnityEngine;
 using UnityEngine.Events;
 using GameDevTV.RTS.EventBus;
@@ -18,6 +19,80 @@ namespace GameDevTV.RTS.UI.Containers
         [SerializeField] private UIActionButton[] actionButtons;
 
         private HashSet<BaseBuilding> selectedBuildings = new();
+        private BaseCommand pendingActiveCommand;
+        private Owner subscribedBusOwner = Owner.Invalid;
+
+        void Awake()
+        {
+            if (actionButtons == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < actionButtons.Length; i++)
+            {
+                if (actionButtons[i] != null)
+                {
+                    actionButtons[i].SetDisplaySlot(i);
+                }
+            }
+        }
+
+        void OnEnable()
+        {
+            SubscribeCommandPendingBus();
+        }
+
+        void OnDisable()
+        {
+            UnsubscribeCommandPendingBus();
+        }
+
+        void SubscribeCommandPendingBus()
+        {
+            Owner owner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            if (subscribedBusOwner == owner)
+            {
+                return;
+            }
+
+            UnsubscribeCommandPendingBus();
+            subscribedBusOwner = owner;
+            Bus<ActiveCommandChangedEvent>.OnEvent[owner] += HandleActiveCommandChanged;
+        }
+
+        void UnsubscribeCommandPendingBus()
+        {
+            if (subscribedBusOwner == Owner.Invalid)
+            {
+                return;
+            }
+
+            Bus<ActiveCommandChangedEvent>.OnEvent[subscribedBusOwner] -= HandleActiveCommandChanged;
+            subscribedBusOwner = Owner.Invalid;
+        }
+
+        void HandleActiveCommandChanged(ActiveCommandChangedEvent evt)
+        {
+            pendingActiveCommand = evt.Command;
+            RefreshPendingHighlights();
+        }
+
+        void RefreshPendingHighlights()
+        {
+            if (actionButtons == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < actionButtons.Length; i++)
+            {
+                if (actionButtons[i] != null)
+                {
+                    actionButtons[i].RefreshPendingHighlight(pendingActiveCommand);
+                }
+            }
+        }
 
         public void EnableFor(HashSet<AbstractCommandable> selectedUnits)
         {
@@ -89,34 +164,9 @@ namespace GameDevTV.RTS.UI.Containers
                 return;
             }
 
-            AbstractCommandable first = selectedUnits.First();
-            IEnumerable<BaseCommand> firstCommands = first.AvailableCommands ?? Array.Empty<BaseCommand>();
-
-            Owner busOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
-            IEnumerable<BaseCommand> availableCommands = firstCommands.Where(action => action.IsAvailable(
-                new CommandContext(
-                    busOwner,
-                    first,
-                    new RaycastHit()
-                )
-            ));
-
-            for(int i = 1; i<selectedUnits.Count; i++)
-            {
-                AbstractCommandable commandable = selectedUnits.ElementAt(i);
-                if (commandable.AvailableCommands != null)
-                {
-                    availableCommands = availableCommands.Intersect(commandable.AvailableCommands);
-                }
-            }
-
-            BaseCommand[] slotSource = availableCommands.ToArray();
-
             for (int i = 0; i < actionButtons.Length; i++)
             {
-                BaseCommand actionForSlot = slotSource.Where(action => action.Slot == i).FirstOrDefault();
-
-                if (actionForSlot != null)
+                if (ActionBarCommandResolver.TryGetCommandForSlot(selectedUnits, i, out BaseCommand actionForSlot))
                 {
                     actionButtons[i].EnableFor(actionForSlot, selectedUnits, HandleClick(actionForSlot));
                 }
@@ -125,6 +175,8 @@ namespace GameDevTV.RTS.UI.Containers
                     actionButtons[i].Disable();
                 }
             }
+
+            RefreshPendingHighlights();
         }
 
         private UnityAction HandleClick(BaseCommand action)

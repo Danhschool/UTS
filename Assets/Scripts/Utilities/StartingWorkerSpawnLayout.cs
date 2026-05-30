@@ -23,5 +23,28 @@ namespace GameDevTV.RTS.Utilities
             Vector3 spacingBetweenWorkers,
             int workerIndex) =>
             basePosition + firstWorkerOffset + spacingBetweenWorkers * workerIndex;
+
+        /// <summary>
+        /// Mục tiêu: Khoảng cách tâm hai slot spawn khi mỗi unit chiếm sphere bán kính r.
+        /// Cách hoạt động: Trả về 2 × r để các sphere không chồng nhau.
+        /// </summary>
+        public static float ComputeCenterSpacing(float sphereRadius) =>
+            Mathf.Max(0.01f, sphereRadius * 2f);
+
+        /// <summary>
+        /// Mục tiêu: Dàn unit quanh anchor trên rìa CC (offset/spacing theo hướng local của nhà).
+        /// Cách hoạt động: Quay offset local bằng anchorRotation rồi cộng anchor + bước * index.
+        /// </summary>
+        public static Vector3 GetPositionAtEdge(
+            Vector3 anchorPosition,
+            Vector3 firstOffsetLocal,
+            Vector3 spacingLocal,
+            Quaternion anchorRotation,
+            int unitIndex)
+        {
+            Vector3 firstOffset = anchorRotation * firstOffsetLocal;
+            Vector3 spacing = anchorRotation * spacingLocal;
+            return anchorPosition + firstOffset + spacing * unitIndex;
+        }
     }
 }

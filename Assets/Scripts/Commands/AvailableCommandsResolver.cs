@@ -40,7 +40,7 @@ namespace GameDevTV.RTS.Commands
 
         /// <summary>
         /// Mục tiêu: Chuột phải chọn đúng Gather/Attack (không bị Move.CanHandle luôn true cướp lệnh).
-        /// Cách hoạt động: Ưu tiên Gather → Attack → Rally → lệnh khác (Move cuối).
+        /// Cách hoạt động: Ưu tiên Gather → Attack → lệnh khác (Move cuối).
         /// </summary>
         public static bool TryPickPrimaryRightClickCommand(
             AbstractUnit unit,
@@ -59,8 +59,7 @@ namespace GameDevTV.RTS.Commands
             List<BaseCommand> commands = GetFlattened(unit);
 
             if (TryPickFirstMatching<GatherCommand>(commands, context, out command)
-                || TryPickFirstMatching<AttackCommand>(commands, context, out command)
-                || TryPickFirstMatching<RallyAreaCommand>(commands, context, out command))
+                || TryPickFirstMatching<AttackCommand>(commands, context, out command))
             {
                 return true;
             }
@@ -68,7 +67,7 @@ namespace GameDevTV.RTS.Commands
             for (int i = 0; i < commands.Count; i++)
             {
                 BaseCommand candidate = commands[i];
-                if (candidate is GatherCommand or AttackCommand or RallyAreaCommand)
+                if (candidate is GatherCommand or AttackCommand)
                 {
                     continue;
                 }

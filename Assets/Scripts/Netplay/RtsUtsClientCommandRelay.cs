@@ -40,6 +40,8 @@ namespace GameDevTV.RTS.Netplay
 
             PlayerInputNetworkBridge.TryRelayUnitCommand = TryRelay;
 
+            PlayerInputNetworkBridge.TryRelayUnitStop = TryRelayStop;
+
         }
 
 
@@ -124,6 +126,37 @@ namespace GameDevTV.RTS.Netplay
 
             return false;
 
+        }
+
+        static bool TryRelayStop(AbstractUnit unit)
+        {
+            if (unit == null)
+            {
+                return false;
+            }
+
+            if (!unit.TryGetComponent(out NetworkIdentity identity))
+            {
+                return false;
+            }
+
+            if (!unit.TryGetComponent(out RtsUtsNetworkEntity networkEntity)
+                || !networkEntity.IsCommandableByLocalHuman)
+            {
+                return false;
+            }
+
+            RtsUtsPlayerCommands commands = NetworkClient.localPlayer != null
+                ? NetworkClient.localPlayer.GetComponent<RtsUtsPlayerCommands>()
+                : null;
+
+            if (commands == null)
+            {
+                return false;
+            }
+
+            commands.RequestUtsStop(identity.netId);
+            return true;
         }
 
     }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GameDevTV.RTS.Utilities;
 using GameDevTV.RTS.Units;
 using UnityEngine;
@@ -5,7 +6,7 @@ using UnityEngine;
 namespace GameDevTV.RTS.PvAI
 {
     /// <summary>
-    /// SRP: Spawn Civil Central + worker khởi đầu cho human và AI khi Play PvE offline.
+    /// SRP: Spawn Civil Central + unit khởi đầu cho human và AI khi Play PvE offline.
     /// </summary>
     public static class PvAiOfflineSpawnService
     {
@@ -46,38 +47,115 @@ namespace GameDevTV.RTS.PvAI
             Vector3 spawn = setup.factionSpawnPoints[spawnIndex].position;
             Quaternion rotation = setup.factionSpawnPoints[spawnIndex].rotation;
 
+            GameObject civilCentralInstance = null;
             if (setup.civilCentralPrefab != null)
             {
-                PvAiOfflineEntityFactory.Spawn(setup.civilCentralPrefab, spawn, rotation, owner);
+                civilCentralInstance = PvAiOfflineEntityFactory.Spawn(
+                    setup.civilCentralPrefab,
+                    spawn,
+                    rotation,
+                    owner);
+            }
+
+            if (setup.spawnStartingUnits)
+            {
+                SpawnStartingUnits(setup, civilCentralInstance, spawn, rotation, owner);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Spawn mọi unit khởi đầu quanh rìa CC theo cấu hình Inspector.
+        /// Cách hoạt động: Lấy anchor từ BaseBuilding.UnitSpawnWorldPosition; dàn slot theo spacing local CC.
+        /// </summary>
+        static void SpawnStartingUnits(
+            PvAiGameSceneSetup setup,
+            GameObject civilCentralInstance,
+            Vector3 fallbackSpawn,
+            Quaternion fallbackRotation,
+            Owner owner)
+        {
+            List<StartingUnitSpawnEntry> entries = ResolveStartingUnitEntries(setup);
+            if (entries.Count == 0)
+            {
+                return;
+            }
+
+            Vector3 anchor = fallbackSpawn;
+            Quaternion anchorRotation = fallbackRotation;
+            if (civilCentralInstance != null
+                && civilCentralInstance.TryGetComponent(out BaseBuilding building))
+            {
+                anchor = building.UnitSpawnWorldPosition;
+                anchorRotation = building.UnitSpawnWorldRotation;
+            }
+
+            int globalSlotIndex = 0;
+            float centerSpacing = StartingWorkerSpawnLayout.ComputeCenterSpacing(setup.unitSpawnSphereRadius);
+            Vector3 spacingLocal = new Vector3(centerSpacing, 0f, 0f);
+
+            for (int entryIndex = 0; entryIndex < entries.Count; entryIndex++)
+            {
+                StartingUnitSpawnEntry entry = entries[entryIndex];
+                if (entry.unitPrefab == null)
+                {
+                    continue;
+                }
+
+                int count = StartingWorkerSpawnLayout.ClampCount(entry.count);
+                for (int i = 0; i < count; i++)
+                {
+                    Vector3 unitPos = StartingWorkerSpawnLayout.GetPositionAtEdge(
+                        anchor,
+                        setup.unitSpawnFirstOffsetLocal,
+                        spacingLocal,
+                        anchorRotation,
+                        globalSlotIndex);
+
+                    PvAiOfflineEntityFactory.Spawn(
+                        entry.unitPrefab,
+                        unitPos,
+                        anchorRotation,
+                        owner);
+
+                    globalSlotIndex++;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Gom cấu hình unit khởi đầu từ mảng mới hoặc field legacy trong scene cũ.
+        /// Cách hoạt động: Ưu tiên startingUnits; nếu trống thì fallback startingWorkerPrefab/count.
+        /// </summary>
+        static List<StartingUnitSpawnEntry> ResolveStartingUnitEntries(PvAiGameSceneSetup setup)
+        {
+            var resolved = new List<StartingUnitSpawnEntry>(8);
+
+            if (setup.startingUnits != null && setup.startingUnits.Length > 0)
+            {
+                for (int i = 0; i < setup.startingUnits.Length; i++)
+                {
+                    StartingUnitSpawnEntry entry = setup.startingUnits[i];
+                    if (entry.unitPrefab == null || entry.count <= 0)
+                    {
+                        continue;
+                    }
+
+                    resolved.Add(entry);
+                }
+
+                return resolved;
             }
 
             if (setup.spawnStartingWorker && setup.startingWorkerPrefab != null)
             {
-                SpawnStartingWorkers(setup, spawn, rotation, owner);
+                resolved.Add(new StartingUnitSpawnEntry
+                {
+                    unitPrefab = setup.startingWorkerPrefab,
+                    count = setup.startingWorkerCount
+                });
             }
-        }
 
-        static void SpawnStartingWorkers(
-            PvAiGameSceneSetup setup,
-            Vector3 baseSpawn,
-            Quaternion rotation,
-            Owner owner)
-        {
-            int count = StartingWorkerSpawnLayout.ClampCount(setup.startingWorkerCount);
-            for (int i = 0; i < count; i++)
-            {
-                Vector3 workerPos = StartingWorkerSpawnLayout.GetPosition(
-                    baseSpawn,
-                    setup.workerOffsetFromBase,
-                    setup.workerSpawnSpacing,
-                    i);
-
-                PvAiOfflineEntityFactory.Spawn(
-                    setup.startingWorkerPrefab,
-                    workerPos,
-                    rotation,
-                    owner);
-            }
+            return resolved;
         }
 
         /// <summary>

@@ -36,6 +36,17 @@ namespace GameDevTV.RTS.Netplay
         }
 
         [Command]
+        void CmdUtsStop(uint netId)
+        {
+            if (!TryResolveCommandable(netId, out _, out AbstractUnit unit))
+            {
+                return;
+            }
+
+            unit.Stop();
+        }
+
+        [Command]
         void CmdUtsGather(uint netId, Vector3 hitPoint, int formationIndex)
         {
             if (!TryResolveCommandable(netId, out RtsUtsNetworkEntity networkEntity, out AbstractUnit unit))
@@ -99,6 +110,20 @@ namespace GameDevTV.RTS.Netplay
             }
 
             return hit;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client gửi lệnh Stop (phím H) lên server cho unit thuộc local human.
+        /// Cách hoạt động: Chỉ local player gọi Command; server chạy Stop() trên unit đã resolve.
+        /// </summary>
+        public void RequestUtsStop(uint netId)
+        {
+            if (!isLocalPlayer)
+            {
+                return;
+            }
+
+            CmdUtsStop(netId);
         }
 
         /// <summary>

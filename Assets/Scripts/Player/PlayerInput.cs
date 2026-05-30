@@ -1,13 +1,15 @@
 using System.Collections.Generic;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Hotkeys.Targets;
 using GameDevTV.RTS.Minimap;
+using GameDevTV.RTS.UI;
+using GameDevTV.RTS.Utilities;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Units.Formation;
 using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.Netplay;
-using GameDevTV.RTS.Utilities;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -18,7 +20,10 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace GameDevTV.RTS.Player
 {
-    public class PlayerInput : MonoBehaviour, IMinimapCameraNavigator
+    public class PlayerInput : MonoBehaviour,
+        IMinimapCameraNavigator,
+        IHotkeyUnitTypeSelectTarget,
+        IHotkeyActionBarTarget
     {
         [SerializeField] private Rigidbody cameraTarget;
         [SerializeField] private CinemachineCamera cinemachineCamera;
@@ -66,8 +71,16 @@ namespace GameDevTV.RTS.Player
         private Owner localOwner = Owner.Player1;
 
         private HashSet<AbstractUnit> aliveUnits = new(100);
+        private HashSet<BaseBuilding> aliveBuildings = new(32);
         private HashSet<AbstractUnit> addedUnits = new(24);
         private List<ISelectable> selectedUnits = new(12);
+
+        private const float UnitDoubleClickIntervalSeconds = 0.35f;
+        private const float DragSelectCancelDoubleClickSqrPixels = 4f;
+        private float lastUnitLeftClickTime = -1f;
+        private AbstractUnit lastUnitLeftClickTarget;
+        private GameObject unitTypeCyclePrefab;
+        private int unitTypeCycleIndex = -1;
 
         private void Awake()
         {
@@ -86,6 +99,11 @@ namespace GameDevTV.RTS.Player
             localOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
             SubscribeBus(localOwner);
             LocalHumanOwnerService.LocalOwnerChanged += OnLocalOwnerChanged;
+
+            if (GetComponent<PlayerInputHotkeyIntegration>() == null)
+            {
+                gameObject.AddComponent<PlayerInputHotkeyIntegration>();
+            }
         }
 
         private void OnDestroy()
@@ -100,6 +118,7 @@ namespace GameDevTV.RTS.Player
             UnsubscribeBus(localOwner);
             localOwner = owner;
             aliveUnits.RemoveWhere(unit => unit == null || unit.Owner != localOwner);
+            aliveBuildings.RemoveWhere(building => building == null || building.Owner != localOwner);
             selectedUnits.Clear();
             SubscribeBus(localOwner);
         }
@@ -111,6 +130,8 @@ namespace GameDevTV.RTS.Player
             Bus<UnitSpawnEvent>.OnEvent[owner] += HandleUnitSpawn;
             Bus<CommandSelectedEvent>.OnEvent[owner] += HandleActionSelected;
             Bus<UnitDeathEvent>.OnEvent[owner] += HandleUnitDeath;
+            Bus<BuildingSpawnEvent>.OnEvent[owner] += HandleBuildingSpawn;
+            Bus<BuildingDeathEvent>.OnEvent[owner] += HandleBuildingDeath;
             Bus<BuildingConstructStartedEvent>.OnEvent[owner] += OnBuildingConstructStarted;
         }
 
@@ -121,6 +142,8 @@ namespace GameDevTV.RTS.Player
             Bus<UnitSpawnEvent>.OnEvent[owner] -= HandleUnitSpawn;
             Bus<CommandSelectedEvent>.OnEvent[owner] -= HandleActionSelected;
             Bus<UnitDeathEvent>.OnEvent[owner] -= HandleUnitDeath;
+            Bus<BuildingSpawnEvent>.OnEvent[owner] -= HandleBuildingSpawn;
+            Bus<BuildingDeathEvent>.OnEvent[owner] -= HandleBuildingDeath;
             Bus<BuildingConstructStartedEvent>.OnEvent[owner] -= OnBuildingConstructStarted;
         }
 
@@ -174,10 +197,27 @@ namespace GameDevTV.RTS.Player
             selectedUnits.Remove(evt.Unit);
         }
 
+        private void HandleBuildingSpawn(BuildingSpawnEvent evt)
+        {
+            if (evt.Building != null && evt.Owner == localOwner)
+            {
+                aliveBuildings.Add(evt.Building);
+            }
+        }
+
+        private void HandleBuildingDeath(BuildingDeathEvent evt)
+        {
+            if (evt.Building != null)
+            {
+                aliveBuildings.Remove(evt.Building);
+                selectedUnits.Remove(evt.Building);
+            }
+        }
+
         private void HandleActionSelected(CommandSelectedEvent evt)
         {
             DisposePlacementGhost();
-            activeCommand = evt.Command;
+            SetActiveCommand(evt.Command);
             if (!activeCommand.RequiresClickToActivate)
             {
                 ActivateAction(new RaycastHit());
@@ -187,6 +227,16 @@ namespace GameDevTV.RTS.Player
                 ghostInstance = Instantiate(activeCommand.GhostPrefab);
                 CacheGhostPlacementVisuals();
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Đồng bộ lệnh chờ với UI action bar (nút trắng khi đang chọn lệnh).
+        /// Cách hoạt động: Gán activeCommand và raise <see cref="ActiveCommandChangedEvent"/> theo localOwner.
+        /// </summary>
+        void SetActiveCommand(BaseCommand command)
+        {
+            activeCommand = command;
+            Bus<ActiveCommandChangedEvent>.Raise(localOwner, new ActiveCommandChangedEvent(command));
         }
 
         private void Update()
@@ -361,13 +411,6 @@ namespace GameDevTV.RTS.Player
         private void HandleGhost()
         {
             if (ghostInstance == null) return;
-
-            if (Keyboard.current.escapeKey.wasReleasedThisFrame)
-            {
-                DisposePlacementGhost();
-                activeCommand = null;
-                return;
-            }
 
             if (placementGhostPinnedToWorld)
             {
@@ -553,6 +596,11 @@ namespace GameDevTV.RTS.Player
         {
             if (activeCommand != null || wasMouseDownOnUI) return;
 
+            if (selectionBox.sizeDelta.sqrMagnitude > DragSelectCancelDoubleClickSqrPixels)
+            {
+                ResetUnitDoubleClickTracking();
+            }
+
             Bounds selectionBoxBounds = ResizeSelectionBox();
             foreach (AbstractUnit unit in aliveUnits.Where(aliveUnits => aliveUnits.gameObject.activeInHierarchy))
             {
@@ -585,6 +633,263 @@ namespace GameDevTV.RTS.Player
             foreach(ISelectable selectable in currentlySelectedUnits)
             {
                 selectable.Deselect();
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Xử lý Esc từ hệ thống hotkey (hủy đặt công trình / bỏ chọn).
+        /// Cách hoạt động: Ưu tiên hủy ghost và active command; nếu không có thì bỏ chọn toàn bộ unit.
+        /// </summary>
+        public void CancelFromHotkey()
+        {
+            if (activeCommand != null || ghostInstance != null)
+            {
+                DisposePlacementGhost();
+                SetActiveCommand(null);
+                return;
+            }
+
+            DeselectAllUnits();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Hotkey Q/W/E/R hoặc A/S/D — chọn unit hoặc nhà theo prefab archetype trên màn hình.
+        /// Cách hoạt động: Prefab nhà → luồng building; còn lại → unit (một hoặc tất cả khi Ctrl).
+        /// </summary>
+        public void OnHotkeySelectUnitType(GameObject referencePrefab, bool selectAllOnScreen)
+        {
+            if (referencePrefab == null)
+            {
+                return;
+            }
+
+            if (BuildingKindMatching.IsBuildingPrefab(referencePrefab))
+            {
+                if (selectAllOnScreen)
+                {
+                    SelectAllBuildingsOfKindOnScreen(referencePrefab);
+                }
+                else
+                {
+                    SelectOneBuildingOfKindOnScreen(referencePrefab);
+                }
+
+                return;
+            }
+
+            if (selectAllOnScreen)
+            {
+                SelectAllUnitsOfKindOnScreen(referencePrefab);
+                return;
+            }
+
+            SelectOneUnitOfKindOnScreen(referencePrefab);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Phím 1–9 kích hoạt lệnh slot trên thanh action (cùng thứ tự UI).
+        /// Cách hoạt động: Resolve lệnh theo selection → validate supply/lock → raise CommandSelectedEvent.
+        /// </summary>
+        public void OnHotkeyActionBarSlot(int slotIndex)
+        {
+            List<AbstractCommandable> commandables = CollectSelectedCommandables();
+            if (commandables.Count == 0)
+            {
+                return;
+            }
+
+            if (!ActionBarCommandResolver.TryGetCommandForSlot(commandables, slotIndex, out BaseCommand command))
+            {
+                return;
+            }
+
+            AbstractCommandable[] units = commandables.ToArray();
+            if (!ActionBarCommandExecution.TryValidateForExecution(command, units))
+            {
+                return;
+            }
+
+            Bus<CommandSelectedEvent>.Raise(localOwner, new CommandSelectedEvent(command));
+        }
+
+        /// <summary>
+        /// Mục tiêu: Chọn một unit cùng loại trên màn hình; bấm lại cùng phím sẽ chuyển sang unit kế tiếp.
+        /// Cách hoạt động: Thu thập danh sách khớp prefab → DeselectAll → cycle index modulo count → Select.
+        /// </summary>
+        public void SelectOneUnitOfKindOnScreen(GameObject referencePrefab)
+        {
+            List<AbstractUnit> matches = CollectUnitsOfKindOnScreen(referencePrefab);
+            if (matches.Count == 0)
+            {
+                return;
+            }
+
+            DeselectAllUnits();
+
+            if (unitTypeCyclePrefab != referencePrefab)
+            {
+                unitTypeCyclePrefab = referencePrefab;
+                unitTypeCycleIndex = -1;
+            }
+
+            unitTypeCycleIndex = (unitTypeCycleIndex + 1) % matches.Count;
+            matches[unitTypeCycleIndex].Select();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Chọn mọi unit cùng prefab archetype trên màn hình (Ctrl+Q/W/E/R hoặc double-click).
+        /// Cách hoạt động: DeselectAll → quét aliveUnits, lọc viewport + MatchesPrefab → Select.
+        /// </summary>
+        public void SelectAllUnitsOfKindOnScreen(GameObject referencePrefab)
+        {
+            if (referencePrefab == null)
+            {
+                return;
+            }
+
+            DeselectAllUnits();
+
+            foreach (AbstractUnit unit in aliveUnits)
+            {
+                if (!IsSelectableUnitOfKindOnScreen(unit, referencePrefab))
+                {
+                    continue;
+                }
+
+                unit.Select();
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Thu thập unit local player cùng prefab và đang trong viewport.
+        /// Cách hoạt động: Duyệt aliveUnits, lọc qua IsSelectableUnitOfKindOnScreen, thêm vào list.
+        /// </summary>
+        List<AbstractUnit> CollectUnitsOfKindOnScreen(GameObject referencePrefab)
+        {
+            var matches = new List<AbstractUnit>(16);
+            foreach (AbstractUnit unit in aliveUnits)
+            {
+                if (IsSelectableUnitOfKindOnScreen(unit, referencePrefab))
+                {
+                    matches.Add(unit);
+                }
+            }
+
+            return matches;
+        }
+
+        bool IsSelectableUnitOfKindOnScreen(AbstractUnit unit, GameObject referencePrefab) =>
+            unit != null
+            && unit.gameObject.activeInHierarchy
+            && IsOwnedByLocalPlayer(unit)
+            && IsCommandableOnScreen(unit)
+            && UnitKindMatching.MatchesPrefab(unit, referencePrefab);
+
+        /// <summary>
+        /// Mục tiêu: Chọn một nhà cùng loại trên màn hình; bấm lại cùng phím chuyển sang nhà kế tiếp.
+        /// Cách hoạt động: Thu thập khớp prefab → DeselectAll → cycle index → Select.
+        /// </summary>
+        public void SelectOneBuildingOfKindOnScreen(GameObject referencePrefab)
+        {
+            List<BaseBuilding> matches = CollectBuildingsOfKindOnScreen(referencePrefab);
+            if (matches.Count == 0)
+            {
+                return;
+            }
+
+            DeselectAllUnits();
+
+            if (unitTypeCyclePrefab != referencePrefab)
+            {
+                unitTypeCyclePrefab = referencePrefab;
+                unitTypeCycleIndex = -1;
+            }
+
+            unitTypeCycleIndex = (unitTypeCycleIndex + 1) % matches.Count;
+            matches[unitTypeCycleIndex].Select();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Chọn mọi nhà cùng prefab archetype trên màn hình (Ctrl+A/S/D).
+        /// Cách hoạt động: DeselectAll → quét aliveBuildings, lọc viewport + MatchesPrefab → Select.
+        /// </summary>
+        public void SelectAllBuildingsOfKindOnScreen(GameObject referencePrefab)
+        {
+            if (referencePrefab == null)
+            {
+                return;
+            }
+
+            DeselectAllUnits();
+
+            foreach (BaseBuilding building in aliveBuildings)
+            {
+                if (!IsSelectableBuildingOfKindOnScreen(building, referencePrefab))
+                {
+                    continue;
+                }
+
+                building.Select();
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Thu thập nhà local player cùng prefab và đang trong viewport.
+        /// Cách hoạt động: Duyệt aliveBuildings, lọc qua IsSelectableBuildingOfKindOnScreen.
+        /// </summary>
+        List<BaseBuilding> CollectBuildingsOfKindOnScreen(GameObject referencePrefab)
+        {
+            var matches = new List<BaseBuilding>(8);
+            foreach (BaseBuilding building in aliveBuildings)
+            {
+                if (IsSelectableBuildingOfKindOnScreen(building, referencePrefab))
+                {
+                    matches.Add(building);
+                }
+            }
+
+            return matches;
+        }
+
+        bool IsSelectableBuildingOfKindOnScreen(BaseBuilding building, GameObject referencePrefab) =>
+            building != null
+            && building.gameObject.activeInHierarchy
+            && IsOwnedByLocalPlayer(building)
+            && IsCommandableOnScreen(building)
+            && BuildingKindMatching.MatchesPrefab(building, referencePrefab);
+
+        /// <summary>
+        /// Mục tiêu: Dừng mọi unit đang được chọn (phím H theo 0 A.D.).
+        /// Cách hoạt động: Gọi Stop() trên từng AbstractUnit trong selection hiện tại.
+        /// </summary>
+        public void StopSelectedUnitsFromHotkey()
+        {
+            if (selectedUnits.Count == 0)
+            {
+                return;
+            }
+
+            ISelectable[] snapshot = selectedUnits.ToArray();
+            for (int i = 0; i < snapshot.Length; i++)
+            {
+                if (snapshot[i] is not AbstractUnit unit)
+                {
+                    continue;
+                }
+
+                if (!LocalHumanOwnerAccess.IsLocalOwner(unit.Owner))
+                {
+                    continue;
+                }
+
+                if (PlayerInputNetworkBridge.ShouldRelayCommands
+                    && PlayerInputNetworkBridge.TryRelayUnitStop != null
+                    && PlayerInputNetworkBridge.TryRelayUnitStop(unit))
+                {
+                    continue;
+                }
+
+                unit.Stop();
             }
         }
 
@@ -635,6 +940,24 @@ namespace GameDevTV.RTS.Player
         }
 
         /// <summary>
+        /// Mục tiêu: Danh sách commandable đang chọn cho action bar / phím số.
+        /// Cách hoạt động: Lọc selectedUnits thành AbstractCommandable.
+        /// </summary>
+        private List<AbstractCommandable> CollectSelectedCommandables()
+        {
+            List<AbstractCommandable> commandables = new(selectedUnits.Count);
+            foreach (ISelectable selectable in selectedUnits)
+            {
+                if (selectable is AbstractCommandable commandable)
+                {
+                    commandables.Add(commandable);
+                }
+            }
+
+            return commandables;
+        }
+
+        /// <summary>
         /// Mục tiêu: Right-click / ActivateAction — Move nhóm dùng formation vuông.
         /// Cách hoạt động: Move + &gt;1 unit → <see cref="GroupFormationMoveUtility"/>; còn lại giữ loop lệnh cũ.
         /// </summary>
@@ -655,12 +978,6 @@ namespace GameDevTV.RTS.Player
                 {
                     return true;
                 }
-            }
-
-            if (commandBeingActivated is RallyAreaCommand rallyCommand
-                && RallyAreaCommand.TryApplyRally(abstractUnits[0], hit, rallyCommand))
-            {
-                return true;
             }
 
             for (int i = 0; i < abstractUnits.Count; i++)
@@ -684,12 +1001,6 @@ namespace GameDevTV.RTS.Player
                         {
                             return true;
                         }
-                    }
-
-                    if (command is RallyAreaCommand rally
-                        && RallyAreaCommand.TryApplyRally(abstractUnits[0], hit, rally))
-                    {
-                        return true;
                     }
                 }
 
@@ -726,12 +1037,6 @@ namespace GameDevTV.RTS.Player
                     {
                         return true;
                     }
-                }
-
-                if (command is RallyAreaCommand rallyForGroup
-                    && RallyAreaCommand.TryApplyRally(abstractUnits[0], hit, rallyForGroup))
-                {
-                    return true;
                 }
 
                 command.Handle(context);
@@ -776,8 +1081,89 @@ namespace GameDevTV.RTS.Player
                 return false;
             }
 
-            closestUnit.Select();
+            SelectUnitFromLeftClick(closestUnit);
             return true;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Click trái chọn một unit hoặc double-click chọn mọi unit cùng loại trên màn hình (0 A.D.).
+        /// Cách hoạt động: Hai click liên tiếp trong cửa sổ thời gian lên cùng unit → quét aliveUnits, lọc cùng loại + trong viewport.
+        /// </summary>
+        private void SelectUnitFromLeftClick(AbstractUnit clickedUnit)
+        {
+            if (TrySelectAllSameKindOnScreenFromDoubleClick(clickedUnit))
+            {
+                return;
+            }
+
+            clickedUnit.Select();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Nhận diện double-click trái trên unit để chọn hàng loạt cùng loại.
+        /// Cách hoạt động: Hai click trong cửa sổ thời gian, cùng loại (có thể hai instance khác nhau) → thay thế selection.
+        /// </summary>
+        private bool TrySelectAllSameKindOnScreenFromDoubleClick(AbstractUnit clickedUnit)
+        {
+            float now = Time.unscaledTime;
+            bool isDoubleClick = lastUnitLeftClickTarget != null
+                && UnitKindMatching.IsSameKind(lastUnitLeftClickTarget, clickedUnit)
+                && lastUnitLeftClickTime >= 0f
+                && now - lastUnitLeftClickTime <= UnitDoubleClickIntervalSeconds;
+
+            lastUnitLeftClickTime = now;
+            lastUnitLeftClickTarget = clickedUnit;
+
+            if (!isDoubleClick)
+            {
+                return false;
+            }
+
+            SelectAllSameKindOnScreen(clickedUnit);
+            return true;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Chọn mọi unit cùng loại trên màn hình — thay thế toàn bộ selection (kể cả khi giữ Shift).
+        /// Cách hoạt động: DeselectAll → quét aliveUnits, lọc owner/viewport/UnitKindMatching → Select từng unit khớp.
+        /// </summary>
+        private void SelectAllSameKindOnScreen(AbstractUnit referenceUnit)
+        {
+            if (referenceUnit?.UnitSO?.Prefab == null)
+            {
+                return;
+            }
+
+            SelectAllUnitsOfKindOnScreen(referenceUnit.UnitSO.Prefab);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Kiểm tra unit có projection nằm trong viewport camera hay không.
+        /// Cách hoạt động: Ủy quyền <see cref="IsCommandableOnScreen"/>.
+        /// </summary>
+        private bool IsUnitOnScreen(AbstractUnit unit) => IsCommandableOnScreen(unit);
+
+        /// <summary>
+        /// Mục tiêu: Kiểm tra commandable có projection nằm trong viewport camera hay không.
+        /// Cách hoạt động: WorldToViewportPoint; z &gt; 0 và tọa độ x/y trong [0, 1].
+        /// </summary>
+        private bool IsCommandableOnScreen(AbstractCommandable commandable)
+        {
+            if (camera == null || commandable == null)
+            {
+                return false;
+            }
+
+            Vector3 viewport = camera.WorldToViewportPoint(commandable.transform.position);
+            return viewport.z > 0f
+                && viewport.x >= 0f && viewport.x <= 1f
+                && viewport.y >= 0f && viewport.y <= 1f;
+        }
+
+        private void ResetUnitDoubleClickTracking()
+        {
+            lastUnitLeftClickTime = -1f;
+            lastUnitLeftClickTarget = null;
         }
 
         private void HandleLeftClick()
@@ -881,7 +1267,7 @@ namespace GameDevTV.RTS.Player
                 }
             }
 
-            activeCommand = null;
+            SetActiveCommand(null);
 
             if (deferDestroyGhostForBuild)
             {

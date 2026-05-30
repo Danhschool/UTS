@@ -15,6 +15,8 @@ namespace GameDevTV.RTS.Netplay
 
         public static Func<AbstractUnit, RaycastHit, BaseCommand, MouseButton, int, bool> TryRelayUnitCommand;
 
+        public static Func<AbstractUnit, bool> TryRelayUnitStop;
+
         public static bool ShouldRelayCommands =>
             IsMultiplayerClient != null && IsMultiplayerClient.Invoke();
     }

@@ -1,0 +1,193 @@
+{
+  "source": "UTS — Phím tắt trong trận",
+  "note": "A/S/D chọn Civil Central / Forge / Barracks trên màn hình. Pan camera: phím mũi tên hoặc rìa màn hình.",
+  "updated": "2026-05-30",
+  "categories": [
+    {
+      "id": "mouse_basic",
+      "name": "Chuột — Chọn và ra lệnh",
+      "hotkeys": [
+        {
+          "keys": "Click trái",
+          "description": "Chọn một unit hoặc công trình. Khi trúng cả unit và nhà, game ưu tiên chọn unit."
+        },
+        {
+          "keys": "Kéo thả chuột trái",
+          "description": "Chọn nhiều unit trong khung. Thả chuột mà khung rỗng → bỏ chọn (trừ khi giữ Shift)."
+        },
+        {
+          "keys": "Double click trái (trên unit)",
+          "description": "Bỏ chọn cũ và chọn tất cả unit cùng loại trên màn hình."
+        },
+        {
+          "keys": "Click phải",
+          "description": "Ra lệnh: di chuyển, tấn công, thu thập, đặt nhà (khi đang chọn lệnh trên thanh action)."
+        },
+        {
+          "keys": "Shift + kéo / click trái",
+          "description": "Thêm unit vào lựa chọn (hỗ trợ một phần khi kéo chọn)."
+        }
+      ]
+    },
+    {
+      "id": "system",
+      "name": "Hệ thống",
+      "hotkeys": [
+        {
+          "keys": "Esc",
+          "description": "Hủy ghost đặt công trình hoặc lệnh đang chờ click → nếu không có thì bỏ chọn toàn bộ."
+        }
+      ]
+    },
+    {
+      "id": "quick_select_units",
+      "name": "Chọn unit nhanh (trên màn hình)",
+      "hotkeys": [
+        {
+          "keys": "Q",
+          "description": "Một Worker; bấm lại để chuyển sang Worker kế tiếp (cycle)."
+        },
+        {
+          "keys": "Ctrl + Q",
+          "description": "Mọi Worker trong khung nhìn camera."
+        },
+        {
+          "keys": "W",
+          "description": "Một Warrior; bấm lại để cycle."
+        },
+        {
+          "keys": "Ctrl + W",
+          "description": "Mọi Warrior trên màn hình."
+        },
+        {
+          "keys": "E",
+          "description": "Một Archer; bấm lại để cycle."
+        },
+        {
+          "keys": "Ctrl + E",
+          "description": "Mọi Archer trên màn hình."
+        },
+        {
+          "keys": "R",
+          "description": "Một RockWarrior; bấm lại để cycle."
+        },
+        {
+          "keys": "Ctrl + R",
+          "description": "Mọi RockWarrior trên màn hình."
+        }
+      ]
+    },
+    {
+      "id": "quick_select_buildings",
+      "name": "Chọn công trình nhanh (trên màn hình)",
+      "hotkeys": [
+        {
+          "keys": "A",
+          "description": "Một Civil Central (CC); bấm lại để cycle."
+        },
+        {
+          "keys": "Ctrl + A",
+          "description": "Mọi Civil Central trên màn hình."
+        },
+        {
+          "keys": "S",
+          "description": "Một Forge; bấm lại để cycle."
+        },
+        {
+          "keys": "Ctrl + S",
+          "description": "Mọi Forge trên màn hình."
+        },
+        {
+          "keys": "D",
+          "description": "Một Barracks; bấm lại để cycle."
+        },
+        {
+          "keys": "Ctrl + D",
+          "description": "Mọi Barracks trên màn hình."
+        }
+      ]
+    },
+    {
+      "id": "action_bar",
+      "name": "Thanh lệnh (action bar)",
+      "hotkeys": [
+        {
+          "keys": "1 … 9",
+          "description": "Lệnh ô 1–9 trên thanh action (cùng thứ tự UI). Cần đã chọn unit hoặc công trình."
+        },
+        {
+          "keys": "Click trái (nút action bar)",
+          "description": "Chọn lệnh; nút đang chờ click thế giới được highlight trắng."
+        }
+      ]
+    },
+    {
+      "id": "unit_commands",
+      "name": "Lệnh unit",
+      "hotkeys": [
+        {
+          "keys": "H",
+          "description": "Dừng (Stop) mọi unit đang được chọn."
+        }
+      ]
+    },
+    {
+      "id": "camera",
+      "name": "Camera",
+      "hotkeys": [
+        {
+          "keys": "↑ ↓ ← →",
+          "description": "Pan camera."
+        },
+        {
+          "keys": "Rìa màn hình",
+          "description": "Pan khi đưa chuột sát mép (nếu bật edge pan)."
+        },
+        {
+          "keys": "Con lăn chuột",
+          "description": "Zoom in / zoom out."
+        },
+        {
+          "keys": "Home",
+          "description": "Reset zoom và góc camera."
+        },
+        {
+          "keys": "F",
+          "description": "Theo dõi unit đang chọn."
+        }
+      ]
+    },
+    {
+      "id": "placement",
+      "name": "Đặt công trình",
+      "hotkeys": [
+        {
+          "keys": "Esc",
+          "description": "Hủy ghost đặt nhà và lệnh đang chờ."
+        },
+        {
+          "keys": "Click phải",
+          "description": "Đặt công trình sau khi chọn lệnh Build (vị trí hợp lệ)."
+        }
+      ]
+    },
+    {
+      "id": "tips",
+      "name": "Mẹo",
+      "hotkeys": [
+        {
+          "keys": "Ctrl",
+          "description": "Giữ Ctrl khi bấm Q/W/E/R hoặc A/S/D để chọn hết cùng loại trên màn hình thay vì cycle từng đối tượng."
+        },
+        {
+          "keys": "D → 1–9",
+          "description": "Ví dụ: D chọn Barracks → bấm số để huấn luyện theo slot thanh action."
+        },
+        {
+          "keys": "Nhiều unit",
+          "description": "Chọn nhóm → click phải đất: di chuyển theo đội hình."
+        }
+      ]
+    }
+  ]
+}

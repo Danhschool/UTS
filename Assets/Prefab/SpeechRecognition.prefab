@@ -15,7 +15,6 @@ GameObject:
   - component: {fileID: 7932982010821750756}
   - component: {fileID: 7909246947005213565}
   - component: {fileID: 6808391140065760110}
-  - component: {fileID: 6070757899140168318}
   m_Layer: 0
   m_Name: SpeechRecognition
   m_TagString: Untagged
@@ -132,17 +131,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ProjectRTS.SpeechRecognition.VoiceCommandOneShotCapture
   _sttDriver: {fileID: 7773533907087713904}
   _whisper: {fileID: 6260290366470313422}
-  _datasetResourcesPath: VoiceCommands/rts_voice_commands_uts_units_vi
   _maxCaptureSeconds: 12
-  _onCommandMatched:
-    m_PersistentCalls:
-      m_Calls: []
-  _onCommandNearMatch:
-    m_PersistentCalls:
-      m_Calls: []
-  _onNoCommandMatch:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!114 &7909246947005213565
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -174,20 +163,4 @@ MonoBehaviour:
   _toggleButton: {fileID: 0}
   _toggleButtonLabel: {fileID: 0}
   _statusText: {fileID: 0}
-  _commandResultText: {fileID: 0}
   _createRuntimeUiIfMissing: 0
---- !u!114 &6070757899140168318
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5111993236680966954}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d303f4878eebd9d4d800fdf81e2bc076, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ProjectRTS.SpeechRecognition.VoiceCommandCaptureHud
-  _capture: {fileID: 7932982010821750756}
-  _resultText: {fileID: 0}
-  _createRuntimeHudIfMissing: 1

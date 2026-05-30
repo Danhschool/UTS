@@ -341,6 +341,13 @@ namespace GameDevTV.RTS.Units
             OnQueueUpdated?.Invoke(buildingQueue.ToArray());
         }
 
+        /// <summary>Vị trí spawn unit trên rìa CC/nhà (world space).</summary>
+        public Vector3 UnitSpawnWorldPosition => GetUnitSpawnWorldPosition();
+
+        /// <summary>Hướng spawn unit theo <see cref="unitSpawnPoint"/> hoặc building.</summary>
+        public Quaternion UnitSpawnWorldRotation =>
+            unitSpawnPoint != null ? unitSpawnPoint.rotation : transform.rotation;
+
         /// <summary>
         /// Mục tiêu: Cho biết world position spawn unit từ hàng đợi nhà (theo điểm bạn chọn trong Inspector hoặc pivot nhà).
         /// Cách hoạt động: Nếu có <see cref="unitSpawnPoint"/> thì trả về vị trí của nó, không thì dùng <see cref="Transform.position"/> của building.
