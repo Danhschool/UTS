@@ -13,6 +13,7 @@ namespace ProjectRTS.Netplay
     {
         [Header("RTS scenes (must be in Build Settings)")]
         [Scene] public string lobbyScene = "RtsNet_Lobby";
+        [Scene] public string loadingScene = "Loading";
         [Scene] public string gameScene = "RtsNet_Game";
 
         [Header("Prefabs")]
@@ -139,6 +140,46 @@ namespace ProjectRTS.Netplay
 
             ServerChangeScene(gameScene);
         }
+
+        /// <summary>
+        /// Mục tiêu: Host chuyển từ Loading scene sang game (Phase A xong).
+        /// </summary>
+        public void ServerChangeSceneFromLoading(string targetScene)
+        {
+            if (!NetworkServer.active)
+            {
+                return;
+            }
+
+            base.ServerChangeScene(targetScene);
+        }
+
+        public override void ServerChangeScene(string newSceneName)
+        {
+            if (newSceneName == gameScene
+                && !string.IsNullOrWhiteSpace(loadingScene)
+                && !IsActiveScene(loadingScene))
+            {
+                RtsNetworkSceneLoadHooks.BeginNetworkGameplayLoad?.Invoke(gameScene);
+                base.ServerChangeScene(loadingScene);
+                return;
+            }
+
+            base.ServerChangeScene(newSceneName);
+        }
+
+        public override void OnClientChangeScene(string newSceneName, SceneOperation sceneOperation, bool customHandling)
+        {
+            if (newSceneName == loadingScene)
+            {
+                RtsNetworkSceneLoadHooks.BeginNetworkGameplayLoad?.Invoke(gameScene);
+            }
+
+            base.OnClientChangeScene(newSceneName, sceneOperation, customHandling);
+        }
+
+        static bool IsActiveScene(string sceneName) =>
+            SceneManager.GetActiveScene().name == sceneName;
 
         bool AllPlayersReady()
         {

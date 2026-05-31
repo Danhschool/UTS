@@ -1,5 +1,6 @@
 using Unity.Behavior;
 using UnityEngine;
+using GameDevTV.RTS.Audio;
 
 namespace GameDevTV.RTS.Units
 {
@@ -66,6 +67,9 @@ namespace GameDevTV.RTS.Units
             {
                 return;
             }
+
+            AudioCueId cue = AttackAudioUtility.ResolveAttackCue(unitSO.AttackConfig);
+            AudioAccess.TryPlay3D(cue, GetFireWorldPosition());
 
             if (arrowFlight == null)
             {

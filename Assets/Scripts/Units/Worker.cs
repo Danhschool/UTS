@@ -4,6 +4,8 @@ using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Audio;
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Utilities;
 using Unity.Behavior;
 using UnityEngine;
@@ -12,6 +14,8 @@ namespace GameDevTV.RTS.Units
     public class Worker : AbstractUnit, IBuildingBuilder, ITransportable
     {
         private readonly WorkerGatherAssignmentLock gatherAssignmentLock = new();
+        const float GatherAudioCooldownSeconds = 0.55f;
+        float lastGatherAudioTime = -999f;
 
         public bool IsBuilding => graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> command) && command.Value == UnitCommands.BuildBuilding;
 
@@ -513,12 +517,36 @@ namespace GameDevTV.RTS.Units
                 return;
             }
 
+            TryPlayGatherAudio(self, amount, supply);
+
             if (graphAgent != null)
             {
                 graphAgent.SetVariableValue("SupplySO", supply);
             }
 
             Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, amount, supply));
+        }
+
+        void TryPlayGatherAudio(GameObject self, int amount, SupplySO supply)
+        {
+            if (amount <= 0 || self == null || !LocalHumanOwnerAccess.IsLocalOwner(Owner))
+            {
+                return;
+            }
+
+            if (Time.unscaledTime - lastGatherAudioTime < GatherAudioCooldownSeconds)
+            {
+                return;
+            }
+
+            AudioCueId cue = SupplyGatherAudioUtility.ResolveGatherCue(supply);
+            if (cue == AudioCueId.None)
+            {
+                return;
+            }
+
+            lastGatherAudioTime = Time.unscaledTime;
+            AudioAccess.TryPlay3D(cue, self.transform.position);
         }
 
         /// <summary>

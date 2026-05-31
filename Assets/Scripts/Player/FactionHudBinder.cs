@@ -1,3 +1,4 @@
+using GameDevTV.RTS.Audio;
 using GameDevTV.RTS.Minimap;
 using GameDevTV.RTS.UI.GameEventLog;
 using GameDevTV.RTS.Units;
@@ -14,6 +15,7 @@ namespace GameDevTV.RTS.Player
         [SerializeField] LocalHumanOwnerService localHumanOwnerService;
         [SerializeField] Supplies supplies;
         [SerializeField] PlayerGameEventLogListener gameEventLogListener;
+        [SerializeField] PlayerAudioListener playerAudioListener;
         [SerializeField] MinimapUnitIconsController minimapUnitIcons;
         [SerializeField] MinimapFogSystemReference minimapFog;
 
@@ -47,7 +49,18 @@ namespace GameDevTV.RTS.Player
         {
             supplies ??= FindFirstObjectByType<Supplies>(FindObjectsInactive.Include);
             gameEventLogListener ??= FindFirstObjectByType<PlayerGameEventLogListener>(FindObjectsInactive.Include);
+            playerAudioListener ??= GetComponent<PlayerAudioListener>();
+            if (playerAudioListener == null)
+            {
+                playerAudioListener = gameObject.AddComponent<PlayerAudioListener>();
+            }
+
             minimapUnitIcons ??= FindFirstObjectByType<MinimapUnitIconsController>(FindObjectsInactive.Include);
+
+            if (FindFirstObjectByType<AudioBootstrap>(FindObjectsInactive.Include) == null)
+            {
+                AudioBootstrap.EnsureExists();
+            }
             minimapFog ??= FindFirstObjectByType<MinimapFogSystemReference>(FindObjectsInactive.Include);
         }
 
@@ -100,6 +113,7 @@ namespace GameDevTV.RTS.Player
             }
 
             gameEventLogListener?.SetListenOwner(localOwner);
+            playerAudioListener?.SetListenOwner(localOwner);
 
             MinimapUnitIconsController icons = rigMinimapIcons ?? minimapUnitIcons;
             if (icons != null)

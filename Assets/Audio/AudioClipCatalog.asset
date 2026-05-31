@@ -1,0 +1,166 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ba85173c4b04c04f8305a14500fb8a9, type: 3}
+  m_Name: AudioClipCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Audio.AudioClipCatalogSO
+  cues:
+  - Cue: 1
+    Clips:
+    - {fileID: 8300000, guid: 2021ef9385fa61a40a6ffec6fbedd22e, type: 3}
+    Volume: 0.7
+    Channel: 1
+  - Cue: 2
+    Clips:
+    - {fileID: 8300000, guid: d48d8712b9a247c4cb7fb42a87471cd2, type: 3}
+    Volume: 0.7
+    Channel: 1
+  - Cue: 3
+    Clips:
+    - {fileID: 8300000, guid: 18fbf1ac2c470c94d9fe14aaec1a0a2b, type: 3}
+    Volume: 0.75
+    Channel: 0
+  - Cue: 4
+    Clips:
+    - {fileID: 8300000, guid: 75fd13f078dc9904ca6fa2512c0b0064, type: 3}
+    Volume: 0.8
+    Channel: 0
+  - Cue: 5
+    Clips:
+    - {fileID: 8300000, guid: 80eee2922b3af03439fce7519988829b, type: 3}
+    Volume: 0.75
+    Channel: 0
+  - Cue: 6
+    Clips:
+    - {fileID: 8300000, guid: 53b07e4d6a768d84b8b9289d0afb25ef, type: 3}
+    Volume: 0.5
+    Channel: 1
+  - Cue: 7
+    Clips:
+    - {fileID: 8300000, guid: 0e26784ee41e2a244a03447006b582bc, type: 3}
+    - {fileID: 8300000, guid: a320dd4bebf8eb140801630d600fdb7b, type: 3}
+    - {fileID: 8300000, guid: 04a5ea29a204726438a1039648a350bb, type: 3}
+    Volume: 0.85
+    Channel: 0
+  - Cue: 8
+    Clips:
+    - {fileID: 8300000, guid: d0c3fba25ef0474439fb136501bfe3d1, type: 3}
+    - {fileID: 8300000, guid: cd44a27b40a61244994ca81caffa5542, type: 3}
+    Volume: 0.9
+    Channel: 0
+  - Cue: 15
+    Clips:
+    - {fileID: 8300000, guid: b89f96ddad130a94598408d45892b4d2, type: 3}
+    - {fileID: 8300000, guid: e6520917fa854ad4a8d18f7f6c1bd397, type: 3}
+    - {fileID: 8300000, guid: c0c9a5ae676667d49b7432e6f6858fa5, type: 3}
+    - {fileID: 8300000, guid: 893b3c2cf2e342c418c767c4c43af6df, type: 3}
+    - {fileID: 8300000, guid: 5278e08512027d748870c047984f374f, type: 3}
+    - {fileID: 8300000, guid: 4aea8050a44162744b3fdc08e6ad50c1, type: 3}
+    - {fileID: 8300000, guid: 80f0c5f05e9063b4a86b4ddd1de8b6b0, type: 3}
+    - {fileID: 8300000, guid: 32f7f7b1515cbd4418db318fa0928b36, type: 3}
+    - {fileID: 8300000, guid: 00bda72eda942fa48a342e73178d1bf9, type: 3}
+    Volume: 0.85
+    Channel: 0
+  - Cue: 16
+    Clips:
+    - {fileID: 8300000, guid: 66bf371f34ce09143b620a21ae60dbfe, type: 3}
+    - {fileID: 8300000, guid: 79d8c07261b6f8c4692a4e0335ede040, type: 3}
+    - {fileID: 8300000, guid: fe6b2ccfa10d5f5439aaf3350d98a2a5, type: 3}
+    Volume: 0.85
+    Channel: 0
+  - Cue: 17
+    Clips:
+    - {fileID: 8300000, guid: 988e1e5d0cd1fd14aa774af4056967d5, type: 3}
+    - {fileID: 8300000, guid: 7f158592ee2556d4290b8b4086ac947d, type: 3}
+    - {fileID: 8300000, guid: d7bda51c6d62b134089b4fe7151d301f, type: 3}
+    - {fileID: 8300000, guid: 2fad18a676513a045a0b6ad2fe7bb6af, type: 3}
+    - {fileID: 8300000, guid: ec17e474453e8154b9d95c2c89787fa7, type: 3}
+    - {fileID: 8300000, guid: 2433e85a025c8bf4480e34c1dcf0eb39, type: 3}
+    - {fileID: 8300000, guid: 826bb2bc135f8864885bbcf0dd56f142, type: 3}
+    - {fileID: 8300000, guid: dc4d332ab55e3114c8131ed4cf0b0183, type: 3}
+    - {fileID: 8300000, guid: 8193e3b42c881d244a95d7c6f823d1f0, type: 3}
+    Volume: 0.75
+    Channel: 0
+  - Cue: 18
+    Clips:
+    - {fileID: 8300000, guid: f3389c81725674644ac05fa706e02ca6, type: 3}
+    - {fileID: 8300000, guid: 402537211e40c5447ab190e28edfc881, type: 3}
+    - {fileID: 8300000, guid: d136293de354db84689790d89750eee1, type: 3}
+    - {fileID: 8300000, guid: b3babf2825fe0614b9d1b9bc3a34e86d, type: 3}
+    - {fileID: 8300000, guid: 8eb8ee0160ad580418a5a2175c286e0d, type: 3}
+    - {fileID: 8300000, guid: 301fb126c965dd747a61b6422ad2e5f0, type: 3}
+    - {fileID: 8300000, guid: 11ff41f9babc1384290726ad3d49f056, type: 3}
+    - {fileID: 8300000, guid: 92693bc07fe5e6442877a9d79b5cde14, type: 3}
+    - {fileID: 8300000, guid: 5afb7ee65c1c06a4f8b1bdfc241b6cd3, type: 3}
+    Volume: 0.75
+    Channel: 0
+  - Cue: 19
+    Clips:
+    - {fileID: 8300000, guid: 81086eb028109354f8737a485ae9770c, type: 3}
+    - {fileID: 8300000, guid: 419eb23757e8ce44facd16e9b1f007a9, type: 3}
+    - {fileID: 8300000, guid: f91b7e0e67c50524b834a453355fbf90, type: 3}
+    - {fileID: 8300000, guid: 99e738d76e46cb4459fc495fe93f44f1, type: 3}
+    - {fileID: 8300000, guid: f4d7d588bcae7f54d95ee95f99b676a2, type: 3}
+    - {fileID: 8300000, guid: ff2ed78a5f7466948a96356307a59b9f, type: 3}
+    - {fileID: 8300000, guid: 0c41acde67bd6fe4c8d0a650122f225d, type: 3}
+    - {fileID: 8300000, guid: c0a10ee5645c83b4fa0f78878d1c3c59, type: 3}
+    - {fileID: 8300000, guid: 016569fff960e2841a3cfbff513e231b, type: 3}
+    Volume: 0.7
+    Channel: 0
+  - Cue: 14
+    Clips:
+    - {fileID: 8300000, guid: ff0ae557488ad7844a8fce14cde90b6a, type: 3}
+    - {fileID: 8300000, guid: cd9c18973d0d0224dbcfd739caa107ca, type: 3}
+    Volume: 0.55
+    Channel: 3
+  - Cue: 13
+    Clips:
+    - {fileID: 8300000, guid: ff0ae557488ad7844a8fce14cde90b6a, type: 3}
+    - {fileID: 8300000, guid: cd9c18973d0d0224dbcfd739caa107ca, type: 3}
+    - {fileID: 8300000, guid: b10e9408144504647879aefd0e57eb6a, type: 3}
+    Volume: 1
+    Channel: 3
+  - Cue: 9
+    Clips:
+    - {fileID: 8300000, guid: dd1f304f846d84d4c84e1be5710e2b70, type: 3}
+    - {fileID: 8300000, guid: efe54c5f86bfe2e45a5dcc16d9a5d93c, type: 3}
+    - {fileID: 8300000, guid: c02b86dfbe905ea49b4cc91073c7f3c5, type: 3}
+    - {fileID: 8300000, guid: 89f4c64482ef6a74aaa67983bdcea1c8, type: 3}
+    - {fileID: 8300000, guid: dc7289ff1cbddf3498d634df138e8c65, type: 3}
+    - {fileID: 8300000, guid: 7ea77f1ecde65dc408c16071c52e7fb4, type: 3}
+    - {fileID: 8300000, guid: c53c3203b335865438dfb627117f7465, type: 3}
+    Volume: 0.85
+    Channel: 2
+  - Cue: 10
+    Clips:
+    - {fileID: 8300000, guid: 3eb67ed93c8008f48b6d1885bfa46657, type: 3}
+    - {fileID: 8300000, guid: 9ab0b528f10b3b349886ae56cb01635b, type: 3}
+    - {fileID: 8300000, guid: 13b79928bf34d8d4ab38b9e721b1723e, type: 3}
+    - {fileID: 8300000, guid: d683f6042eb8e75468535b00287aaf51, type: 3}
+    Volume: 0.85
+    Channel: 2
+  - Cue: 11
+    Clips:
+    - {fileID: 8300000, guid: 7c5fb7d4fbbd60347906ee909e81a0ca, type: 3}
+    - {fileID: 8300000, guid: 8dc65487d048efa46943c4755265d209, type: 3}
+    - {fileID: 8300000, guid: ab0cea913fde6b241a70130639d35573, type: 3}
+    - {fileID: 8300000, guid: 706a1123ba23ef347ae24a20dbdc8abc, type: 3}
+    - {fileID: 8300000, guid: ba148da20dd794a4d9dbf4caaa8530da, type: 3}
+    Volume: 0.85
+    Channel: 2
+  - Cue: 12
+    Clips:
+    - {fileID: 8300000, guid: f0dce0e9bf722bd42b10555cbef47749, type: 3}
+    - {fileID: 8300000, guid: ee81de7708054724eacdba636b4f2ff6, type: 3}
+    - {fileID: 8300000, guid: ca9ed64d77d51aa4b8be65c4dfc172e7, type: 3}
+    - {fileID: 8300000, guid: fa48150d98926654abe97068039d9039, type: 3}
+    Volume: 0.85
+    Channel: 2

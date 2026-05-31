@@ -1,3 +1,4 @@
+using GameDevTV.RTS.Audio;
 using UnityEngine;
 
 namespace GameDevTV.RTS.Units
@@ -13,6 +14,7 @@ namespace GameDevTV.RTS.Units
         [field: SerializeField] public float AreaOfEffectRadius { get; private set; } = 2;
         [field: SerializeField] public int MaxEnemiesHitPerAttack { get; private set; } = 5;
         [field: SerializeField] public LayerMask DamageableLayers { get; private set; }
+        [field: SerializeField] public AudioCueId AttackAudioCue { get; private set; } = AudioCueId.None;
 
         public int CalculateAreaOfEffectDamage(Vector3 impactPoint, Vector3 targetPosition)
         {

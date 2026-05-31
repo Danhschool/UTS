@@ -1,3 +1,4 @@
+using GameDevTV.RTS.Game.Startup;
 using GameDevTV.RTS.Player;
 using Mirror;
 
@@ -11,6 +12,12 @@ namespace GameDevTV.RTS.Hotkeys
     {
         public bool IsBlocked(in HotkeyContext context)
         {
+            if (!GameplayStartupGate.IsGameplayUnlocked
+                && GameplayStartupScenes.IsActiveGameplayScene())
+            {
+                return true;
+            }
+
             if (!NetworkClient.active)
             {
                 return false;

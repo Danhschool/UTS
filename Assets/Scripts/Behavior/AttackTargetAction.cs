@@ -7,6 +7,7 @@ using GameDevTV.RTS.Units;
 using UnityEngine.AI;
 using GameDevTV.RTS.Utilities;
 using System.Collections.Generic;
+using GameDevTV.RTS.Audio;
 
 namespace GameDevTV.RTS.Behavior
 {
@@ -130,6 +131,8 @@ namespace GameDevTV.RTS.Behavior
                 unit.AttackingParticleSystem.Play();
             }
 
+            PlayAttackSound();
+
             if (AttackConfig.Value.HasProjectileAttacks)
             {
                 if (selfTransform.TryGetComponent(out IProjectileAttacker projectileAttacker))
@@ -163,6 +166,22 @@ namespace GameDevTV.RTS.Behavior
                         unit);
                 }
             }
+        }
+
+        void PlayAttackSound()
+        {
+            if (AttackConfig.Value.HasProjectileAttacks)
+            {
+                return;
+            }
+
+            AudioCueId cue = AttackAudioUtility.ResolveAttackCue(AttackConfig.Value);
+            if (cue == AudioCueId.None || selfTransform == null)
+            {
+                return;
+            }
+
+            AudioAccess.TryPlay3D(cue, selfTransform.position);
         }
 
         protected override void OnEnd()

@@ -9,6 +9,7 @@ using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Units.Formation;
 using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Environment;
+using GameDevTV.RTS.Game.Startup;
 using GameDevTV.RTS.Netplay;
 using Unity.Cinemachine;
 using UnityEngine;
@@ -241,6 +242,12 @@ namespace GameDevTV.RTS.Player
 
         private void Update()
         {
+            if (!GameplayStartupGate.IsGameplayUnlocked
+                && GameplayStartupScenes.IsActiveGameplayScene())
+            {
+                return;
+            }
+
             HandlePanning();
             HandleScrollZoomInput();
             zoomTargetScale = Keyboard.current.endKey.isPressed

@@ -1,3 +1,4 @@
+using GameDevTV.RTS.Game.Startup;
 using GameDevTV.RTS.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -35,11 +36,23 @@ namespace GameDevTV.RTS.Game
             resetNormalSpeedKey = InputSystemKeyboardUtility.CoerceKeyboardKey(resetNormalSpeedKey, Key.NumpadMinus);
 
             Instance = this;
-            ApplySpeed(normalSpeed);
+            GameplayStartupGate.Unlocked += HandleGameplayUnlocked;
+            TryApplyNormalSpeed();
+        }
+
+        void HandleGameplayUnlocked() => TryApplyNormalSpeed();
+
+        void TryApplyNormalSpeed()
+        {
+            if (GameplayStartupGate.IsGameplayUnlocked)
+            {
+                ApplySpeed(normalSpeed);
+            }
         }
 
         private void OnDestroy()
         {
+            GameplayStartupGate.Unlocked -= HandleGameplayUnlocked;
             if (Instance == this)
             {
                 Instance = null;

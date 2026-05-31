@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8129859511959166314
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7382110281920032773}
+  - component: {fileID: 2206848276381024547}
+  - component: {fileID: 5831757234175182926}
+  - component: {fileID: 7748879356692500019}
+  m_Layer: 0
+  m_Name: AudioSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7382110281920032773
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8129859511959166314}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 608.4666, y: 646.6873, z: -7.48299}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2206848276381024547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8129859511959166314}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d01013f2c19bea949a1550430d270e8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Audio.AudioBootstrap
+  catalog: {fileID: 11400000, guid: 0bb633470212e0345b01609567b74eb7, type: 2}
+  persistAcrossScenes: 1
+  startMusicOnPlay: 1
+  musicGroup: {fileID: -3474118226483914798, guid: 853290838adb5754ab4a28db2c323b8b, type: 2}
+  sfxGroup: {fileID: -8367619991382493547, guid: 853290838adb5754ab4a28db2c323b8b, type: 2}
+  uiGroup: {fileID: -6000354493946977503, guid: 853290838adb5754ab4a28db2c323b8b, type: 2}
+  voiceGroup: {fileID: 7786334371119855765, guid: 853290838adb5754ab4a28db2c323b8b, type: 2}
+  volumeController: {fileID: 5831757234175182926}
+  playback3DSettings:
+    spatialBlend: 0.2
+    minDistance: 8
+    maxDistance: 180
+    rolloffMode: 1
+--- !u!114 &5831757234175182926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8129859511959166314}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0af9a820e96350a418876777df3c4bde, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Audio.AudioVolumeController
+  audioMixer: {fileID: 24100000, guid: 853290838adb5754ab4a28db2c323b8b, type: 2}
+  loadSavedVolumesOnAwake: 1
+  useMixerWhenAssigned: 1
+  defaultMaster: 1
+  defaultMusic: 0.7
+  defaultSfx: 0.85
+  defaultUi: 0.75
+  defaultVoice: 0.85
+--- !u!114 &7748879356692500019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8129859511959166314}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5553d4b026103884fa54528d7bceb778, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Audio.PlayerAudioListener
+  listenOwner: 1
+  playSupplySpend: 1
+  playVoiceOnUnitSelect: 1
+  playVoiceOnMoveCommand: 1
+  playVoiceOnAttackCommand: 1
+  voiceCooldownSeconds: 0.35
