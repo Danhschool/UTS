@@ -1,6 +1,7 @@
 using GameDevTV.RTS.Audio;
 using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Player;
+using GameDevTV.RTS.PvAI;
 using UnityEngine;
 
 namespace GameDevTV.RTS.Game.Startup
@@ -126,6 +127,7 @@ namespace GameDevTV.RTS.Game.Startup
             }
 
             GameplayStartupGate.Unlock();
+            PregameAiDifficultyApplyService.TryApply();
             AudioAccess.TryStartGameplayMusic();
             GameplaySceneLoader.CompleteLoadFlow();
 

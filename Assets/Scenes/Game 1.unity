@@ -49998,173 +49998,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 354867925509048298, guid: e4b3b4f8b6109d84dba079c2342e033b, type: 3}
   m_PrefabInstance: {fileID: 1070994173}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1072514498
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1072514500}
-  - component: {fileID: 1072514499}
-  m_Layer: 0
-  m_Name: AIBot 2
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &1072514499
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1072514498}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 22d0e82f2fc133d4988a685e479be1ce, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.AI.AIController
-  aiOwner: 4
-  difficultyProfile: {fileID: 11400000, guid: a8cd3f1e6debdc7498897e64f43f1416, type: 2}
-  tickInterval: 1.5
-  logTickSummary: 0
-  aggressivePerformanceMode: 1
-  economyPlannerEveryNTicks: 1
-  basePlannerEveryNTicks: 3
-  militaryPlannerEveryNTicks: 3
-  influenceRebuildEveryNTicks: 5
-  configResolveEveryNTicks: 8
-  sightRefreshEveryNTicks: 2
-  staleGatherRecoverEveryNTicks: 4
-  sceneCacheMinFramesBetweenRefresh: 20
-  postAiStatusToGameEvent: 1
-  postAiStatusOnlyOnChange: 1
-  economySettings:
-    stoneSupply: {fileID: 11400000, guid: 7d796433841096a47826454e08f211d8, type: 2}
-    woodSupply: {fileID: 11400000, guid: 1095511bff25e6c4ba9f593164fb4f32, type: 2}
-    foodSupply: {fileID: 11400000, guid: 73650d5f9b2a2fd498fffaa64ae2021c, type: 2}
-    storeBuildCommand: {fileID: 11400000, guid: 634ac0705574b374daae7bb2d6c490f9, type: 2}
-    gatherBalanceCheckIntervalTicks: 20
-    gatherImbalanceMaxRatio: 3
-    enableWorkerGatherRefresh: 1
-    workerGatherRefreshIntervalTicks: 10
-    enableExtraCorralWhenFoodLow: 1
-    foodLowAmountForExtraCorral: 80
-    maxCorralsForFoodEconomy: 4
-    extraCorralAttemptIntervalTicks: 40
-    enableStoneWoodOnlyWhenNoFoodMines: 1
-    stoneWoodMajorShare: 0.7
-    stoneWoodMinMajorSlots: 7
-    enableWildFoodHunt: 1
-    foodHuntBelowAmount: 80
-    wildFoodHuntMaxDistance: 120
-    maxWildFoodHuntersPerTick: 3
-  baseSettings:
-    trainWorkerCommand: {fileID: 11400000, guid: 59f03620499325a4788473c1b6eb08aa, type: 2}
-    buildCorralCommand: {fileID: 11400000, guid: cd97a927bb22cb24482d50fab99422a6, type: 2}
-    buildForgeCommand: {fileID: 11400000, guid: 89da643faad9e054dabebda4570100d3, type: 2}
-    buildStoreHouseCommand: {fileID: 11400000, guid: 634ac0705574b374daae7bb2d6c490f9, type: 2}
-    buildBarrackCommand: {fileID: 11400000, guid: d545d0914f1f4e14ebca2297217769c1, type: 2}
-    buildDefenseTowerCommand: {fileID: 11400000, guid: 853976b46235413449498425764306e2, type: 2}
-    researchUpgradeCommand: {fileID: 0}
-    maxWorkersUntilStoreBuilt: 3
-    maxWorkersUntilCorralBuilt: 5
-    maxWorkersUntilForgeBuilt: 8
-    maxWorkersTotal: 0
-    reserveStoneBeforeTrain: 0
-    reserveWoodBeforeTrain: 0
-    reserveFoodBeforeTrain: 0
-    placementNavMeshObstacleProbeRadius: 0
-    placementNavMeshObstacleProbeLayers:
-      serializedVersion: 2
-      m_Bits: 4294967295
-    requireBackboneBeforeBarrackAndTower: 0
-    minWorkersDuringMilitaryExpansion: 5
-  militarySettings:
-    enemyOwner: 1
-    workerArmyRatio: 0.3
-    minArmyBeforeAttack: 6
-    minArmyOnHostileContact: 1
-    rallyFractionWhileExploring: 0.8
-    rallyRegroupStagingRadiusFromCc: 48
-    rallyRegroupMaxThreatDistanceFraction: 0.28
-    rallyRegroupGatherRadius: 18
-    rallyRegroupRequiredFraction: 0.7
-    attackPowerThreshold: 1.2
-    defenseRadius: 100
-    requireVisibleTargets: 1
-    maxTowersInLine: 3
-    towerLineRadius: 28
-    towerLineMinSpacing: 14
-    unitMixSlot1:
-      trainCommand: {fileID: 11400000, guid: 8613e33d5363cc2468241af51741c424, type: 2}
-      spawnWeight: 20
-    unitMixSlot2:
-      trainCommand: {fileID: 11400000, guid: ec73fe166b9806a4aaabd2e2fc3061a5, type: 2}
-      spawnWeight: 50
-    unitMixSlot3:
-      trainCommand: {fileID: 11400000, guid: 0852bd712e3cd9d4b8b0665620e51393, type: 2}
-      spawnWeight: 30
-    enableIdlePatrol: 1
-    patrolMinRadius: 50
-    patrolMaxRadius: 0
-    patrolRingStep: 30
-    maxPatrolAssignmentsPerTick: 16
-    mapExplorationCompleteCoverage: 0.92
-    squadMergeRadius: 14
-    squadMergeHoldSeconds: 2.5
-    minSquadMembers: 2
-    minStoneBeforeMilitaryExpansion: 120
-    minWoodBeforeMilitaryExpansion: 120
-    earlyGameTargetBarrackCount: 2
-    earlyGameTargetDefenseTowerCount: 3
-    militaryExpansionArmyThreshold: 10
-    expansionAttackSquadSize: 10
-    unifiedArmySquadSize: 0
-    requireArmyAssemblyBeforePatrol: 1
-    minUnitsToBeginStagingAssembly: 1
-    armyAssemblyStagingRadiusFromCc: 22
-    armyAssemblyGatherRadius: 20
-    armyAssemblyRequiredFraction: 0.55
-    useFullArmyUnifiedAttack: 1
-    disableSoloPatrolWhenUnifiedArmy: 1
-    enablePostContactBufferedOffense: 1
-    postContactExploreBuildSeconds: 120
-    enableDefenseRingExpansion: 1
-    defenseRingInnerRadius: 100
-    defenseRingSpacing: 100
-    operationalLeashBeyondOuterRing: 100
-    defenseRingMaxRings: 5
-    towersPerRing: 8
-    towerExpansionIntervalSeconds: 300
-    maxTowersPerExpansionPulse: 1
-    militarySpawnedPerTowerTier: 5
-    ringPlacementRadiusExpansionStep: 20
-    resourceShortageThresholdForEconomyBoost: 3
-    economyBoostExtraWorkerCap: 4
-    requireEnemyCcInLeashForUnifiedAttack: 1
-  dispatchEconomyIntents: 1
-  dispatchBaseIntents: 1
-  dispatchMilitaryIntents: 1
-  fogSystemReference: {fileID: 0}
---- !u!4 &1072514500
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1072514498}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -124.39977, y: -0.00001, z: -174.1607}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1073124999
 GameObject:
   m_ObjectHideFlags: 0
@@ -62010,7 +61843,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1339117016
 Transform:
   m_ObjectHideFlags: 0
@@ -62051,7 +61884,7 @@ MonoBehaviour:
   sightRefreshEveryNTicks: 2
   staleGatherRecoverEveryNTicks: 4
   sceneCacheMinFramesBetweenRefresh: 20
-  postAiStatusToGameEvent: 0
+  postAiStatusToGameEvent: 1
   postAiStatusOnlyOnChange: 1
   economySettings:
     stoneSupply: {fileID: 11400000, guid: 7d796433841096a47826454e08f211d8, type: 2}
@@ -99313,6 +99146,7 @@ GameObject:
   - component: {fileID: 2124640904}
   - component: {fileID: 2124640903}
   - component: {fileID: 2124640902}
+  - component: {fileID: 2124640905}
   m_Layer: 0
   m_Name: PvAiGameSceneSetup
   m_TagString: Untagged
@@ -99385,6 +99219,19 @@ Transform:
   - {fileID: 774179276}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2124640905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2124640901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdfd16c6858495941a7e60a9f02dc704, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.PvAI.PregameAiDifficultyApplicator
+  logWhenApplied: 1
 --- !u!1001 &2126128780
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -101374,7 +101221,6 @@ SceneRoots:
   - {fileID: 330585546}
   - {fileID: 1918564347251628585}
   - {fileID: 1339117016}
-  - {fileID: 1072514500}
   - {fileID: 7206060467835035830}
   - {fileID: 7016014339019920140}
   - {fileID: 184842336}

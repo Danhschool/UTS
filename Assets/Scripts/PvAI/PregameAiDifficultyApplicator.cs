@@ -1,35 +1,20 @@
-using GameDevTV.RTS.AI;
-using GameDevTV.RTS.Game.Pregame;
-using Mirror;
 using UnityEngine;
 
 namespace GameDevTV.RTS.PvAI
 {
     /// <summary>
-    /// SRP: Áp độ khó AI đã chọn ở SSScene khi vào Game 1 offline.
-    /// Gắn cùng scene với PvAiGameSceneBootstrap; kéo AIGameSessionConfigSO vào Inspector.
+    /// SRP: Hook scene Game 1 — gọi <see cref="PregameAiDifficultyApplyService"/> khi vào play mode.
+    /// Có thể gắn cùng PvAiGameSceneBootstrap; không bắt buộc nếu bootstrap đã gọi service.
     /// </summary>
     [DisallowMultipleComponent]
-    [DefaultExecutionOrder(50)]
+    [DefaultExecutionOrder(100)]
     public sealed class PregameAiDifficultyApplicator : MonoBehaviour
     {
-        [SerializeField] AIGameSessionConfigSO sessionConfig;
+        [SerializeField] bool logWhenApplied = true;
 
         void Start()
         {
-            if (NetworkClient.active || NetworkServer.active || sessionConfig == null)
-            {
-                return;
-            }
-
-            AIController[] controllers = FindObjectsByType<AIController>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-
-            for (int i = 0; i < controllers.Length; i++)
-            {
-                controllers[i].SetDifficulty(sessionConfig, PregameSessionState.SelectedDifficulty);
-            }
+            PregameAiDifficultyApplyService.TryApply(logWhenApplied);
         }
     }
 }

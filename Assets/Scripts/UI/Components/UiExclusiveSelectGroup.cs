@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace GameDevTV.RTS.UI.Components
@@ -11,7 +12,7 @@ namespace GameDevTV.RTS.UI.Components
     public sealed class UiExclusiveSelectGroup : MonoBehaviour
     {
         [SerializeField] UiExclusiveSelectOption[] options;
-        [SerializeField] int defaultIndex;
+        [SerializeField] int defaultIndex = 1;
 
         public event Action<int> SelectionChanged;
 
@@ -29,6 +30,7 @@ namespace GameDevTV.RTS.UI.Components
         public void RefreshOptions()
         {
             options = GetComponentsInChildren<UiExclusiveSelectOption>(true);
+            SortOptionsByHierarchy(options);
 
             for (int i = 0; i < options.Length; i++)
             {
@@ -66,6 +68,21 @@ namespace GameDevTV.RTS.UI.Components
             if (notify)
             {
                 SelectionChanged?.Invoke(SelectedIndex);
+            }
+        }
+
+        static void SortOptionsByHierarchy(UiExclusiveSelectOption[] list)
+        {
+            if (list == null || list.Length < 2)
+            {
+                return;
+            }
+
+            List<UiExclusiveSelectOption> sorted = new(list);
+            sorted.Sort((a, b) => a.transform.GetSiblingIndex().CompareTo(b.transform.GetSiblingIndex()));
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                list[i] = sorted[i];
             }
         }
     }

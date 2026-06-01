@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.AI.AIDifficultySO
   level: 2
   displayName: "Kh\xF3"
-  tickInterval: 0.35
+  tickInterval: 0.55
   reactionDelay: 0.4
   attackPowerThreshold: 0.85
   retreatHealthRatio: 0.22

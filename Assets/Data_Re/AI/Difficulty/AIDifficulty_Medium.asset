@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.AI.AIDifficultySO
   level: 1
   displayName: "Trung b\xECnh"
-  tickInterval: 0.65
+  tickInterval: 1.05
   reactionDelay: 1
   attackPowerThreshold: 1.2
   retreatHealthRatio: 0.35

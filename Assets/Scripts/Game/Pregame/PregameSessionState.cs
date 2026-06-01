@@ -24,6 +24,15 @@ namespace GameDevTV.RTS.Game.Pregame
         }
 
         /// <summary>
+        /// Mục tiêu: Lưu độ khó AI khi user chọn trên SSScene (trước khi bấm Start).
+        /// Cách hoạt động: Gán SelectedDifficulty từ UI exclusive select.
+        /// </summary>
+        public static void SetSelectedDifficulty(AIDifficultyLevel difficulty)
+        {
+            SelectedDifficulty = difficulty;
+        }
+
+        /// <summary>
         /// Mục tiêu: Lưu map + độ khó trước khi bấm Bắt đầu.
         /// Cách hoạt động: Gán index map, enum difficulty và tên scene gameplay.
         /// </summary>

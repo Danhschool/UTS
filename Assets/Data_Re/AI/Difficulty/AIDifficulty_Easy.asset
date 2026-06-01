@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.AI.AIDifficultySO
   level: 0
   displayName: "D\u1EC5"
-  tickInterval: 2
-  reactionDelay: 4
+  tickInterval: 1.5
+  reactionDelay: 2
   attackPowerThreshold: 1.8
   retreatHealthRatio: 0.55
   defenseRadius: 55

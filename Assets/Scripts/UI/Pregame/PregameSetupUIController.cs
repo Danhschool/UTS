@@ -40,7 +40,9 @@ namespace GameDevTV.RTS.UI.Pregame
         };
 
         [Header("AI difficulty (single player)")]
+        [SerializeField] Transform difficultyOptionsRoot;
         [SerializeField] UiExclusiveSelectGroup difficultySelectGroup;
+        [SerializeField] string[] difficultyRowNames = { "Easy", "Medium", "Hard" };
         [SerializeField] AIDifficultyLevel[] difficultyLevels =
         {
             AIDifficultyLevel.Easy,
@@ -113,15 +115,6 @@ namespace GameDevTV.RTS.UI.Pregame
                 }
             }
 
-            if (difficultySelectGroup == null && singlePlayerAiPanel != null)
-            {
-                difficultySelectGroup = singlePlayerAiPanel.GetComponent<UiExclusiveSelectGroup>();
-                if (difficultySelectGroup == null)
-                {
-                    difficultySelectGroup = singlePlayerAiPanel.AddComponent<UiExclusiveSelectGroup>();
-                }
-            }
-
             BootstrapMapSelectOptions();
             BootstrapDifficultySelectOptions();
 
@@ -144,7 +137,8 @@ namespace GameDevTV.RTS.UI.Pregame
             if (difficultySelectGroup != null && PregameSessionState.PlayMode == PregamePlayMode.SinglePlayer)
             {
                 difficultySelectGroup.SelectionChanged += OnDifficultySelectionChanged;
-                difficultySelectGroup.Select((int)PregameSessionState.SelectedDifficulty, notify: true);
+                int difficultyIndex = DifficultyLevelToIndex(PregameSessionState.SelectedDifficulty);
+                difficultySelectGroup.Select(difficultyIndex, notify: true);
             }
 
             Bind(buttonStart, OnStartClicked);
@@ -220,7 +214,7 @@ namespace GameDevTV.RTS.UI.Pregame
 
         void OnDifficultySelectionChanged(int index)
         {
-            // Visual handled by UiExclusiveSelectGroup; session saved on Start.
+            PregameSessionState.SetSelectedDifficulty(ResolveDifficultyAt(index));
         }
 
         public void OnStartClicked()
@@ -265,13 +259,12 @@ namespace GameDevTV.RTS.UI.Pregame
 
         AIDifficultyLevel ResolveDifficulty()
         {
-            if (difficultySelectGroup == null || difficultyLevels == null || difficultyLevels.Length == 0)
+            if (difficultySelectGroup == null || difficultySelectGroup.SelectedIndex < 0)
             {
-                return AIDifficultyLevel.Medium;
+                return PregameSessionState.SelectedDifficulty;
             }
 
-            int index = Mathf.Clamp(difficultySelectGroup.SelectedIndex, 0, difficultyLevels.Length - 1);
-            return difficultyLevels[index];
+            return ResolveDifficultyAt(difficultySelectGroup.SelectedIndex);
         }
 
         string ResolveGameplayScene(int mapIndex)
@@ -415,20 +408,146 @@ namespace GameDevTV.RTS.UI.Pregame
                 return;
             }
 
-            string[] rows = { "Easy", "Medium", "Hard" };
+            Transform optionsRoot = ResolveDifficultyOptionsRoot();
+            if (optionsRoot == null)
+            {
+                return;
+            }
+
+            if (difficultySelectGroup == null)
+            {
+                difficultySelectGroup = optionsRoot.GetComponent<UiExclusiveSelectGroup>();
+                if (difficultySelectGroup == null)
+                {
+                    difficultySelectGroup = optionsRoot.gameObject.AddComponent<UiExclusiveSelectGroup>();
+                }
+            }
+
+            string[] rows = difficultyRowNames is { Length: > 0 }
+                ? difficultyRowNames
+                : new[] { "Easy", "Medium", "Hard" };
+
             for (int i = 0; i < rows.Length; i++)
             {
                 Transform row = FindDeepChild(singlePlayerAiPanel.transform, rows[i]);
                 if (row == null)
                 {
+                    Debug.LogWarning($"{nameof(PregameSetupUIController)}: Không tìm thấy hàng độ khó '{rows[i]}'.", this);
                     continue;
                 }
 
-                if (row.GetComponent<UiExclusiveSelectOption>() == null)
-                {
-                    row.gameObject.AddComponent<UiExclusiveSelectOption>();
-                }
+                ConfigureDifficultyRow(row);
             }
+
+            difficultySelectGroup.RefreshOptions();
+        }
+
+        Transform ResolveDifficultyOptionsRoot()
+        {
+            if (difficultyOptionsRoot != null)
+            {
+                return difficultyOptionsRoot;
+            }
+
+            difficultyOptionsRoot = singlePlayerAiPanel.transform;
+            return difficultyOptionsRoot;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Mỗi hàng độ khó = Button (Img Select + Img Unselect) + Text bên cạnh.
+        /// Cách hoạt động: Gắn UiExclusiveSelectOption lên Button con; text không chặn raycast.
+        /// </summary>
+        static void ConfigureDifficultyRow(Transform row)
+        {
+            RemoveRedundantRowButton(row);
+
+            Transform buttonRoot = FindDeepChild(row, "Button");
+            Button difficultyButton = buttonRoot != null
+                ? buttonRoot.GetComponent<Button>()
+                : row.GetComponent<Button>();
+
+            if (difficultyButton == null)
+            {
+                Debug.LogWarning($"[PregameSetup] Hàng '{row.name}' cần Button trên hàng hoặc child 'Button'.", row);
+                return;
+            }
+
+            if (buttonRoot == null)
+            {
+                buttonRoot = difficultyButton.transform;
+            }
+
+            difficultyButton.interactable = true;
+
+            TMP_Text[] labels = row.GetComponentsInChildren<TMP_Text>(true);
+            for (int i = 0; i < labels.Length; i++)
+            {
+                labels[i].raycastTarget = false;
+            }
+
+            Image rowBackground = row.GetComponent<Image>();
+            if (rowBackground != null && rowBackground.gameObject != buttonRoot.gameObject)
+            {
+                rowBackground.raycastTarget = false;
+            }
+
+            GameObject selectVisual = FindChildGameObject(row, "Img Select");
+            GameObject unselectVisual = FindChildGameObject(row, "Img Unselect");
+
+            UiExclusiveSelectOption option = row.GetComponent<UiExclusiveSelectOption>();
+            if (option == null)
+            {
+                option = buttonRoot.GetComponent<UiExclusiveSelectOption>();
+            }
+
+            if (option == null)
+            {
+                option = buttonRoot.gameObject.AddComponent<UiExclusiveSelectOption>();
+            }
+
+            option.Configure(difficultyButton, selectVisual, unselectVisual);
+        }
+
+        static void RemoveRedundantRowButton(Transform row)
+        {
+            Button rowButton = row.GetComponent<Button>();
+            if (rowButton == null)
+            {
+                return;
+            }
+
+            Transform nestedButton = FindDeepChild(row, "Button");
+            if (nestedButton != null)
+            {
+                UnityEngine.Object.Destroy(rowButton);
+            }
+        }
+
+        static GameObject FindChildGameObject(Transform parent, string childName)
+        {
+            Transform found = FindDeepChild(parent, childName);
+            return found != null ? found.gameObject : null;
+        }
+
+        static int DifficultyLevelToIndex(AIDifficultyLevel level)
+        {
+            return level switch
+            {
+                AIDifficultyLevel.Easy => 0,
+                AIDifficultyLevel.Hard => 2,
+                _ => 1
+            };
+        }
+
+        AIDifficultyLevel ResolveDifficultyAt(int index)
+        {
+            if (difficultyLevels == null || difficultyLevels.Length == 0)
+            {
+                return AIDifficultyLevel.Medium;
+            }
+
+            index = Mathf.Clamp(index, 0, difficultyLevels.Length - 1);
+            return difficultyLevels[index];
         }
 
         static Transform FindMapListContent(Transform root)

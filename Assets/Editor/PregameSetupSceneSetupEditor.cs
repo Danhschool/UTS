@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using GameDevTV.RTS.Audio;
+using GameDevTV.RTS.UI.Components;
 using GameDevTV.RTS.UI.Pregame;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -62,6 +63,17 @@ namespace GameDevTV.RTS.EditorTools
             serialized.FindProperty("searchRoot").objectReferenceValue = root;
             serialized.FindProperty("singlePlayerAiPanel").objectReferenceValue = aiPanel;
             serialized.FindProperty("multiplayerPanel").objectReferenceValue = mpPanel;
+
+            UiExclusiveSelectGroup difficultyGroup = aiPanel != null
+                ? aiPanel.GetComponent<UiExclusiveSelectGroup>()
+                : null;
+            if (difficultyGroup == null && aiPanel != null)
+            {
+                difficultyGroup = aiPanel.AddComponent<UiExclusiveSelectGroup>();
+            }
+
+            serialized.FindProperty("difficultyOptionsRoot").objectReferenceValue = aiPanel != null ? aiPanel.transform : null;
+            serialized.FindProperty("difficultySelectGroup").objectReferenceValue = difficultyGroup;
             serialized.FindProperty("buttonStart").objectReferenceValue = buttonStart;
             serialized.FindProperty("buttonBack").objectReferenceValue = buttonBack;
             serialized.FindProperty("buttonExit").objectReferenceValue = buttonExit;

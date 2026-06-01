@@ -25,7 +25,18 @@ namespace GameDevTV.RTS.PvAI
 
         void Start()
         {
-            if (s_spawnedThisSession || !ShouldRunOfflineSpawn())
+            if (!ShouldRunOfflineSpawn())
+            {
+                return;
+            }
+
+            TrySpawnOfflineMatch();
+            PregameAiDifficultyApplyService.TryApply();
+        }
+
+        void TrySpawnOfflineMatch()
+        {
+            if (s_spawnedThisSession)
             {
                 return;
             }
