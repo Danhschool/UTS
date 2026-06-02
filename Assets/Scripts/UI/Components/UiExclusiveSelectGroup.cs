@@ -12,7 +12,7 @@ namespace GameDevTV.RTS.UI.Components
     public sealed class UiExclusiveSelectGroup : MonoBehaviour
     {
         [SerializeField] UiExclusiveSelectOption[] options;
-        [SerializeField] int defaultIndex = 1;
+        [SerializeField] int defaultIndex;
 
         public event Action<int> SelectionChanged;
 
@@ -29,7 +29,7 @@ namespace GameDevTV.RTS.UI.Components
         /// </summary>
         public void RefreshOptions()
         {
-            options = GetComponentsInChildren<UiExclusiveSelectOption>(true);
+            options = GetComponentsInChildren<UiExclusiveSelectOption>(false);
             SortOptionsByHierarchy(options);
 
             for (int i = 0; i < options.Length; i++)
@@ -52,12 +52,6 @@ namespace GameDevTV.RTS.UI.Components
             }
 
             index = Mathf.Clamp(index, 0, options.Length - 1);
-
-            if (SelectedIndex == index && notify)
-            {
-                return;
-            }
-
             SelectedIndex = index;
 
             for (int i = 0; i < options.Length; i++)

@@ -12,8 +12,10 @@ namespace GameDevTV.RTS.Game
     {
         public static GameSpeedController Instance { get; private set; }
 
+        [SerializeField] private float slowSpeed = 0.5f;
         [SerializeField] private float normalSpeed = 1f;
-        [SerializeField] private float fastSpeed = 2f;
+        [SerializeField] private float fastSpeed = 1.5f;
+        [SerializeField] private float veryFastSpeed = 2f;
         [SerializeField] private float maxSpeed = 4f;
         [SerializeField] private bool enableKeyboardToggle = true;
         [SerializeField] private Key toggleFastSpeedKey = Key.NumpadPlus;
@@ -22,7 +24,7 @@ namespace GameDevTV.RTS.Game
         private const float BaseFixedDeltaTime = 0.02f;
 
         public float CurrentSpeed => Time.timeScale;
-        public bool IsFastSpeed => Mathf.Approximately(Time.timeScale, fastSpeed);
+        public bool IsFastSpeed => Mathf.Approximately(Time.timeScale, veryFastSpeed);
 
         private void Awake()
         {
@@ -88,20 +90,55 @@ namespace GameDevTV.RTS.Game
         /// Mục tiêu: Tăng tốc simulation (mặc định 2x) để test AI/build nhanh hơn.
         /// Cách hoạt động: timeScale = fastSpeed; physics bước theo scale.
         /// </summary>
-        public void SetFastSpeed() => ApplySpeed(fastSpeed);
+        public void SetFastSpeed() => ApplySpeed(veryFastSpeed);
+
+        /// <summary>
+        /// Mục tiêu: UI in-game chọn preset tốc độ (0.5x / 1x / 1.5x / 2x).
+        /// Cách hoạt động: Clamp qua ApplySpeed; bỏ qua khi đang pause (timeScale=0).
+        /// </summary>
+        public void ApplyPresetSpeed(float scale)
+        {
+            if (GamePauseService.IsPaused)
+            {
+                return;
+            }
+
+            ApplySpeed(scale);
+        }
+
+        public void SetHalfSpeed() => ApplyPresetSpeed(slowSpeed);
+        public void SetNormalSpeedPreset() => ApplyPresetSpeed(normalSpeed);
+        public void SetFastSpeedPreset() => ApplyPresetSpeed(fastSpeed);
+        public void SetDoubleSpeed() => ApplyPresetSpeed(veryFastSpeed);
+
+        /// <summary>
+        /// Mục tiêu: Lấy hệ số timeScale theo index nút UI (0–3).
+        /// Cách hoạt động: Map index sang các preset đã cấu hình trong Inspector.
+        /// </summary>
+        public float GetPresetScale(int index)
+        {
+            return index switch
+            {
+                0 => slowSpeed,
+                1 => normalSpeed,
+                2 => fastSpeed,
+                3 => veryFastSpeed,
+                _ => normalSpeed
+            };
+        }
 
         /// <summary>
         /// Mục tiêu: Bật 2x nếu đang 1x, ngược lại về 1x (một phím).
         /// </summary>
         public void ToggleFastSpeed()
         {
-            if (IsFastSpeed)
+            if (Mathf.Approximately(Time.timeScale, veryFastSpeed))
             {
                 SetNormalSpeed();
             }
             else
             {
-                SetFastSpeed();
+                SetDoubleSpeed();
             }
         }
 

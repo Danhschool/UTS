@@ -44,26 +44,63 @@ namespace GameDevTV.RTS.Audio
             }
         }
 
-        void SyncSliderFromController()
+        /// <summary>
+        /// Mục tiêu: Gán kênh + slider từ panel setup (Master/Music/…).
+        /// Cách hoạt động: Lưu reference rồi đồng bộ giá trị đã lưu PlayerPrefs.
+        /// </summary>
+        public void Configure(AudioVolumeChannel targetChannel, Slider targetSlider = null)
         {
-            AudioVolumeController controller = AudioVolumeController.Instance;
-            if (controller == null)
+            channel = targetChannel;
+            if (targetSlider != null)
+            {
+                slider = targetSlider;
+            }
+            else if (slider == null)
+            {
+                slider = GetComponent<Slider>();
+            }
+
+            EnsureSliderRange();
+            SyncSliderFromController();
+        }
+
+        void EnsureSliderRange()
+        {
+            if (slider == null)
             {
                 return;
             }
 
-            slider.SetValueWithoutNotify(controller.GetVolume(channel));
+            slider.minValue = 0f;
+            slider.maxValue = 1f;
+            slider.wholeNumbers = false;
+        }
+
+        void SyncSliderFromController()
+        {
+            float volume = ResolveVolume();
+            slider.SetValueWithoutNotify(volume);
         }
 
         void OnSliderChanged(float value)
         {
-            AudioVolumeController controller = AudioVolumeController.Instance;
-            if (controller == null)
+            if (AudioVolumeController.Instance != null)
             {
+                AudioVolumeController.Instance.SetVolume(channel, value);
                 return;
             }
 
-            controller.SetVolume(channel, value);
+            AudioAccess.SetVolume(channel, value);
+        }
+
+        float ResolveVolume()
+        {
+            if (AudioVolumeController.Instance != null)
+            {
+                return AudioVolumeController.Instance.GetVolume(channel);
+            }
+
+            return AudioAccess.GetVolume(channel);
         }
     }
 }

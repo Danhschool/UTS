@@ -59,6 +59,16 @@ namespace GameDevTV.RTS.Audio
             ApplyVolume(channel, linear01);
         }
 
+        /// <summary>
+        /// Mục tiêu: Cho phép UI preview âm lượng realtime mà chưa lưu vĩnh viễn.
+        /// Cách hoạt động: Clamp 0–1 và chỉ ApplyVolume runtime, không ghi PlayerPrefs.
+        /// </summary>
+        public void PreviewVolume(AudioVolumeChannel channel, float linear01)
+        {
+            linear01 = Mathf.Clamp01(linear01);
+            ApplyVolume(channel, linear01);
+        }
+
         public float GetVolume(AudioVolumeChannel channel)
         {
             if (PlayerPrefs.HasKey(GetPrefKey(channel)))

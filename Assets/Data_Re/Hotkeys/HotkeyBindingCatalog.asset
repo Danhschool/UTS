@@ -1,0 +1,159 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ddcb575b4ff75b4eb6fadff3407ca8f, type: 3}
+  m_Name: HotkeyBindingCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Hotkeys.HotkeyBindingCatalogSO
+  bindings:
+  - id: 1
+    chords:
+    - key: 60
+      shift: 0
+      ctrl: 0
+      alt: 0
+  - id: 2
+    chords:
+    - key: 22
+      shift: 0
+      ctrl: 0
+      alt: 0
+  - id: 5
+    chords:
+    - key: 31
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 31
+      shift: 0
+      ctrl: 1
+      alt: 0
+  - id: 6
+    chords:
+    - key: 37
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 37
+      shift: 0
+      ctrl: 1
+      alt: 0
+  - id: 7
+    chords:
+    - key: 19
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 19
+      shift: 0
+      ctrl: 1
+      alt: 0
+  - id: 8
+    chords:
+    - key: 32
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 32
+      shift: 0
+      ctrl: 1
+      alt: 0
+  - id: 9
+    chords:
+    - key: 15
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 15
+      shift: 0
+      ctrl: 1
+      alt: 0
+  - id: 10
+    chords:
+    - key: 33
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 33
+      shift: 0
+      ctrl: 1
+      alt: 0
+  - id: 11
+    chords:
+    - key: 18
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 18
+      shift: 0
+      ctrl: 1
+      alt: 0
+  - id: 12
+    chords:
+    - key: 41
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 42
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 43
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 44
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 45
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 46
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 47
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 48
+      shift: 0
+      ctrl: 0
+      alt: 0
+    - key: 49
+      shift: 0
+      ctrl: 0
+      alt: 0
+  - id: 3
+    chords:
+    - key: 71
+      shift: 0
+      ctrl: 0
+      alt: 0
+  - id: 4
+    chords:
+    - key: 71
+      shift: 1
+      ctrl: 0
+      alt: 0
+  - id: 13
+    chords:
+    - key: 68
+      shift: 0
+      ctrl: 0
+      alt: 0
+  - id: 14
+    chords:
+    - key: 20
+      shift: 0
+      ctrl: 0
+      alt: 0

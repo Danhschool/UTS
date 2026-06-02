@@ -1,4 +1,5 @@
 using GameDevTV.RTS.Game.Pregame;
+using GameDevTV.RTS.UI.Components;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,12 +18,19 @@ namespace GameDevTV.RTS.UI.Pregame
         [SerializeField] Button buttonLearn;
         [SerializeField] Button buttonSetting;
         [SerializeField] Button buttonExit;
+        [SerializeField] HoverRevealPanel buttonPvEHoverReveal;
+        [SerializeField] HoverRevealPanel buttonPvPHoverReveal;
+        [SerializeField] HoverRevealPanel buttonLearnHoverReveal;
+        [SerializeField] HoverRevealPanel buttonSettingHoverReveal;
+        [SerializeField] HoverRevealPanel buttonExitHoverReveal;
 
         [Header("Dialogs")]
         [SerializeField] GameObject dialogSetting;
         [SerializeField] GameObject dialogManual;
         [SerializeField] Button dialogSettingClose;
         [SerializeField] Button dialogManualClose;
+        [SerializeField] HoverRevealPanel dialogSettingCloseHoverReveal;
+        [SerializeField] HoverRevealPanel dialogManualCloseHoverReveal;
 
         [Header("Exit confirm")]
         [SerializeField] ExitConfirmDialog exitConfirmDialog;
@@ -44,6 +52,7 @@ namespace GameDevTV.RTS.UI.Pregame
             TryResolveButton(root, "Button Learn", ref buttonLearn);
             TryResolveButton(root, "Button Setting", ref buttonSetting);
             TryResolveButton(root, "Button Exit", ref buttonExit);
+            ResolveHoverRevealReferences();
 
             TryResolveDialog(root, "Dialog Setting", ref dialogSetting);
             TryResolveDialog(root, "Dialog Huong Dan", ref dialogManual);
@@ -81,11 +90,15 @@ namespace GameDevTV.RTS.UI.Pregame
         void OnDialogSettingCloseClicked()
         {
             HideDialog(dialogSetting);
+            dialogSettingCloseHoverReveal?.ClearLock();
+            buttonSettingHoverReveal?.ClearLock();
         }
 
         void OnDialogManualCloseClicked()
         {
             HideDialog(dialogManual);
+            dialogManualCloseHoverReveal?.ClearLock();
+            buttonLearnHoverReveal?.ClearLock();
         }
 
         public void OnSinglePlayerClicked()
@@ -101,11 +114,13 @@ namespace GameDevTV.RTS.UI.Pregame
         public void OnLearnClicked()
         {
             ShowDialog(dialogManual);
+            buttonSettingHoverReveal?.ClearLock();
         }
 
         public void OnSettingClicked()
         {
             ShowDialog(dialogSetting);
+            buttonLearnHoverReveal?.ClearLock();
         }
 
         public void OnExitClicked()
@@ -121,10 +136,7 @@ namespace GameDevTV.RTS.UI.Pregame
 
         public void ShowDialog(GameObject dialog)
         {
-            if (dialog != null)
-            {
-                dialog.SetActive(true);
-            }
+            UiPanelActivation.ShowDeferred(dialog, this);
         }
 
         public void HideDialog(GameObject dialog)
@@ -236,6 +248,55 @@ namespace GameDevTV.RTS.UI.Pregame
             }
 
             return null;
+        }
+
+        void ResolveHoverRevealReferences()
+        {
+            if (buttonLearnHoverReveal == null && buttonLearn != null)
+            {
+                buttonLearnHoverReveal = buttonLearn.GetComponent<HoverRevealPanel>();
+            }
+
+            if (buttonSettingHoverReveal == null && buttonSetting != null)
+            {
+                buttonSettingHoverReveal = buttonSetting.GetComponent<HoverRevealPanel>();
+            }
+
+            if (dialogSettingCloseHoverReveal == null && dialogSettingClose != null)
+            {
+                dialogSettingCloseHoverReveal = dialogSettingClose.GetComponent<HoverRevealPanel>();
+            }
+
+            if (dialogManualCloseHoverReveal == null && dialogManualClose != null)
+            {
+                dialogManualCloseHoverReveal = dialogManualClose.GetComponent<HoverRevealPanel>();
+            }
+
+            if (buttonPvEHoverReveal == null && buttonPvE != null)
+            {
+                buttonPvEHoverReveal = buttonPvE.GetComponent<HoverRevealPanel>();
+            }
+
+            if (buttonPvPHoverReveal == null && buttonPvP != null)
+            {
+                buttonPvPHoverReveal = buttonPvP.GetComponent<HoverRevealPanel>();
+            }
+
+            if (buttonExitHoverReveal == null && buttonExit != null)
+            {
+                buttonExitHoverReveal = buttonExit.GetComponent<HoverRevealPanel>();
+            }
+
+            // Chỉ nút mở panel/dialog mới giữ hover sau click.
+            buttonLearnHoverReveal?.SetLockRevealAfterClick(true);
+            buttonSettingHoverReveal?.SetLockRevealAfterClick(true);
+            buttonPvEHoverReveal?.SetLockRevealAfterClick(false);
+            buttonPvPHoverReveal?.SetLockRevealAfterClick(false);
+            buttonExitHoverReveal?.SetLockRevealAfterClick(false);
+
+            // Nút đóng panel/dialog chạy như cũ: click không giữ hover.
+            dialogSettingCloseHoverReveal?.SetLockRevealAfterClick(false);
+            dialogManualCloseHoverReveal?.SetLockRevealAfterClick(false);
         }
     }
 }

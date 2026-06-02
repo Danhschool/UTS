@@ -1,4 +1,6 @@
+using System;
 using GameDevTV.RTS.Game.Pregame;
+using GameDevTV.RTS.UI.Components;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,8 +8,7 @@ using UnityEngine.UI;
 namespace GameDevTV.RTS.UI.Pregame
 {
     /// <summary>
-    /// SRP: Hiện dialog xác nhận thoát đã làm sẵn trong scene/prefab (OK → quit, Hủy → đóng).
-    /// Gán Dialog Root, Txt_Message, Btn_Confirm, Btn_Cancel trong Inspector.
+    /// SRP: Dialog xác nhận 2 nút (OK / Hủy) — thoát app hoặc hành động tùy chỉnh (đầu hàng…).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class ExitConfirmDialog : MonoBehaviour
@@ -19,6 +20,9 @@ namespace GameDevTV.RTS.UI.Pregame
         [SerializeField] Button confirmButton;
         [SerializeField] Button cancelButton;
         [SerializeField] string message = DefaultMessage;
+
+        Action _customConfirmAction;
+        Action _customCancelAction;
 
         void Awake()
         {
@@ -53,10 +57,28 @@ namespace GameDevTV.RTS.UI.Pregame
         }
 
         /// <summary>
-        /// Mục tiêu: Hiện dialog hỏi xác nhận khi bấm Thoát.
-        /// Cách hoạt động: Bật dialogRoot đã gán sẵn; chờ OK/Hủy.
+        /// Mục tiêu: Hiện dialog thoát game mặc định (quit application).
+        /// Cách hoạt động: Xóa custom action, dùng message mặc định hoặc đã gán trong Inspector.
         /// </summary>
         public void Show()
+        {
+            Show(message, null);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Hiện dialog với message và hành động xác nhận tùy chỉnh (ví dụ đầu hàng).
+        /// Cách hoạt động: Lưu delegate; OK gọi delegate, Hủy chỉ đóng dialog.
+        /// </summary>
+        public void Show(string messageOverride, Action onConfirm)
+        {
+            Show(messageOverride, onConfirm, null);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Hiện dialog với message, OK và Hủy tùy chỉnh (ví dụ đầu hàng / tiếp tục chơi).
+        /// Cách hoạt động: Lưu delegate confirm/cancel; Hủy gọi onCancel sau khi ẩn dialog.
+        /// </summary>
+        public void Show(string messageOverride, Action onConfirm, Action onCancel)
         {
             if (dialogRoot == null)
             {
@@ -64,9 +86,14 @@ namespace GameDevTV.RTS.UI.Pregame
                 return;
             }
 
+            _customConfirmAction = onConfirm;
+            _customCancelAction = onCancel;
+            message = string.IsNullOrWhiteSpace(messageOverride) ? DefaultMessage : messageOverride;
             ApplyMessage();
-            dialogRoot.SetActive(true);
+            UiPanelActivation.ShowDeferred(dialogRoot, this);
         }
+
+        public bool IsVisible => dialogRoot != null && dialogRoot.activeSelf;
 
         public void Hide()
         {
@@ -74,17 +101,30 @@ namespace GameDevTV.RTS.UI.Pregame
             {
                 dialogRoot.SetActive(false);
             }
+
+            _customConfirmAction = null;
+            _customCancelAction = null;
         }
 
         void OnConfirmClicked()
         {
+            Action confirm = _customConfirmAction;
             Hide();
+
+            if (confirm != null)
+            {
+                confirm.Invoke();
+                return;
+            }
+
             PregameApplicationQuit.RequestQuit();
         }
 
         void OnCancelClicked()
         {
+            Action cancel = _customCancelAction;
             Hide();
+            cancel?.Invoke();
         }
 
         void ApplyMessage()

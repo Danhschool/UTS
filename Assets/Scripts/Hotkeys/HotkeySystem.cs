@@ -46,14 +46,19 @@ namespace GameDevTV.RTS.Hotkeys
 
         IReadOnlyList<HotkeyBindingEntry> ResolveBindings()
         {
+            IReadOnlyList<HotkeyBindingEntry> baseBindings;
             if (bindingCatalog != null && bindingCatalog.Bindings.Count > 0)
             {
-                return bindingCatalog.Bindings;
+                baseBindings = bindingCatalog.Bindings;
+            }
+            else
+            {
+                baseBindings = useBuiltInDefaultsIfEmpty
+                    ? HotkeyDefaults.CreateBindings()
+                    : System.Array.Empty<HotkeyBindingEntry>();
             }
 
-            return useBuiltInDefaultsIfEmpty
-                ? HotkeyDefaults.CreateBindings()
-                : System.Array.Empty<HotkeyBindingEntry>();
+            return HotkeyBindingPreferences.ApplyOverrides(baseBindings);
         }
 
         void RegisterAllHandlers()

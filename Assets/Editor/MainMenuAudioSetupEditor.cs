@@ -28,9 +28,11 @@ namespace GameDevTV.RTS.EditorTools
 
             EnsureAudioSystem();
             EnsureMenuAudioController();
+            MainMenuAudioSettingsSetupEditor.WireMainMenuVolumeSliders();
+            MainMenuSettingsDialogSetupEditor.SetupMainMenuSettingsDialogLogic();
 
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-            Debug.Log("[MainMenuAudioSetup] Đã gắn AudioSystem + MenuAudioController cho MainMenu.");
+            Debug.Log("[MainMenuAudioSetup] Đã gắn AudioSystem + MenuAudioController + volume sliders + settings dialog logic.");
         }
 
         static void EnsureAudioSystem()

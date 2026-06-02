@@ -1333,7 +1333,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 4bf101d70858b2c49bce71c2159e25cf, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3213,6 +3213,7 @@ GameObject:
   - component: {fileID: 1047929412}
   - component: {fileID: 1047929411}
   - component: {fileID: 1047929410}
+  - component: {fileID: 1047929413}
   m_Layer: 5
   m_Name: Scroll View
   m_TagString: Untagged
@@ -3308,6 +3309,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1047929408}
   m_CullTransparentMesh: 1
+--- !u!114 &1047929413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1047929408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fad6e3ee244c28647a02eaf97a0b978b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.UI.Pregame.PregameMapSelectScrollBinder
+  maps:
+  - displayName: Game 1
+    previewSprite: {fileID: -260309372, guid: 986561922830ed34fa5861177a21cf75, type: 3}
+    gameplaySceneName: Game 1
+  - displayName: Game 2
+    previewSprite: {fileID: -100186165, guid: 986561922830ed34fa5861177a21cf75, type: 3}
+    gameplaySceneName: Game 2
+  mapListContent: {fileID: 1380737252}
+  mapButtonTemplate: {fileID: 7612434446823431077, guid: 790656aef8b8d8d40883646278034b91, type: 3}
+  mapPreviewImage: {fileID: 505241128}
+  mapNameLabel: {fileID: 2070928419}
+  searchRoot: {fileID: 0}
 --- !u!1 &1092276785
 GameObject:
   m_ObjectHideFlags: 0
@@ -6068,7 +6093,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1741769810
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6665,24 +6690,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64bb236d73f010747958d356eac9f260, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.UI.Pregame.PregameSetupUIController
+  mapSelectBinder: {fileID: 1047929413}
   singlePlayerAiPanel: {fileID: 1741769809}
   multiplayerPanel: {fileID: 15307626}
-  mapPreviewImage: {fileID: 505241128}
-  mapNameLabel: {fileID: 2070928419}
-  mapSelectGroup: {fileID: 1546008282}
-  maps:
-  - displayName: Map 1
-    previewSprite: {fileID: 0}
-    gameplaySceneName: Game 1
-  - displayName: Map 2
-    previewSprite: {fileID: 0}
-    gameplaySceneName: Game 1
-  - displayName: Map 3
-    previewSprite: {fileID: 0}
-    gameplaySceneName: Game 1
-  - displayName: Map 4
-    previewSprite: {fileID: 0}
-    gameplaySceneName: Game 1
   difficultyOptionsRoot: {fileID: 1741769810}
   difficultySelectGroup: {fileID: 1741769813}
   difficultyRowNames:

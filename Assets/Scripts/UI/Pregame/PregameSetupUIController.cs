@@ -1,4 +1,3 @@
-using System;
 using GameDevTV.RTS.AI;
 using GameDevTV.RTS.Game.Pregame;
 using GameDevTV.RTS.UI.Components;
@@ -9,35 +8,19 @@ using UnityEngine.UI;
 namespace GameDevTV.RTS.UI.Pregame
 {
     /// <summary>
-    /// SRP: Màn setup SSScene — chọn map, độ khó AI (SP), bắt đầu trận hoặc quay menu.
+    /// SRP: Màn setup SSScene — điều phối chọn map, độ khó AI, bắt đầu trận / lobby.
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-50)]
     public sealed class PregameSetupUIController : MonoBehaviour
     {
-        [Serializable]
-        public struct MapEntry
-        {
-            public string displayName;
-            public Sprite previewSprite;
-            public string gameplaySceneName;
-        }
+        [Header("Map selection")]
+        [Tooltip("Cấu hình map (tên, ảnh, scene) chỉ trên component Pregame Map Select Scroll Binder.")]
+        [SerializeField] PregameMapSelectScrollBinder mapSelectBinder;
 
         [Header("Mode panels")]
         [SerializeField] GameObject singlePlayerAiPanel;
         [SerializeField] GameObject multiplayerPanel;
-
-        [Header("Map preview")]
-        [SerializeField] Image mapPreviewImage;
-        [SerializeField] TMP_Text mapNameLabel;
-        [SerializeField] UiExclusiveSelectGroup mapSelectGroup;
-        [SerializeField] MapEntry[] maps =
-        {
-            new() { displayName = "Map 1", gameplaySceneName = PregameSessionState.DefaultGameplayScene },
-            new() { displayName = "Map 2", gameplaySceneName = PregameSessionState.DefaultGameplayScene },
-            new() { displayName = "Map 3", gameplaySceneName = PregameSessionState.DefaultGameplayScene },
-            new() { displayName = "Map 4", gameplaySceneName = PregameSessionState.DefaultGameplayScene }
-        };
 
         [Header("AI difficulty (single player)")]
         [SerializeField] Transform difficultyOptionsRoot;
@@ -84,41 +67,10 @@ namespace GameDevTV.RTS.UI.Pregame
                 TryCreateExitButtonFromBack();
             }
 
-            if (mapPreviewImage == null)
-            {
-                Transform preview = FindDeepChild(root, "Image_Map");
-                if (preview != null)
-                {
-                    mapPreviewImage = preview.GetComponent<Image>();
-                }
-            }
+            EnsureMapSelectBinder();
+            mapSelectBinder.BuildMapList();
 
-            if (mapNameLabel == null)
-            {
-                Transform label = FindDeepChild(root, "Map name");
-                if (label != null)
-                {
-                    mapNameLabel = label.GetComponent<TMP_Text>();
-                }
-            }
-
-            if (mapSelectGroup == null)
-            {
-                Transform mapScrollContent = FindMapListContent(root);
-                if (mapScrollContent != null)
-                {
-                    mapSelectGroup = mapScrollContent.GetComponent<UiExclusiveSelectGroup>();
-                    if (mapSelectGroup == null)
-                    {
-                        mapSelectGroup = mapScrollContent.gameObject.AddComponent<UiExclusiveSelectGroup>();
-                    }
-                }
-            }
-
-            BootstrapMapSelectOptions();
             BootstrapDifficultySelectOptions();
-
-            mapSelectGroup?.RefreshOptions();
             difficultySelectGroup?.RefreshOptions();
 
             ApplyPlayMode(PregameSessionState.PlayMode);
@@ -128,11 +80,8 @@ namespace GameDevTV.RTS.UI.Pregame
         {
             ApplyPlayMode(PregameSessionState.PlayMode);
 
-            if (mapSelectGroup != null)
-            {
-                mapSelectGroup.SelectionChanged += OnMapSelectionChanged;
-                mapSelectGroup.Select(PregameSessionState.SelectedMapIndex, notify: true);
-            }
+            mapSelectBinder?.SubscribeSelectionChanged();
+            mapSelectBinder?.SelectDefaultMap();
 
             if (difficultySelectGroup != null && PregameSessionState.PlayMode == PregamePlayMode.SinglePlayer)
             {
@@ -149,10 +98,7 @@ namespace GameDevTV.RTS.UI.Pregame
 
         void OnDisable()
         {
-            if (mapSelectGroup != null)
-            {
-                mapSelectGroup.SelectionChanged -= OnMapSelectionChanged;
-            }
+            mapSelectBinder?.UnsubscribeSelectionChanged();
 
             if (difficultySelectGroup != null)
             {
@@ -163,6 +109,20 @@ namespace GameDevTV.RTS.UI.Pregame
             Unbind(buttonBack, OnBackClicked);
             Unbind(buttonExit, OnExitClicked);
             Unbind(buttonCreateRoom, OnCreateRoomClicked);
+        }
+
+        void EnsureMapSelectBinder()
+        {
+            if (mapSelectBinder != null)
+            {
+                return;
+            }
+
+            mapSelectBinder = GetComponent<PregameMapSelectScrollBinder>();
+            if (mapSelectBinder == null)
+            {
+                mapSelectBinder = gameObject.AddComponent<PregameMapSelectScrollBinder>();
+            }
         }
 
         void ApplyPlayMode(PregamePlayMode mode)
@@ -190,28 +150,6 @@ namespace GameDevTV.RTS.UI.Pregame
             }
         }
 
-        void OnMapSelectionChanged(int index)
-        {
-            if (maps == null || maps.Length == 0)
-            {
-                return;
-            }
-
-            index = Mathf.Clamp(index, 0, maps.Length - 1);
-            MapEntry entry = maps[index];
-
-            if (mapNameLabel != null)
-            {
-                mapNameLabel.text = entry.displayName;
-            }
-
-            if (mapPreviewImage != null && entry.previewSprite != null)
-            {
-                mapPreviewImage.sprite = entry.previewSprite;
-                mapPreviewImage.enabled = true;
-            }
-        }
-
         void OnDifficultySelectionChanged(int index)
         {
             PregameSessionState.SetSelectedDifficulty(ResolveDifficultyAt(index));
@@ -219,8 +157,14 @@ namespace GameDevTV.RTS.UI.Pregame
 
         public void OnStartClicked()
         {
-            int mapIndex = mapSelectGroup != null ? mapSelectGroup.SelectedIndex : 0;
-            string sceneName = ResolveGameplayScene(mapIndex);
+            if (mapSelectBinder == null)
+            {
+                Debug.LogError("[PregameSetup] Thiếu PregameMapSelectScrollBinder.", this);
+                return;
+            }
+
+            int mapIndex = mapSelectBinder.SelectedIndex;
+            string sceneName = mapSelectBinder.GetSelectedGameplayScene();
 
             if (PregameSessionState.PlayMode == PregamePlayMode.SinglePlayer)
             {
@@ -252,8 +196,14 @@ namespace GameDevTV.RTS.UI.Pregame
 
         public void OnCreateRoomClicked()
         {
-            int mapIndex = mapSelectGroup != null ? mapSelectGroup.SelectedIndex : 0;
-            PregameSessionState.ConfigureMultiplayer(mapIndex, ResolveGameplayScene(mapIndex));
+            if (mapSelectBinder == null)
+            {
+                return;
+            }
+
+            int mapIndex = mapSelectBinder.SelectedIndex;
+            string sceneName = mapSelectBinder.GetSelectedGameplayScene();
+            PregameSessionState.ConfigureMultiplayer(mapIndex, sceneName);
             PregameMenuSceneNavigator.LoadLobby();
         }
 
@@ -265,19 +215,6 @@ namespace GameDevTV.RTS.UI.Pregame
             }
 
             return ResolveDifficultyAt(difficultySelectGroup.SelectedIndex);
-        }
-
-        string ResolveGameplayScene(int mapIndex)
-        {
-            if (maps == null || maps.Length == 0)
-            {
-                return PregameSessionState.DefaultGameplayScene;
-            }
-
-            mapIndex = Mathf.Clamp(mapIndex, 0, maps.Length - 1);
-            return string.IsNullOrWhiteSpace(maps[mapIndex].gameplaySceneName)
-                ? PregameSessionState.DefaultGameplayScene
-                : maps[mapIndex].gameplaySceneName;
         }
 
         static void Bind(Button button, UnityEngine.Events.UnityAction action)
@@ -324,10 +261,6 @@ namespace GameDevTV.RTS.UI.Pregame
             }
         }
 
-        /// <summary>
-        /// Mục tiêu: Có nút Thoát trên SSScene khi scene chưa có Button Exit.
-        /// Cách hoạt động: Nhân bản Button Back, đặt bên trái, đổi nhãn "Thoát".
-        /// </summary>
         void TryCreateExitButtonFromBack()
         {
             if (buttonBack == null)
@@ -354,51 +287,6 @@ namespace GameDevTV.RTS.UI.Pregame
                 exitRect.sizeDelta = backRect.sizeDelta;
                 exitRect.anchoredPosition = backRect.anchoredPosition + new Vector2(-(backRect.sizeDelta.x + 12f), 0f);
             }
-        }
-
-        void BootstrapMapSelectOptions()
-        {
-            if (mapSelectGroup == null)
-            {
-                return;
-            }
-
-            Transform content = FindMapListContent(searchRoot != null ? searchRoot : transform);
-            if (content == null)
-            {
-                return;
-            }
-
-            Button[] buttons = content.GetComponentsInChildren<Button>(true);
-            for (int i = 0; i < buttons.Length; i++)
-            {
-                if (!IsMapListButton(buttons[i]))
-                {
-                    continue;
-                }
-
-                if (buttons[i].GetComponent<UiExclusiveSelectOption>() == null)
-                {
-                    buttons[i].gameObject.AddComponent<UiExclusiveSelectOption>();
-                }
-            }
-        }
-
-        static bool IsMapListButton(Button button)
-        {
-            if (button == null)
-            {
-                return false;
-            }
-
-            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
-            if (label == null || string.IsNullOrWhiteSpace(label.text))
-            {
-                return false;
-            }
-
-            string trimmed = label.text.Trim();
-            return trimmed.StartsWith("Map", System.StringComparison.OrdinalIgnoreCase);
         }
 
         void BootstrapDifficultySelectOptions()
@@ -438,8 +326,6 @@ namespace GameDevTV.RTS.UI.Pregame
 
                 ConfigureDifficultyRow(row);
             }
-
-            difficultySelectGroup.RefreshOptions();
         }
 
         Transform ResolveDifficultyOptionsRoot()
@@ -453,10 +339,6 @@ namespace GameDevTV.RTS.UI.Pregame
             return difficultyOptionsRoot;
         }
 
-        /// <summary>
-        /// Mục tiêu: Mỗi hàng độ khó = Button (Img Select + Img Unselect) + Text bên cạnh.
-        /// Cách hoạt động: Gắn UiExclusiveSelectOption lên Button con; text không chặn raycast.
-        /// </summary>
         static void ConfigureDifficultyRow(Transform row)
         {
             RemoveRedundantRowButton(row);
@@ -519,7 +401,7 @@ namespace GameDevTV.RTS.UI.Pregame
             Transform nestedButton = FindDeepChild(row, "Button");
             if (nestedButton != null)
             {
-                UnityEngine.Object.Destroy(rowButton);
+                Destroy(rowButton);
             }
         }
 
@@ -548,26 +430,6 @@ namespace GameDevTV.RTS.UI.Pregame
 
             index = Mathf.Clamp(index, 0, difficultyLevels.Length - 1);
             return difficultyLevels[index];
-        }
-
-        static Transform FindMapListContent(Transform root)
-        {
-            Transform[] all = root.GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < all.Length; i++)
-            {
-                if (all[i].name != "Map Panel")
-                {
-                    continue;
-                }
-
-                Transform content = FindDeepChild(all[i], "Content");
-                if (content != null && content.GetComponentInChildren<Button>(true) != null)
-                {
-                    return content;
-                }
-            }
-
-            return null;
         }
 
         static Transform FindDeepChild(Transform parent, string name)
