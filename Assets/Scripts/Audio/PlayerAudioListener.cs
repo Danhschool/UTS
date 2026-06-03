@@ -34,6 +34,11 @@ namespace GameDevTV.RTS.Audio
         /// </summary>
         public void SetListenOwner(Owner owner)
         {
+            if (this == null)
+            {
+                return;
+            }
+
             if (listenOwner == owner)
             {
                 return;

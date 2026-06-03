@@ -1,3 +1,4 @@
+using GameDevTV.RTS.Game.Startup;
 using Mirror;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -5,15 +6,12 @@ using UnityEngine.SceneManagement;
 namespace GameDevTV.RTS.PvAI
 {
     /// <summary>
-    /// SRP: Khi Play Game 1 offline — chạy spawn PvE một lần (không chạy khi Mirror active).
+    /// SRP: Khi Play map offline — chạy spawn PvE (không chạy khi Mirror active).
     /// </summary>
-    [DefaultExecutionOrder(-100)]
+    [DefaultExecutionOrder(-150)]
     public sealed class PvAiGameSceneBootstrap : MonoBehaviour
     {
-        [SerializeField] string targetSceneName = PvAiSceneValidator.Game1SceneName;
         [SerializeField] PvAiGameSceneSetup sceneSetup;
-
-        static bool s_spawnedThisSession;
 
         void Awake()
         {
@@ -21,6 +19,13 @@ namespace GameDevTV.RTS.PvAI
             {
                 sceneSetup = GetComponent<PvAiGameSceneSetup>();
             }
+
+            if (!ShouldRunOfflineSpawn())
+            {
+                return;
+            }
+
+            PvAiOfflineSpawnCoordinator.TryEnsureHumanBaseSpawned();
         }
 
         void Start()
@@ -30,32 +35,9 @@ namespace GameDevTV.RTS.PvAI
                 return;
             }
 
-            TrySpawnOfflineMatch();
+            PvAiOfflineSpawnCoordinator.TryEnsureHumanBaseSpawned();
+            PvAiOfflineAiCoordinator.TryEnableForOfflinePvE();
             PregameAiDifficultyApplyService.TryApply();
-        }
-
-        void TrySpawnOfflineMatch()
-        {
-            if (s_spawnedThisSession)
-            {
-                return;
-            }
-
-            if (sceneSetup == null)
-            {
-                sceneSetup = FindFirstObjectByType<PvAiGameSceneSetup>();
-            }
-
-            if (sceneSetup == null)
-            {
-                Debug.LogWarning(
-                    "[PvAiGameSceneBootstrap] Không có PvAiGameSceneSetup — bỏ qua spawn PvE. "
-                    + "Chạy menu ProjectRTS/PvAI/Setup Game 1 spawn (long-term).");
-                return;
-            }
-
-            PvAiOfflineSpawnService.SpawnMatch(sceneSetup);
-            s_spawnedThisSession = true;
         }
 
         bool ShouldRunOfflineSpawn()
@@ -66,10 +48,17 @@ namespace GameDevTV.RTS.PvAI
             }
 
             Scene scene = SceneManager.GetActiveScene();
-            return scene.IsValid() && scene.name.Contains(targetSceneName);
-        }
+            if (!scene.IsValid() || !GameplayStartupScenes.IsGameplayScene(scene))
+            {
+                return false;
+            }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetSession() => s_spawnedThisSession = false;
+            if (sceneSetup != null && sceneSetup.gameObject.scene != scene)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 }

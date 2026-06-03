@@ -19,7 +19,9 @@ namespace GameDevTV.RTS.Player
         IHotkeyCancelTarget,
         IHotkeyStopUnitsTarget,
         IHotkeyUnitTypeSelectTarget,
-        IHotkeyActionBarTarget
+        IHotkeyActionBarTarget,
+        IHotkeyCameraTarget,
+        IHotkeyDeleteSelectionTarget
     {
         PlayerInput playerInput;
         Owner logSubscribedOwner = Owner.Invalid;
@@ -91,6 +93,10 @@ namespace GameDevTV.RTS.Player
             EnsureComponent<CancelSelectionHotkeyHandler>();
             EnsureComponent<StopUnitsHotkeyHandler>();
             EnsureComponent<ActionBarSlotHotkeyHandler>();
+            EnsureComponent<CameraResetHotkeyHandler>();
+            EnsureComponent<CameraFollowUnitHotkeyHandler>();
+            EnsureComponent<DeleteSelectionHotkeyHandler>();
+            EnsureComponent<DeleteSelectionImmediateHotkeyHandler>();
             EnsureComponent<HotkeySystem>();
             EnsureComponent<UnitTypeHotkeySetup>();
             EnsureComponent<BuildingTypeHotkeySetup>();
@@ -114,6 +120,21 @@ namespace GameDevTV.RTS.Player
         public void OnHotkeyStopUnits(in HotkeyContext context)
         {
             playerInput?.StopSelectedUnitsFromHotkey();
+        }
+
+        public void OnHotkeyResetCamera(in HotkeyContext context)
+        {
+            playerInput?.ResetCameraFromHotkey();
+        }
+
+        public void OnHotkeyFollowSelected(in HotkeyContext context)
+        {
+            playerInput?.FollowSelectedFromHotkey();
+        }
+
+        public void OnHotkeyDeleteSelection(in HotkeyContext context, bool immediate)
+        {
+            playerInput?.DeleteSelectionFromHotkey(immediate);
         }
 
         void EnsureComponent<T>() where T : Component

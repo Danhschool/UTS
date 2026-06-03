@@ -1,4 +1,6 @@
 using System.Collections;
+using GameDevTV.RTS.Game;
+using GameDevTV.RTS.Game.Startup;
 using GameDevTV.RTS.Player;
 using Mirror;
 using ProjectRTS.Netplay;
@@ -12,12 +14,11 @@ namespace GameDevTV.RTS.Netplay
     [DefaultExecutionOrder(-200)]
     public sealed class RtsNetGameSceneBootstrap : MonoBehaviour
     {
-        [SerializeField] string gameSceneName = "RtsNet_Game";
         [SerializeField] bool disableCapsuleGameInput = true;
 
         void Awake()
         {
-            if (!RtsNetSceneUtility.MatchesActiveScene(gameSceneName))
+            if (!GameplayStartupScenes.IsActiveGameplayScene())
             {
                 return;
             }
@@ -28,7 +29,7 @@ namespace GameDevTV.RTS.Netplay
 
         void Start()
         {
-            if (!RtsNetSceneUtility.MatchesActiveScene(gameSceneName))
+            if (!GameplayStartupScenes.IsActiveGameplayScene())
             {
                 return;
             }
@@ -41,6 +42,7 @@ namespace GameDevTV.RTS.Netplay
             if (NetworkServer.active)
             {
                 RtsMatchServerSpawnRunner.EnsureScheduled();
+                GameMatchOverlayStateSync.EnsureServerInstance();
             }
 
             yield return null;

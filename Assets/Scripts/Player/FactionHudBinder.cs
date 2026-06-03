@@ -112,8 +112,16 @@ namespace GameDevTV.RTS.Player
                 hud.BindHudOwner(localOwner);
             }
 
-            gameEventLogListener?.SetListenOwner(localOwner);
-            playerAudioListener?.SetListenOwner(localOwner);
+            if (gameEventLogListener != null)
+            {
+                gameEventLogListener.SetListenOwner(localOwner);
+            }
+
+            PlayerAudioListener audioListener = ResolvePlayerAudioListener();
+            if (audioListener != null)
+            {
+                audioListener.SetListenOwner(localOwner);
+            }
 
             MinimapUnitIconsController icons = rigMinimapIcons ?? minimapUnitIcons;
             if (icons != null)
@@ -129,6 +137,24 @@ namespace GameDevTV.RTS.Player
             }
 
             BindMinimapFog(localOwner);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Tránh MissingReferenceException — C# ?. không dùng Unity fake-null.
+        /// </summary>
+        PlayerAudioListener ResolvePlayerAudioListener()
+        {
+            if (playerAudioListener == null)
+            {
+                playerAudioListener = GetComponent<PlayerAudioListener>();
+            }
+
+            if (playerAudioListener == null && gameObject != null)
+            {
+                playerAudioListener = gameObject.AddComponent<PlayerAudioListener>();
+            }
+
+            return playerAudioListener;
         }
 
         void BindMinimapFog(Owner localOwner)

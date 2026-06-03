@@ -1,3 +1,4 @@
+using GameDevTV.RTS.PvAI;
 using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
@@ -50,6 +51,11 @@ namespace GameDevTV.RTS.Game.Startup
                 contentProgress = 0.45f;
                 statusMessage = "Đang chờ phe người chơi…";
                 return timedOut;
+            }
+
+            if (!NetworkClient.active && !NetworkServer.active)
+            {
+                PvAiOfflineSpawnCoordinator.TryEnsureHumanBaseSpawned();
             }
 
             if (HasLocalCivilCentral(localOwner))

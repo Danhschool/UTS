@@ -66,6 +66,7 @@ namespace GameDevTV.RTS.Player
         private float rotTargetX;
         private float rotXVelocity;
         private float scrollOrthoSize;
+        private float initialScrollOrthoSize;
         private float orthoSizeVelocity;
         private float smoothedFollowZ;
         private float followZVelocity;
@@ -95,6 +96,7 @@ namespace GameDevTV.RTS.Player
             smoothedRotX = cinemachineFollow.FollowOffset.x;
             smoothedFollowZ = cinemachineFollow.FollowOffset.z;
             scrollOrthoSize = camera != null ? camera.orthographicSize : 20f;
+            initialScrollOrthoSize = scrollOrthoSize;
             scrollZoomScale = smoothedZoomScale = zoomTargetScale = ComputeInitialZoomScaleFromFollowOffset();
 
             localOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
@@ -105,6 +107,12 @@ namespace GameDevTV.RTS.Player
             {
                 gameObject.AddComponent<PlayerInputHotkeyIntegration>();
             }
+        }
+
+        void Start()
+        {
+            RegisterExistingLocalCommandables();
+            PurgeNonLocalFromSelection();
         }
 
         private void OnDestroy()
@@ -122,6 +130,7 @@ namespace GameDevTV.RTS.Player
             aliveBuildings.RemoveWhere(building => building == null || building.Owner != localOwner);
             selectedUnits.Clear();
             SubscribeBus(localOwner);
+            RegisterExistingLocalCommandables();
         }
 
         void SubscribeBus(Owner owner)
@@ -179,6 +188,11 @@ namespace GameDevTV.RTS.Player
 
         private void HandleUnitSelected(UnitSelectedEvent evt)
         {
+            if (!IsLocalOwnedSelectable(evt.Unit))
+            {
+                return;
+            }
+
             if (!selectedUnits.Contains(evt.Unit))
             {
                 selectedUnits.Add(evt.Unit);
@@ -187,7 +201,7 @@ namespace GameDevTV.RTS.Player
         private void HandleUnitDeselected(UnitDeselectedEvent evt) => selectedUnits.Remove(evt.Unit);
         private void HandleUnitSpawn(UnitSpawnEvent evt)
         {
-            if (evt.Unit.Owner == localOwner)
+            if (evt.Unit != null && evt.Unit.Owner == ResolveLocalOwner())
             {
                 aliveUnits.Add(evt.Unit);
             }
@@ -200,7 +214,10 @@ namespace GameDevTV.RTS.Player
 
         private void HandleBuildingSpawn(BuildingSpawnEvent evt)
         {
-            if (evt.Building != null && evt.Owner == localOwner)
+            Owner local = ResolveLocalOwner();
+            if (evt.Building != null
+                && evt.Building.Owner == local
+                && evt.Owner == evt.Building.Owner)
             {
                 aliveBuildings.Add(evt.Building);
             }
@@ -237,7 +254,7 @@ namespace GameDevTV.RTS.Player
         void SetActiveCommand(BaseCommand command)
         {
             activeCommand = command;
-            Bus<ActiveCommandChangedEvent>.Raise(localOwner, new ActiveCommandChangedEvent(command));
+            Bus<ActiveCommandChangedEvent>.Raise(ResolveLocalOwner(), new ActiveCommandChangedEvent(command));
         }
 
         private void Update()
@@ -594,7 +611,7 @@ namespace GameDevTV.RTS.Player
 
             foreach (AbstractUnit unit in addedUnits)
             {
-                unit.Select();
+                TrySelectLocalOwned(unit);
             }
             selectionBox.gameObject.SetActive(false);
         }
@@ -649,6 +666,8 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         public void CancelFromHotkey()
         {
+            EnsureLocalOwnerBeforeHotkey();
+
             if (activeCommand != null || ghostInstance != null)
             {
                 DisposePlacementGhost();
@@ -665,6 +684,8 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         public void OnHotkeySelectUnitType(GameObject referencePrefab, bool selectAllOnScreen)
         {
+            EnsureLocalOwnerBeforeHotkey();
+
             if (referencePrefab == null)
             {
                 return;
@@ -699,6 +720,8 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         public void OnHotkeyActionBarSlot(int slotIndex)
         {
+            EnsureLocalOwnerBeforeHotkey();
+
             List<AbstractCommandable> commandables = CollectSelectedCommandables();
             if (commandables.Count == 0)
             {
@@ -716,7 +739,83 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
-            Bus<CommandSelectedEvent>.Raise(localOwner, new CommandSelectedEvent(command));
+            Bus<CommandSelectedEvent>.Raise(ResolveLocalOwner(), new CommandSelectedEvent(command));
+        }
+
+        /// <summary>
+        /// Mục tiêu: Home — reset zoom và góc nghiêng camera về mặc định scene.
+        /// Cách hoạt động: Khôi phục offset Cinemachine và orthographic size ban đầu.
+        /// </summary>
+        public void ResetCameraFromHotkey()
+        {
+            if (cinemachineFollow == null)
+            {
+                return;
+            }
+
+            scrollZoomScale = 1f;
+            zoomTargetScale = 1f;
+            smoothedZoomScale = 1f;
+            zoomScaleVelocity = 0f;
+            rotTargetX = startingFollowOffset.x;
+            smoothedRotX = rotTargetX;
+            rotXVelocity = 0f;
+            smoothedFollowZ = startingFollowOffset.z;
+            followZVelocity = 0f;
+
+            if (camera != null && camera.orthographic)
+            {
+                scrollOrthoSize = initialScrollOrthoSize;
+                orthoSizeVelocity = 0f;
+            }
+
+            ApplyCinemachineFollowOffset();
+        }
+
+        /// <summary>
+        /// Mục tiêu: F — pan camera tới unit/nhà phe local đang được chọn.
+        /// Cách hoạt động: Lấy commandable local đầu tiên trong selection → PanCameraToWorldPosition.
+        /// </summary>
+        public void FollowSelectedFromHotkey()
+        {
+            EnsureLocalOwnerBeforeHotkey();
+
+            List<AbstractCommandable> commandables = CollectSelectedCommandables();
+            if (commandables.Count == 0)
+            {
+                return;
+            }
+
+            PanCameraToWorldPosition(commandables[0].transform.position);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Delete / Shift+Delete — xóa selection phe local (debug / editor).
+        /// Cách hoạt động: Purge selection địch → gọi Die() trên từng commandable local; immediate bỏ qua hiệu ứng chờ.
+        /// </summary>
+        public void DeleteSelectionFromHotkey(bool immediate)
+        {
+            EnsureLocalOwnerBeforeHotkey();
+
+            ISelectable[] snapshot = selectedUnits.ToArray();
+            DeselectAllUnits();
+
+            for (int i = 0; i < snapshot.Length; i++)
+            {
+                if (snapshot[i] is not AbstractCommandable commandable || !IsOwnedByLocalPlayer(commandable))
+                {
+                    continue;
+                }
+
+                if (immediate)
+                {
+                    Destroy(commandable.gameObject);
+                }
+                else
+                {
+                    commandable.Die();
+                }
+            }
         }
 
         /// <summary>
@@ -740,12 +839,12 @@ namespace GameDevTV.RTS.Player
             }
 
             unitTypeCycleIndex = (unitTypeCycleIndex + 1) % matches.Count;
-            matches[unitTypeCycleIndex].Select();
+            TrySelectLocalOwned(matches[unitTypeCycleIndex]);
         }
 
         /// <summary>
         /// Mục tiêu: Chọn mọi unit cùng prefab archetype trên màn hình (Ctrl+Q/W/E/R hoặc double-click).
-        /// Cách hoạt động: DeselectAll → quét aliveUnits, lọc viewport + MatchesPrefab → Select.
+        /// Cách hoạt động: DeselectAll → quét scene, lọc local owner + viewport + MatchesPrefab → Select.
         /// </summary>
         public void SelectAllUnitsOfKindOnScreen(GameObject referencePrefab)
         {
@@ -756,29 +855,28 @@ namespace GameDevTV.RTS.Player
 
             DeselectAllUnits();
 
-            foreach (AbstractUnit unit in aliveUnits)
+            List<AbstractUnit> matches = CollectUnitsOfKindOnScreen(referencePrefab);
+            for (int i = 0; i < matches.Count; i++)
             {
-                if (!IsSelectableUnitOfKindOnScreen(unit, referencePrefab))
-                {
-                    continue;
-                }
-
-                unit.Select();
+                TrySelectLocalOwned(matches[i]);
             }
         }
 
         /// <summary>
-        /// Mục tiêu: Thu thập unit local player cùng prefab và đang trong viewport.
-        /// Cách hoạt động: Duyệt aliveUnits, lọc qua IsSelectableUnitOfKindOnScreen, thêm vào list.
+        /// Mục tiêu: Thu thập unit phe local cùng prefab và đang trong viewport.
+        /// Cách hoạt động: Quét scene, lọc owner local + IsSelectableUnitOfKindOnScreen.
         /// </summary>
         List<AbstractUnit> CollectUnitsOfKindOnScreen(GameObject referencePrefab)
         {
             var matches = new List<AbstractUnit>(16);
-            foreach (AbstractUnit unit in aliveUnits)
+            AbstractUnit[] units = FindObjectsByType<AbstractUnit>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < units.Length; i++)
             {
-                if (IsSelectableUnitOfKindOnScreen(unit, referencePrefab))
+                if (IsSelectableUnitOfKindOnScreen(units[i], referencePrefab))
                 {
-                    matches.Add(unit);
+                    matches.Add(units[i]);
                 }
             }
 
@@ -813,12 +911,12 @@ namespace GameDevTV.RTS.Player
             }
 
             unitTypeCycleIndex = (unitTypeCycleIndex + 1) % matches.Count;
-            matches[unitTypeCycleIndex].Select();
+            TrySelectLocalOwned(matches[unitTypeCycleIndex]);
         }
 
         /// <summary>
         /// Mục tiêu: Chọn mọi nhà cùng prefab archetype trên màn hình (Ctrl+A/S/D).
-        /// Cách hoạt động: DeselectAll → quét aliveBuildings, lọc viewport + MatchesPrefab → Select.
+        /// Cách hoạt động: DeselectAll → quét scene, lọc local owner + viewport + MatchesPrefab → Select.
         /// </summary>
         public void SelectAllBuildingsOfKindOnScreen(GameObject referencePrefab)
         {
@@ -829,29 +927,28 @@ namespace GameDevTV.RTS.Player
 
             DeselectAllUnits();
 
-            foreach (BaseBuilding building in aliveBuildings)
+            List<BaseBuilding> matches = CollectBuildingsOfKindOnScreen(referencePrefab);
+            for (int i = 0; i < matches.Count; i++)
             {
-                if (!IsSelectableBuildingOfKindOnScreen(building, referencePrefab))
-                {
-                    continue;
-                }
-
-                building.Select();
+                TrySelectLocalOwned(matches[i]);
             }
         }
 
         /// <summary>
-        /// Mục tiêu: Thu thập nhà local player cùng prefab và đang trong viewport.
-        /// Cách hoạt động: Duyệt aliveBuildings, lọc qua IsSelectableBuildingOfKindOnScreen.
+        /// Mục tiêu: Thu thập nhà phe local cùng prefab và đang trong viewport.
+        /// Cách hoạt động: Quét scene, lọc owner local + IsSelectableBuildingOfKindOnScreen.
         /// </summary>
         List<BaseBuilding> CollectBuildingsOfKindOnScreen(GameObject referencePrefab)
         {
             var matches = new List<BaseBuilding>(8);
-            foreach (BaseBuilding building in aliveBuildings)
+            BaseBuilding[] buildings = FindObjectsByType<BaseBuilding>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < buildings.Length; i++)
             {
-                if (IsSelectableBuildingOfKindOnScreen(building, referencePrefab))
+                if (IsSelectableBuildingOfKindOnScreen(buildings[i], referencePrefab))
                 {
-                    matches.Add(building);
+                    matches.Add(buildings[i]);
                 }
             }
 
@@ -871,6 +968,8 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         public void StopSelectedUnitsFromHotkey()
         {
+            EnsureLocalOwnerBeforeHotkey();
+
             if (selectedUnits.Count == 0)
             {
                 return;
@@ -879,12 +978,7 @@ namespace GameDevTV.RTS.Player
             ISelectable[] snapshot = selectedUnits.ToArray();
             for (int i = 0; i < snapshot.Length; i++)
             {
-                if (snapshot[i] is not AbstractUnit unit)
-                {
-                    continue;
-                }
-
-                if (!LocalHumanOwnerAccess.IsLocalOwner(unit.Owner))
+                if (snapshot[i] is not AbstractUnit unit || !IsOwnedByLocalPlayer(unit))
                 {
                     continue;
                 }
@@ -937,7 +1031,7 @@ namespace GameDevTV.RTS.Player
             List<AbstractUnit> abstractUnits = new(selectedUnits.Count);
             foreach (ISelectable selectable in selectedUnits)
             {
-                if (selectable is AbstractUnit unit)
+                if (selectable is AbstractUnit unit && IsOwnedByLocalPlayer(unit))
                 {
                     abstractUnits.Add(unit);
                 }
@@ -947,15 +1041,15 @@ namespace GameDevTV.RTS.Player
         }
 
         /// <summary>
-        /// Mục tiêu: Danh sách commandable đang chọn cho action bar / phím số.
-        /// Cách hoạt động: Lọc selectedUnits thành AbstractCommandable.
+        /// Mục tiêu: Danh sách commandable phe local đang chọn cho action bar / phím số / lệnh.
+        /// Cách hoạt động: Lọc selectedUnits → AbstractCommandable + IsOwnedByLocalPlayer.
         /// </summary>
         private List<AbstractCommandable> CollectSelectedCommandables()
         {
             List<AbstractCommandable> commandables = new(selectedUnits.Count);
             foreach (ISelectable selectable in selectedUnits)
             {
-                if (selectable is AbstractCommandable commandable)
+                if (selectable is AbstractCommandable commandable && IsOwnedByLocalPlayer(commandable))
                 {
                     commandables.Add(commandable);
                 }
@@ -989,6 +1083,11 @@ namespace GameDevTV.RTS.Player
 
             for (int i = 0; i < abstractUnits.Count; i++)
             {
+                if (!IsOwnedByLocalPlayer(abstractUnits[i]))
+                {
+                    continue;
+                }
+
                 BaseCommand command = commandBeingActivated;
                 if (command == null)
                 {
@@ -1103,7 +1202,7 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
-            clickedUnit.Select();
+            TrySelectLocalOwned(clickedUnit);
         }
 
         /// <summary>
@@ -1206,9 +1305,9 @@ namespace GameDevTV.RTS.Player
                     }
 
                     AbstractCommandable commandable = h.collider.GetComponentInParent<AbstractCommandable>();
-                    if (commandable is ISelectable selectable && IsOwnedByLocalPlayer(commandable))
+                    if (commandable is ISelectable && IsOwnedByLocalPlayer(commandable))
                     {
-                        selectable.Select();
+                        TrySelectLocalOwned(commandable);
                         return;
                     }
                 }
@@ -1227,11 +1326,104 @@ namespace GameDevTV.RTS.Player
         }
 
         /// <summary>
+        /// Mục tiêu: Đồng bộ owner local và loại selection địch trước mọi hotkey gameplay.
+        /// Cách hoạt động: ResolveLocalOwner → PurgeNonLocalFromSelection.
+        /// </summary>
+        void EnsureLocalOwnerBeforeHotkey()
+        {
+            ResolveLocalOwner();
+            PurgeNonLocalFromSelection();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Loại unit/nhà địch khỏi selection nội bộ PlayerInput.
+        /// Cách hoạt động: Deselect và remove mọi entry không pass IsLocalOwnedSelectable.
+        /// </summary>
+        void PurgeNonLocalFromSelection()
+        {
+            for (int i = selectedUnits.Count - 1; i >= 0; i--)
+            {
+                ISelectable selectable = selectedUnits[i];
+                if (IsLocalOwnedSelectable(selectable))
+                {
+                    continue;
+                }
+
+                selectable?.Deselect();
+                selectedUnits.RemoveAt(i);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Kiểm tra selectable có phải commandable thuộc phe local.
+        /// Cách hoạt động: AbstractCommandable + IsOwnedByLocalPlayer.
+        /// </summary>
+        bool IsLocalOwnedSelectable(ISelectable selectable) =>
+            selectable is AbstractCommandable commandable && IsOwnedByLocalPlayer(commandable);
+
+        /// <summary>
+        /// Mục tiêu: Luôn lấy owner human trên máy này — tránh cache <see cref="localOwner"/> lệch (MP / debug F1-F2).
+        /// Cách hoạt động: Đọc <see cref="LocalHumanOwnerAccess"/> và cập nhật field localOwner.
+        /// </summary>
+        Owner ResolveLocalOwner()
+        {
+            localOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            return localOwner;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Index unit/nhà phe local đã spawn trước khi PlayerInput subscribe Bus.
+        /// Cách hoạt động: FindObjectsByType, chỉ thêm entity có Owner == ResolveLocalOwner().
+        /// </summary>
+        void RegisterExistingLocalCommandables()
+        {
+            Owner local = ResolveLocalOwner();
+
+            AbstractUnit[] units = FindObjectsByType<AbstractUnit>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < units.Length; i++)
+            {
+                AbstractUnit unit = units[i];
+                if (unit != null && unit.Owner == local)
+                {
+                    aliveUnits.Add(unit);
+                }
+            }
+
+            BaseBuilding[] buildings = FindObjectsByType<BaseBuilding>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < buildings.Length; i++)
+            {
+                BaseBuilding building = buildings[i];
+                if (building != null && building.Owner == local)
+                {
+                    aliveBuildings.Add(building);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Chỉ gọi Select khi commandable thuộc phe local — chặn chọn nhà/unit địch qua hotkey.
+        /// Cách hoạt động: Kiểm tra IsOwnedByLocalPlayer trước khi gọi Select().
+        /// </summary>
+        void TrySelectLocalOwned(AbstractCommandable commandable)
+        {
+            if (!IsOwnedByLocalPlayer(commandable))
+            {
+                return;
+            }
+
+            commandable.Select();
+        }
+
+        /// <summary>
         /// Mục tiêu: Chỉ cho phép chọn unit/nhà thuộc phe người chơi local.
-        /// Cách hoạt động: So sánh <see cref="AbstractCommandable.Owner"/> với <see cref="localOwner"/>.
+        /// Cách hoạt động: So sánh <see cref="AbstractCommandable.Owner"/> với ResolveLocalOwner().
         /// </summary>
         private bool IsOwnedByLocalPlayer(AbstractCommandable commandable) =>
-            commandable != null && commandable.Owner == localOwner;
+            commandable != null && commandable.Owner == ResolveLocalOwner();
 
         private void ActivateAction(RaycastHit hit)
         {
@@ -1246,10 +1438,7 @@ namespace GameDevTV.RTS.Player
             List<AbstractUnit> abstractUnits = CollectSelectedAbstractUnits();
             bool buildDispatched = false;
 
-            List<AbstractCommandable> abstractCommandables = selectedUnits
-                .Where(unit => unit is AbstractCommandable)
-                .Cast<AbstractCommandable>()
-                .ToList();
+            List<AbstractCommandable> abstractCommandables = CollectSelectedCommandables();
 
             if (commandBeingActivated is MoveCommand moveCommand
                 && abstractUnits.Count > 1
@@ -1287,10 +1476,10 @@ namespace GameDevTV.RTS.Player
                     UpdateGhostPlacementVisual(EvaluateGhostPlacementValid(placementGhostPinnedPosition, pinnedPlacementRestrictionsCommand));
                 }
                 else if (commandBeingActivated is BuildBuildingCommand buildCommand
-                    && !SupplyAffordability.HasEnough(localOwner, buildCommand.Building.Cost))
+                    && !SupplyAffordability.HasEnough(ResolveLocalOwner(), buildCommand.Building.Cost))
                 {
                     SupplyAffordability.WarnPlayerIfInsufficient(
-                        localOwner,
+                        ResolveLocalOwner(),
                         buildCommand.Building.Cost,
                         $"xây {buildCommand.Building.Name}");
                     DisposePlacementGhost();

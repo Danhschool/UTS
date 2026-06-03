@@ -16,6 +16,7 @@ namespace GameDevTV.RTS.PvAI
         const string EditorConfigAssetPath = "Assets/Data_Re/AI/AIGameSessionConfig.asset";
 
         static bool s_appliedThisSession;
+        static int s_appliedLoadGeneration = -1;
         static AIGameSessionConfigSO cachedConfig;
 
         /// <summary>
@@ -34,10 +35,12 @@ namespace GameDevTV.RTS.PvAI
                 return false;
             }
 
-            if (s_appliedThisSession)
+            if (s_appliedThisSession && s_appliedLoadGeneration == PvAiOfflineSessionPrep.CurrentLoadGeneration)
             {
                 return true;
             }
+
+            PvAiOfflineAiCoordinator.TryEnableForOfflinePvE();
 
             AIGameSessionConfigSO config = ResolveSessionConfig();
             if (config == null)
@@ -70,6 +73,7 @@ namespace GameDevTV.RTS.PvAI
             }
 
             s_appliedThisSession = true;
+            s_appliedLoadGeneration = PvAiOfflineSessionPrep.CurrentLoadGeneration;
 
             if (logResult)
             {
@@ -114,6 +118,7 @@ namespace GameDevTV.RTS.PvAI
         static void ResetSession()
         {
             s_appliedThisSession = false;
+            s_appliedLoadGeneration = -1;
             cachedConfig = null;
         }
     }

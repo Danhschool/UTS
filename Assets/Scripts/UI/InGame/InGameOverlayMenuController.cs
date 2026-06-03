@@ -49,6 +49,9 @@ namespace GameDevTV.RTS.UI.InGame
 
         OverlayPanel _openPanel = OverlayPanel.None;
         bool _surrenderDialogOpen;
+        bool _applyingRemoteState;
+
+        static bool IsNetworkMatch => GameMatchOverlayStateSync.IsNetworkMatchActive;
 
         enum OverlayPanel
         {
@@ -123,12 +126,12 @@ namespace GameDevTV.RTS.UI.InGame
         {
             HidePanelsExcept(OverlayPanel.Menu);
             settingsOpener?.Show();
-            SyncGameplayPause();
+            SyncLocalSettingsPauseOnly();
         }
 
         void OnSettingsPanelClosed()
         {
-            SyncGameplayPause();
+            SyncLocalSettingsPauseOnly();
         }
 
         void OnMenuPauseClicked()
@@ -147,8 +150,8 @@ namespace GameDevTV.RTS.UI.InGame
             }
 
             _surrenderDialogOpen = true;
-            SyncGameplayPause();
             surrenderConfirmDialog.Show(SurrenderMessage, OnSurrenderConfirmed, OnSurrenderCancelled);
+            SyncGameplayPause();
         }
 
         void OnSurrenderCancelled()
@@ -169,6 +172,13 @@ namespace GameDevTV.RTS.UI.InGame
             _surrenderDialogOpen = false;
             HideAllPanels();
             settingsOpener?.Hide();
+
+            if (IsNetworkMatch)
+            {
+                GameMatchOverlayStateSync.RequestSurrenderConfirmed();
+                return;
+            }
+
             MatchOutcomeFlow.LoadDefeatScene(defeatSceneName);
         }
 
@@ -182,6 +192,15 @@ namespace GameDevTV.RTS.UI.InGame
             }
 
             float selectedScale = speed.GetPresetScale(index);
+
+            if (IsNetworkMatch)
+            {
+                GameMatchOverlayStateSync.RequestSharedSpeed(index, selectedScale);
+                _openPanel = OverlayPanel.None;
+                ApplyPanelVisibilityFromRemote(OverlayPanel.None);
+                return;
+            }
+
             CloseOverlayPanelsAndResumeGameplay(selectedScale);
         }
 
@@ -198,6 +217,17 @@ namespace GameDevTV.RTS.UI.InGame
 
         void TogglePanel(OverlayPanel panel)
         {
+            if (IsNetworkMatch)
+            {
+                OverlayPanel next = IsPanelVisible(panel) ? OverlayPanel.None : panel;
+                _openPanel = next;
+                settingsOpener?.Hide();
+                ApplyPanelVisibilityFromRemote(next);
+                PublishSharedOverlayState(next);
+                SyncLocalSettingsPauseOnly();
+                return;
+            }
+
             if (IsPanelVisible(panel))
             {
                 HideAllPanels();
@@ -308,33 +338,163 @@ namespace GameDevTV.RTS.UI.InGame
         }
 
         /// <summary>
-        /// Mục tiêu: Chỉ pause khi mở pause/settings/dialog đầu hàng — không pause khi mở panel speed/menu.
-        /// Cách hoạt động: HasBlockingOverlay true → Pause; false → Resume.
+        /// Mục tiêu: Pause chia sẻ (pause/đầu hàng) hoặc pause local (settings) tùy chế độ.
         /// </summary>
         void SyncGameplayPause()
         {
-            if (HasBlockingOverlay())
+            if (IsNetworkMatch)
+            {
+                PublishSharedOverlayState(_openPanel);
+                SyncLocalSettingsPauseOnly();
+                return;
+            }
+
+            if (HasSharedBlockingOverlay())
             {
                 GamePauseService.Pause();
+                return;
+            }
+
+            if (settingsOpener != null && settingsOpener.IsOpen)
+            {
+                GamePauseService.ApplyLocalSettingsPause(true);
                 return;
             }
 
             GamePauseService.Resume();
         }
 
-        bool HasBlockingOverlay()
+        void SyncLocalSettingsPauseOnly()
+        {
+            bool settingsOpen = settingsOpener != null && settingsOpener.IsOpen;
+            GamePauseService.ApplyLocalSettingsPause(settingsOpen);
+        }
+
+        void PublishSharedOverlayState(OverlayPanel panel)
+        {
+            if (_applyingRemoteState)
+            {
+                return;
+            }
+
+            bool surrenderVisible = _surrenderDialogOpen
+                || (surrenderConfirmDialog != null && surrenderConfirmDialog.IsVisible);
+            bool sharedPause = panel == OverlayPanel.Pause || surrenderVisible;
+
+            GameMatchOverlayStateSync.RequestSharedPanel(
+                (byte)panel,
+                sharedPause,
+                surrenderVisible);
+        }
+
+        bool HasSharedBlockingOverlay()
         {
             if (_openPanel == OverlayPanel.Pause)
             {
                 return true;
             }
 
-            if (settingsOpener != null && settingsOpener.IsOpen)
+            if (_surrenderDialogOpen || (surrenderConfirmDialog != null && surrenderConfirmDialog.IsVisible))
             {
                 return true;
             }
 
-            if (_surrenderDialogOpen || (surrenderConfirmDialog != null && surrenderConfirmDialog.IsVisible))
+            return false;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client kia áp cùng panel/tốc độ/pause khi SyncVar đổi trên server.
+        /// </summary>
+        public static void ApplyRemoteSharedState(
+            byte panelByte,
+            bool sharedPaused,
+            int speedPresetIndex,
+            float speedScale,
+            bool surrenderDialog)
+        {
+            InGameOverlayMenuController[] controllers = Object.FindObjectsByType<InGameOverlayMenuController>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            for (int i = 0; i < controllers.Length; i++)
+            {
+                controllers[i]?.ApplyRemoteSharedStateInternal(
+                    panelByte,
+                    sharedPaused,
+                    speedPresetIndex,
+                    speedScale,
+                    surrenderDialog);
+            }
+        }
+
+        void ApplyRemoteSharedStateInternal(
+            byte panelByte,
+            bool sharedPaused,
+            int speedPresetIndex,
+            float speedScale,
+            bool surrenderDialog)
+        {
+            _applyingRemoteState = true;
+            try
+            {
+                _surrenderDialogOpen = surrenderDialog;
+                _openPanel = (OverlayPanel)panelByte;
+
+                settingsOpener?.Hide();
+
+                ApplyPanelVisibilityFromRemote(_openPanel);
+
+                if (speedSelectGroup != null && speedPresetIndex >= 0)
+                {
+                    speedSelectGroup.Select(speedPresetIndex, notify: false);
+                }
+
+                GamePauseService.ApplySharedSpeed(speedScale);
+                GamePauseService.ApplySharedPause(sharedPaused);
+
+                if (surrenderDialog && surrenderConfirmDialog != null && !surrenderConfirmDialog.IsVisible)
+                {
+                    surrenderConfirmDialog.Show(SurrenderMessage, OnSurrenderConfirmed, OnSurrenderCancelled);
+                }
+                else if (!surrenderDialog && surrenderConfirmDialog != null && surrenderConfirmDialog.IsVisible)
+                {
+                    surrenderConfirmDialog.Hide();
+                }
+            }
+            finally
+            {
+                _applyingRemoteState = false;
+            }
+        }
+
+        void ApplyPanelVisibilityFromRemote(OverlayPanel panel)
+        {
+            SetPanelActive(panelSpeed, panel == OverlayPanel.Speed);
+            SetPanelActive(panelMenu, panel == OverlayPanel.Menu);
+            SetPanelActive(panelPause, panel == OverlayPanel.Pause);
+        }
+
+        public static void ApplyRemoteMatchEndFromSurrender()
+        {
+            InGameOverlayMenuController[] controllers = Object.FindObjectsByType<InGameOverlayMenuController>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            string scene = controllers.Length > 0
+                ? controllers[0].defeatSceneName
+                : MatchOutcomeFlow.DefaultDefeatScene;
+
+            MatchOutcomeFlow.LoadDefeatScene(scene);
+        }
+
+        bool HasBlockingOverlay()
+        {
+            if (HasSharedBlockingOverlay())
+            {
+                return true;
+            }
+
+            if (settingsOpener != null && settingsOpener.IsOpen)
             {
                 return true;
             }

@@ -117,6 +117,11 @@ namespace GameDevTV.RTS.Netplay
         /// </summary>
         public static int ResolveLocalTeamIndex()
         {
+            if (!NetworkClient.active && !NetworkServer.active)
+            {
+                return -1;
+            }
+
             if (NetworkClient.localPlayer != null)
             {
                 RtsLobbyPlayer lobbyPlayer = NetworkClient.localPlayer.GetComponent<RtsLobbyPlayer>();

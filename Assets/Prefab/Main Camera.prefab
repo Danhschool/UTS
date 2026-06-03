@@ -298,8 +298,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a161b6fd5116906419ac8538a13a9e54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Player.FogLocalOwnerDebugHotkeys
-  player1Key: 284
-  player2Key: 285
+  player1Key: 96
+  player2Key: 97
 --- !u!114 &6846624845833987653
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -315,6 +315,7 @@ MonoBehaviour:
   localHumanOwnerService: {fileID: 7801158452441152885}
   supplies: {fileID: 0}
   gameEventLogListener: {fileID: 0}
+  playerAudioListener: {fileID: 0}
   minimapUnitIcons: {fileID: 0}
   minimapFog: {fileID: 0}
 --- !u!114 &2018004710535714753

@@ -1,4 +1,5 @@
 using System.Collections;
+using GameDevTV.RTS.Game;
 using Mirror;
 using ProjectRTS.Netplay;
 using UnityEngine;
@@ -73,11 +74,12 @@ namespace GameDevTV.RTS.Netplay
                 }
 
                 int spawnedTeams = RtsMatchServerSpawnOrchestrator.TrySpawnMatchGameplay();
-                if (spawnedTeams > 0)
-                {
-                    RtsServerGameplayNotifier.MatchSpawnCompleted = true;
-                    yield break;
-                }
+            if (spawnedTeams > 0)
+            {
+                RtsServerGameplayNotifier.MatchSpawnCompleted = true;
+                GameMatchOverlayStateSync.EnsureServerInstance();
+                yield break;
+            }
 
                 yield return null;
             }

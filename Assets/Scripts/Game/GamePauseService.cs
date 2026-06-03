@@ -1,11 +1,10 @@
 using System;
-using GameDevTV.RTS.Game.Startup;
 using UnityEngine;
 
 namespace GameDevTV.RTS.Game
 {
     /// <summary>
-    /// SRP: Tạm dừng simulation in-game (Time.timeScale) và khôi phục tốc độ trước khi pause.
+    /// SRP: Tạm dừng simulation in-game (Time.timeScale) — tách pause chia sẻ MP và pause local (settings).
     /// </summary>
     public static class GamePauseService
     {
@@ -13,78 +12,106 @@ namespace GameDevTV.RTS.Game
 
         public static bool IsPaused { get; private set; }
 
-        static float _speedBeforePause = 1f;
+        static bool _sharedSimulationPaused;
+        static bool _localSettingsPaused;
+        static float _simulationSpeed = 1f;
 
         /// <summary>
-        /// Mục tiêu: Dừng gameplay khi mở panel Pause.
-        /// Cách hoạt động: Lưu timeScale hiện tại, gán 0; bỏ qua nếu đã pause.
+        /// Mục tiêu: Pause chia sẻ (menu pause / dialog đầu hàng) — đồng bộ qua network.
+        /// Cách hoạt động: Ghi cờ shared rồi RefreshSimulationTime.
         /// </summary>
-        public static void Pause()
+        public static void ApplySharedPause(bool paused)
         {
-            if (IsPaused)
-            {
-                return;
-            }
-
-            _speedBeforePause = Time.timeScale;
-            if (_speedBeforePause <= 0f)
-            {
-                _speedBeforePause = 1f;
-            }
-
-            Time.timeScale = 0f;
-            IsPaused = true;
-            PauseStateChanged?.Invoke(true);
+            _sharedSimulationPaused = paused;
+            RefreshSimulationTime();
         }
+
+        /// <summary>
+        /// Mục tiêu: Pause chỉ trên máy mở Settings — không ảnh hưởng đối thủ.
+        /// Cách hoạt động: Ghi cờ local settings rồi RefreshSimulationTime.
+        /// </summary>
+        public static void ApplyLocalSettingsPause(bool paused)
+        {
+            _localSettingsPaused = paused;
+            RefreshSimulationTime();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Áp tốc độ simulation đã đồng bộ (MP) hoặc local (offline).
+        /// Cách hoạt động: Lưu speed rồi RefreshSimulationTime nếu không đang pause.
+        /// </summary>
+        public static void ApplySharedSpeed(float timeScale)
+        {
+            _simulationSpeed = Mathf.Max(0.0001f, timeScale);
+            RefreshSimulationTime();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Dừng gameplay khi mở panel Pause (offline hoặc fallback).
+        /// </summary>
+        public static void Pause() => ApplySharedPause(true);
 
         /// <summary>
         /// Mục tiêu: Tiếp tục chơi sau panel Pause.
-        /// Cách hoạt động: Khôi phục timeScale qua GameSpeedController nếu có, không thì gán trực tiếp.
         /// </summary>
         public static void Resume()
         {
-            if (!IsPaused)
-            {
-                return;
-            }
-
-            IsPaused = false;
-            ApplyStoredSpeed();
-            PauseStateChanged?.Invoke(false);
+            ApplySharedPause(false);
+            ApplyLocalSettingsPause(false);
         }
 
         /// <summary>
-        /// Mục tiêu: Đóng overlay và chạy game với tốc độ vừa chọn (ví dụ panel speed x0.5–x2).
-        /// Cách hoạt động: Ghi tốc độ resume rồi Resume; nếu chưa pause thì chỉ ApplySpeed trực tiếp.
+        /// Mục tiêu: Đóng overlay và chạy game với tốc độ vừa chọn.
         /// </summary>
         public static void ResumeAtSpeed(float timeScale)
         {
-            _speedBeforePause = Mathf.Max(0.0001f, timeScale);
+            ApplySharedSpeed(timeScale);
+            ApplySharedPause(false);
+            ApplyLocalSettingsPause(false);
+        }
+
+        static void RefreshSimulationTime()
+        {
+            bool paused = _sharedSimulationPaused || _localSettingsPaused;
+            if (paused)
+            {
+                if (!IsPaused)
+                {
+                    IsPaused = true;
+                    PauseStateChanged?.Invoke(true);
+                }
+
+                Time.timeScale = 0f;
+                return;
+            }
 
             if (IsPaused)
             {
-                Resume();
-                return;
+                IsPaused = false;
+                PauseStateChanged?.Invoke(false);
             }
 
-            ApplyStoredSpeed();
+            ApplySimulationSpeed(_simulationSpeed);
         }
 
-        static void ApplyStoredSpeed()
+        static void ApplySimulationSpeed(float scale)
         {
             if (GameSpeedController.Instance != null)
             {
-                GameSpeedController.Instance.ApplySpeed(_speedBeforePause);
+                GameSpeedController.Instance.ApplySpeed(scale);
                 return;
             }
 
-            Time.timeScale = _speedBeforePause;
-            Time.fixedDeltaTime = 0.02f * Mathf.Max(_speedBeforePause, 0.0001f);
+            Time.timeScale = scale;
+            Time.fixedDeltaTime = 0.02f * scale;
         }
 
         public static void ForceResumeForSceneChange()
         {
+            _sharedSimulationPaused = false;
+            _localSettingsPaused = false;
             IsPaused = false;
+            _simulationSpeed = 1f;
             Time.timeScale = 1f;
             Time.fixedDeltaTime = 0.02f;
         }

@@ -1,12 +1,9 @@
 #if UNITY_EDITOR
-using GameDevTV.RTS.AI;
 using GameDevTV.RTS.Editor.FogOfWar;
-using GameDevTV.RTS.Netplay;
+using GameDevTV.RTS.Editor.Gameplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.UI;
 using GameDevTV.RTS.Units;
-using Mirror;
-using ProjectRTS.Netplay;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -19,10 +16,8 @@ namespace GameDevTV.RTS.Editor.Netplay
     /// </summary>
     public static class RtsNetGameSceneSetupEditor
     {
-        const string GameScenePath = "Assets/3rdParty/RTS_Multiplayer/Scenes/RtsNet_Game.unity";
-        const string FogP2PrefabPath = "Assets/Prefab/Fog of War P2.prefab";
-        const string CivilCentralPath = "Assets/Prefab/Buildings/civil_central/civil_central.prefab";
-        const string WorkerPath = "Assets/Prefab/Unit/Worker 1.prefab";
+        const string GameScenePath = GameplayMapScenePaths.ReferenceStableScenePath;
+        const string FogP2PrefabPath = GameplayMapScenePaths.FogP2PrefabPath;
 
         [MenuItem("ProjectRTS/Netplay/★ Prepare RtsNet_Game Scene (save to scene)")]
         public static void PrepareSceneMenu()
@@ -41,182 +36,7 @@ namespace GameDevTV.RTS.Editor.Netplay
 
         public static void PrepareOpenScene()
         {
-            EnsureSpawnAndGameplaySetup();
-            MpPresentationSceneSetupEditor.WireInOpenScene();
-            EnsureUtsPrefabNetworkComponents();
-            DisableOfflineBootstrap();
-            DisableAiForMp();
-            RemoveScenePlacedNetworkPrefabs();
-        }
-
-        /// <summary>
-        /// Mục tiêu: RtsUtsGameSceneSetup + spawn points + prefab CC/Worker trên scene.
-        /// </summary>
-        static void EnsureSpawnAndGameplaySetup()
-        {
-            Transform team0 = FindOrCreateSpawn("Team0Spawn", new Vector3(-185f, 0f, -174f));
-            Transform team1 = FindOrCreateSpawn("Team1Spawn", new Vector3(185f, 0f, 174f));
-
-            GameObject setupRoot = GameObject.Find("RtsUtsGameSceneSetup");
-            if (setupRoot == null)
-            {
-                setupRoot = new GameObject("RtsUtsGameSceneSetup");
-            }
-
-            if (setupRoot.transform.parent == null)
-            {
-                team0.SetParent(setupRoot.transform);
-                team1.SetParent(setupRoot.transform);
-            }
-
-            RtsUtsGameSceneSetup utsSetup = setupRoot.GetComponent<RtsUtsGameSceneSetup>();
-            if (utsSetup == null)
-            {
-                utsSetup = setupRoot.AddComponent<RtsUtsGameSceneSetup>();
-            }
-
-            utsSetup.teamSpawnPoints = new[] { team0, team1 };
-            utsSetup.civilCentralPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CivilCentralPath);
-            utsSetup.startingWorkerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(WorkerPath);
-            utsSetup.startingWorkerCount = 3;
-            utsSetup.workerOffsetFromBase = new Vector3(10f, 0f, 10f);
-            utsSetup.workerSpawnSpacing = new Vector3(10f, 0f, 0f);
-            utsSetup.disableAiControllersOnLoad = true;
-            EditorUtility.SetDirty(utsSetup);
-
-            RtsGameSceneSetup legacySetup = setupRoot.GetComponent<RtsGameSceneSetup>();
-            if (legacySetup == null)
-            {
-                legacySetup = setupRoot.AddComponent<RtsGameSceneSetup>();
-            }
-
-            legacySetup.teamSpawnPoints = new[] { team0, team1 };
-            EditorUtility.SetDirty(legacySetup);
-
-            if (Object.FindFirstObjectByType<RtsNetGameSceneBootstrap>(FindObjectsInactive.Include) == null)
-            {
-                setupRoot.AddComponent<RtsNetGameSceneBootstrap>();
-            }
-
-            if (setupRoot.GetComponent<RtsMatchServerSpawnRunner>() == null)
-            {
-                setupRoot.AddComponent<RtsMatchServerSpawnRunner>();
-            }
-
-            utsSetup.startingWorkerCount = Mathf.Max(utsSetup.startingWorkerCount, 3);
-            EditorUtility.SetDirty(utsSetup);
-        }
-
-        static Transform FindOrCreateSpawn(string name, Vector3 localPosition)
-        {
-            GameObject existing = GameObject.Find(name);
-            if (existing != null)
-            {
-                return existing.transform;
-            }
-
-            GameObject spawn = new GameObject(name);
-            spawn.transform.localPosition = localPosition;
-            return spawn.transform;
-        }
-
-        static void DisableOfflineBootstrap()
-        {
-            LocalHumanOwnerBootstrap[] bootstraps = Object.FindObjectsByType<LocalHumanOwnerBootstrap>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-            for (int i = 0; i < bootstraps.Length; i++)
-            {
-                if (bootstraps[i] != null)
-                {
-                    bootstraps[i].enabled = false;
-                }
-            }
-        }
-
-        static void DisableAiForMp()
-        {
-            AIController[] controllers = Object.FindObjectsByType<AIController>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-            for (int i = 0; i < controllers.Length; i++)
-            {
-                if (controllers[i] != null)
-                {
-                    controllers[i].enabled = false;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Mục tiêu: Tránh lỗi Mirror sceneId trên CC/Worker đặt sẵn trong scene copy Game 1.
-        /// </summary>
-        /// <summary>
-        /// Mục tiêu: civil_central + Worker 1 có RtsUtsNetworkEntity trên prefab (Mirror sync ổn định).
-        /// </summary>
-        static void EnsureUtsPrefabNetworkComponents()
-        {
-            EnsureNetworkEntityOnPrefab(CivilCentralPath);
-            EnsureNetworkEntityOnPrefab(WorkerPath);
-        }
-
-        static void EnsureNetworkEntityOnPrefab(string assetPath)
-        {
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
-            if (prefab == null)
-            {
-                Debug.LogWarning($"[RtsNetGameScene] Không tìm thấy prefab: {assetPath}");
-                return;
-            }
-
-            if (prefab.GetComponent<NetworkIdentity>() == null)
-            {
-                Debug.LogWarning($"[RtsNetGameScene] {prefab.name} thiếu NetworkIdentity.");
-                return;
-            }
-
-            if (prefab.GetComponent<RtsUtsNetworkEntity>() == null)
-            {
-                prefab.AddComponent<RtsUtsNetworkEntity>();
-                EditorUtility.SetDirty(prefab);
-                Debug.Log($"[RtsNetGameScene] Đã thêm RtsUtsNetworkEntity → {prefab.name}");
-            }
-        }
-
-        static void RemoveScenePlacedNetworkPrefabs()
-        {
-            var paths = new System.Collections.Generic.HashSet<string>
-            {
-                CivilCentralPath,
-                WorkerPath,
-            };
-
-            NetworkIdentity[] identities = Object.FindObjectsByType<NetworkIdentity>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-
-            for (int i = 0; i < identities.Length; i++)
-            {
-                NetworkIdentity identity = identities[i];
-                if (identity == null || identity.gameObject.scene.path != GameScenePath)
-                {
-                    continue;
-                }
-
-                GameObject source = PrefabUtility.GetCorrespondingObjectFromSource(identity.gameObject);
-                if (source == null)
-                {
-                    continue;
-                }
-
-                string assetPath = AssetDatabase.GetAssetPath(source);
-                if (!paths.Contains(assetPath))
-                {
-                    continue;
-                }
-
-                Object.DestroyImmediate(identity.transform.root.gameObject);
-            }
+            GameplayMapSceneSetupApplicator.PrepareOpenGameplayMapScene(wirePresentation: true);
         }
     }
 
@@ -225,8 +45,8 @@ namespace GameDevTV.RTS.Editor.Netplay
     /// </summary>
     public static class MpPresentationSceneSetupEditor
     {
-        const string GameScenePath = "Assets/3rdParty/RTS_Multiplayer/Scenes/RtsNet_Game.unity";
-        const string FogP2PrefabPath = "Assets/Prefab/Fog of War P2.prefab";
+        const string GameScenePath = GameplayMapScenePaths.ReferenceStableScenePath;
+        const string FogP2PrefabPath = GameplayMapScenePaths.FogP2PrefabPath;
 
         [MenuItem("ProjectRTS/Netplay/Setup MP Presentation (fog + UI + input per player)")]
         public static void SetupMenu()
@@ -240,6 +60,8 @@ namespace GameDevTV.RTS.Editor.Netplay
 
         public static void WireInOpenScene()
         {
+            EnsureMpPresentationPrerequisites();
+
             MpPlayerPresentationDirector director =
                 Object.FindFirstObjectByType<MpPlayerPresentationDirector>(FindObjectsInactive.Include);
 
@@ -311,6 +133,111 @@ namespace GameDevTV.RTS.Editor.Netplay
             EnsureLocalHumanOwnerOnMainCamera(mainInput);
             EnsureMainCameraFogOverlayPrefab();
             DisableLegacyPlayerViewBinder();
+            LogPresentationValidation(fogP1, fogP2, hudP1, hudP2, rigP1, rigP2);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Map offline thường chỉ có 1 HUD + 1 fog — MP cần bản nhân đôi cho P2.
+        /// Cách hoạt động: Instantiate prefab Fog P1/P2 và Runtime UI (1) nếu scene thiếu.
+        /// </summary>
+        static void EnsureMpPresentationPrerequisites()
+        {
+            EnsureFogPresentation(Owner.Player1, GameplayMapScenePaths.FogP1PrefabPath, "Fog of War P1");
+            EnsureFogPresentation(Owner.Player2, GameplayMapScenePaths.FogP2PrefabPath, "Fog of War P2");
+            EnsureSecondPlayerHudRoot();
+        }
+
+        static FactionFogPresentation EnsureFogPresentation(Owner owner, string prefabPath, string instanceName)
+        {
+            FactionFogPresentation existing = FindPresentation(owner);
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[MpPresentation] Không tìm thấy {prefabPath} — thiếu fog {owner}.");
+                return null;
+            }
+
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(
+                prefab,
+                SceneManager.GetActiveScene());
+            instance.name = instanceName;
+            FactionFogPresentation fog = instance.GetComponent<FactionFogPresentation>();
+            if (owner == Owner.Player2 && fog != null)
+            {
+                FogOfWarCourseP2SetupEditor.ApplyCourseSection9ToPresentation(fog);
+            }
+
+            Debug.Log($"[MpPresentation] Đã thêm {instanceName} cho {owner}.");
+            return fog;
+        }
+
+        /// <summary>
+        /// Mục tiêu: P2 client có HUD riêng (Supplies + RuntimeUI bus Owner.Player2).
+        /// Cách hoạt động: Nếu chưa có root tên chứa \"(1)\", instantiate Runtime UI UGUI prefab.
+        /// </summary>
+        static void EnsureSecondPlayerHudRoot()
+        {
+            Supplies playerTwoHud = FindHudSupplies(Owner.Player2);
+            if (playerTwoHud != null && playerTwoHud.transform.root.name.Contains("(1)"))
+            {
+                return;
+            }
+
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                GameplayMapScenePaths.RuntimeUiHudPrefabPath);
+            if (prefab == null)
+            {
+                Debug.LogWarning(
+                    $"[MpPresentation] Không tìm thấy {GameplayMapScenePaths.RuntimeUiHudPrefabPath} — "
+                    + "duplicate HUD P2 thủ công: Runtime UI UGUI (1).");
+                return;
+            }
+
+            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(
+                prefab,
+                SceneManager.GetActiveScene());
+            instance.name = "Runtime UI UGUI (1)";
+            Debug.Log("[MpPresentation] Đã thêm Runtime UI UGUI (1) cho HUD P2.");
+        }
+
+        static void LogPresentationValidation(
+            FactionFogPresentation fogP1,
+            FactionFogPresentation fogP2,
+            Supplies hudP1,
+            Supplies hudP2,
+            MpPlayerPresentationRig rigP1,
+            MpPlayerPresentationRig rigP2)
+        {
+            if (fogP1 == null || fogP2 == null)
+            {
+                Debug.LogWarning(
+                    "[MpPresentation] Thiếu fog P1 hoặc P2 — chạy lại ProjectRTS/Gameplay/★ Prepare Open Scene As Gameplay Map.");
+            }
+
+            if (hudP1 == null || hudP2 == null)
+            {
+                Debug.LogWarning("[MpPresentation] Thiếu HUD Supplies P1 hoặc P2.");
+            }
+            else if (hudP1 == hudP2)
+            {
+                Debug.LogError(
+                    "[MpPresentation] P1 và P2 đang dùng chung một HUD — MP client sẽ lỗi UI. "
+                    + "Cần Runtime UI UGUI và Runtime UI UGUI (1).");
+            }
+
+            if (rigP1 == null || rigP2 == null)
+            {
+                Debug.LogWarning("[MpPresentation] Thiếu MpPlayerPresentationRig trên fog P1/P2.");
+            }
+            else
+            {
+                Debug.Log("[MpPresentation] MP presentation OK — fog x2, HUD x2, rigs wired.");
+            }
         }
 
         const string MainCameraPrefabPath = "Assets/Prefab/Main Camera.prefab";

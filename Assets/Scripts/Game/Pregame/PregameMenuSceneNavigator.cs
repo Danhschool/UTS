@@ -1,4 +1,7 @@
 using GameDevTV.RTS.Game.Startup;
+using GameDevTV.RTS.PvAI;
+using Mirror;using ProjectRTS.Netplay;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace GameDevTV.RTS.Game.Pregame
@@ -17,10 +20,6 @@ namespace GameDevTV.RTS.Game.Pregame
             SceneManager.LoadScene(MainMenuScene);
         }
 
-        /// <summary>
-        /// Mục tiêu: MainMenu → màn chọn map / độ khó.
-        /// Cách hoạt động: Lưu PlayMode rồi LoadScene(SSScene).
-        /// </summary>
         public static void LoadSetup(PregamePlayMode mode)
         {
             PregameSessionState.SetPlayMode(mode);
@@ -34,11 +33,49 @@ namespace GameDevTV.RTS.Game.Pregame
 
         /// <summary>
         /// Mục tiêu: Bắt đầu trận offline từ setup.
-        /// Cách hoạt động: Gọi GameplaySceneLoader → Loading → scene game.
+        /// Cách hoạt động: Tắt Mirror nếu còn sót → reset owner PvE → Loading → scene game.
         /// </summary>
         public static void StartGameplay(string sceneName)
         {
+            EnsureOfflineNetworkStopped();
+            RtsLocalHumanOwnerNotifier.ClearCachedTeamIndex();
+            PvAiOfflineSessionPrep.OnGameplayLoadRequested();
+            PvAiOfflineSessionPrep.PrepareLocalHumanOwner();
             GameplaySceneLoader.RequestLoad(sceneName);
+        }
+
+        /// <summary>
+        /// Mục tiêu: PvE offline không bị chặn spawn vì session MP trước đó còn active.
+        /// Cách hoạt động: StopHost/StopClient trên NetworkManager.singleton nếu đang chạy.
+        /// </summary>
+        static void EnsureOfflineNetworkStopped()
+        {
+            if (!NetworkClient.active && !NetworkServer.active)
+            {
+                return;
+            }
+
+            NetworkManager networkManager = NetworkManager.singleton;
+            if (networkManager == null)
+            {
+                return;
+            }
+
+            if (NetworkServer.active && NetworkClient.active)
+            {
+                networkManager.StopHost();
+            }
+            else if (NetworkClient.active)
+            {
+                networkManager.StopClient();
+            }
+            else if (NetworkServer.active)
+            {
+                networkManager.StopServer();
+            }
+
+            RtsLocalHumanOwnerNotifier.ClearCachedTeamIndex();
+            Debug.Log("[PregameMenuSceneNavigator] Đã tắt Mirror trước khi vào PvE offline.");
         }
     }
 }
