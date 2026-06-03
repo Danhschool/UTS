@@ -22,7 +22,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace GameDevTV.RTS.Player
 {
-    public class PlayerInput : MonoBehaviour,
+    public partial class PlayerInput : MonoBehaviour,
         IMinimapCameraNavigator,
         IHotkeyUnitTypeSelectTarget,
         IHotkeyActionBarTarget

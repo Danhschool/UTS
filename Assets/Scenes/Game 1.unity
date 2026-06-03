@@ -48612,8 +48612,8 @@ MonoBehaviour:
   sightRefreshEveryNTicks: 2
   staleGatherRecoverEveryNTicks: 4
   sceneCacheMinFramesBetweenRefresh: 20
-  postAiStatusToGameEvent: 1
-  postAiStatusOnlyOnChange: 1
+  postAiStatusToGameEvent: 0
+  postAiStatusOnlyOnChange: 0
   economySettings:
     stoneSupply: {fileID: 11400000, guid: 7d796433841096a47826454e08f211d8, type: 2}
     woodSupply: {fileID: 11400000, guid: 1095511bff25e6c4ba9f593164fb4f32, type: 2}
@@ -48796,10 +48796,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: SpeechRecognition
       objectReference: {fileID: 0}
+    - target: {fileID: 6260290366470313422, guid: 193afebddd96fdc4883a10806cb330c6, type: 3}
+      propertyPath: modelPath
+      value: Whisper/ggml-small-q8_0.bin
+      objectReference: {fileID: 0}
     - target: {fileID: 6808391140065760110, guid: 193afebddd96fdc4883a10806cb330c6, type: 3}
       propertyPath: _toggleButton
       value: 
       objectReference: {fileID: 489352837}
+    - target: {fileID: 7909246947005213565, guid: 193afebddd96fdc4883a10806cb330c6, type: 3}
+      propertyPath: captureKey
+      value: 36
+      objectReference: {fileID: 0}
     - target: {fileID: 8304420894798449211, guid: 193afebddd96fdc4883a10806cb330c6, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

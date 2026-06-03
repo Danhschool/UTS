@@ -65,6 +65,11 @@ namespace ProjectRTS.SpeechRecognition
             {
                 gameObject.AddComponent<VoiceCommandOneShotTranscriptMapper>();
             }
+
+            if (GetComponent<VoiceCommandGameplayExecutor>() == null)
+            {
+                gameObject.AddComponent<VoiceCommandGameplayExecutor>();
+            }
         }
 
         private void OnEnable()

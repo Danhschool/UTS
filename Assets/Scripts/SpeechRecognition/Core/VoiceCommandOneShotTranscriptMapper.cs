@@ -1,3 +1,4 @@
+using System;
 using GameDevTV.RTS.UI.GameEventLog;
 using UnityEngine;
 using UnityEngine.Events;
@@ -26,6 +27,8 @@ namespace ProjectRTS.SpeechRecognition.Core
         [SerializeField] private UnityEvent<string> _onNoCommandMatch;
 
         private IVoiceCommandResolver _resolver;
+
+        public event Action<string> CommandMatched;
 
         private void Awake()
         {
@@ -108,6 +111,7 @@ namespace ProjectRTS.SpeechRecognition.Core
             _onCommandMatchedWithScore?.Invoke(commandId, similarity);
             _onCommandMatchedWithPhrase?.Invoke(commandId, canonicalPhrase, similarity);
             GameEventLog.Post($"[VoiceCmd] {commandId} ({similarity:0.00})", GameEventLogCategory.Info);
+            CommandMatched?.Invoke(commandId);
         }
     }
 }
