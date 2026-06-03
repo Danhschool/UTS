@@ -20,8 +20,8 @@ namespace GameDevTV.RTS.Commands
                 return false;
             }
 
-            return context.Hit.collider.TryGetComponent(out IHideable hideable)
-                && IsVisibleToCommander(context.Owner, hideable);
+            IHideable hideable = context.Hit.collider.GetComponentInParent<IHideable>();
+            return hideable != null && IsVisibleToCommander(context.Owner, hideable);
         }
 
         /// <summary>

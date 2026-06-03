@@ -13,6 +13,10 @@ namespace GameDevTV.RTS.Player
         static readonly int VisionTextureId = Shader.PropertyToID("_Fog_of_War_Render_Texture");
         static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
         static readonly int MainTexId = Shader.PropertyToID("_MainTex");
+        static readonly int SurfaceId = Shader.PropertyToID("_Surface");
+        static readonly int SrcBlendId = Shader.PropertyToID("_SrcBlend");
+        static readonly int DstBlendId = Shader.PropertyToID("_DstBlend");
+        static readonly int ZWriteId = Shader.PropertyToID("_ZWrite");
 
         [SerializeField] Owner presentationOwner = Owner.Player1;
         [SerializeField] GameObject presentationRoot;
@@ -128,7 +132,16 @@ namespace GameDevTV.RTS.Player
 
             if (active)
             {
-                fogSystemReference?.EnsureReferences();
+                if (fogSystemReference != null)
+                {
+                    fogSystemReference.ConfigureFaction(presentationOwner);
+                    fogSystemReference.EnsureReferences();
+                    FogRenderTextureBootstrap.EnsureExploredStartsBlack(
+                        fogSystemReference.ExploredRenderTexture);
+                    FogRenderTextureBootstrap.EnsureVisionStartsBlack(
+                        fogSystemReference.VisionRenderTexture);
+                }
+
                 ApplyFogPlaneLayer();
                 ApplyOwnerCameraMasks();
                 SyncFogPlaneMaterial();
@@ -136,7 +149,7 @@ namespace GameDevTV.RTS.Player
         }
 
         /// <summary>
-        /// Mục tiêu: Fog camera nhìn layer Fog of War Vision (14) — P1/P2 tách RT, không tách layer vision.
+        /// Mục tiêu: Fog camera nhìn đúng layer vision của phe (P1=14, P2=15).
         /// Cách hoạt động: Vision + explored camera culling mask theo <see cref="OwnerFogVisionLayers"/>.
         /// </summary>
         public void ApplyOwnerCameraMasks()
@@ -216,6 +229,11 @@ namespace GameDevTV.RTS.Player
             material.SetTexture(VisionTextureId, vision);
             material.SetTexture(BaseMapId, vision);
             material.SetTexture(MainTexId, vision);
+
+            material.SetFloat(SurfaceId, 1f);
+            material.SetFloat(SrcBlendId, 5f);
+            material.SetFloat(DstBlendId, 10f);
+            material.SetFloat(ZWriteId, 0f);
         }
     }
 }

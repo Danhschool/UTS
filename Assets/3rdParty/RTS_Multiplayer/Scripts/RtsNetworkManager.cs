@@ -92,15 +92,16 @@ namespace ProjectRTS.Netplay
             if (lobby != null)
             {
                 lobby.ServerInitSlot(slot);
-                if (slot == 0)
-                {
-                    lobby.ApplyLobbyMapOnServer(
-                        RtsLobbyRoomMapSession.PendingIndex,
-                        RtsLobbyRoomMapSession.PendingSceneName);
-                }
             }
 
             NetworkServer.AddPlayerForConnection(conn, player);
+
+            if (lobby != null && slot == 0)
+            {
+                lobby.ApplyLobbyMapOnServer(
+                    RtsLobbyRoomMapSession.PendingIndex,
+                    RtsLobbyRoomMapSession.PendingSceneName);
+            }
         }
 
         public override void OnServerSceneChanged(string sceneName)

@@ -48,10 +48,7 @@ namespace GameDevTV.RTS.Netplay
             yield return null;
 
             MpLocalOwnerSceneSync.RefreshAfterGameSceneLoad();
-            if (!NetworkServer.active)
-            {
-                MpFogVisionSpawnRefresh.SchedulePresentationRetries();
-            }
+            MpFogVisionSpawnRefresh.SchedulePresentationRetries();
 
             if (disableCapsuleGameInput && NetworkClient.localPlayer != null)
             {

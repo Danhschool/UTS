@@ -17,11 +17,23 @@ namespace ProjectRTS.Netplay
         {
             if (!PlayerPrefs.HasKey(PlayerNamePrefKey))
             {
-                return GetMachineDefaultName();
+                return PersistDefaultPlayerName();
             }
 
             string raw = PlayerPrefs.GetString(PlayerNamePrefKey);
-            return string.IsNullOrWhiteSpace(raw) ? GetMachineDefaultName() : raw.Trim();
+            return string.IsNullOrWhiteSpace(raw) ? PersistDefaultPlayerName() : raw.Trim();
+        }
+
+        /// <summary>
+        /// Mục tiêu: MP auth không bao giờ gửi tên rỗng khi user chưa mở Settings.
+        /// Cách hoạt động: Ghi tên máy vào PlayerPrefs lần đầu thiếu key.
+        /// </summary>
+        static string PersistDefaultPlayerName()
+        {
+            string fallback = GetMachineDefaultName();
+            PlayerPrefs.SetString(PlayerNamePrefKey, fallback);
+            PlayerPrefs.Save();
+            return fallback;
         }
 
         public static string ForHost() => ReadBaseName() + "H";

@@ -40,12 +40,13 @@ namespace GameDevTV.RTS.Commands
             GatherableSupply supply = collider.GetComponentInParent<GatherableSupply>();
             if (supply != null && supply.Amount > 0)
             {
+                bool targetedSupplyDirectly = collider.GetComponentInParent<GatherableSupply>() == supply;
                 bool visibleNow = IsHitColliderVisible(context)
                     || FactionFogQuery.IsWorldVisibleTo(context.Owner, supply.transform.position);
                 bool explored = FactionFogQuery.IsWorldExploredFor(
                     context.Owner,
                     supply.transform.position);
-                bool canGatherSupply = visibleNow || explored;
+                bool canGatherSupply = targetedSupplyDirectly || visibleNow || explored;
 
                 if (canGatherSupply)
                 {
@@ -65,11 +66,12 @@ namespace GameDevTV.RTS.Commands
         public override bool IsLocked(CommandContext context) => false;
 
         private bool IsGatherableSupplyOrDepositBuilding(Collider collider) =>
-            collider.TryGetComponent(out GatherableSupply _) || IsSupplyDepositBuilding(collider);
+            collider.GetComponentInParent<GatherableSupply>() != null || IsSupplyDepositBuilding(collider);
 
         private bool IsSupplyDepositBuilding(Collider collider)
         {
-            if (!collider.TryGetComponent(out BaseBuilding building))
+            BaseBuilding building = collider.GetComponentInParent<BaseBuilding>();
+            if (building == null)
             {
                 return false;
             }

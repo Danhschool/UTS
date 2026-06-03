@@ -1,7 +1,6 @@
 using GameDevTV.RTS.Commands;
-
+using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.Units;
-
 using Mirror;
 
 using ProjectRTS.Netplay;
@@ -85,9 +84,7 @@ namespace GameDevTV.RTS.Netplay
                 || !networkEntity.IsCommandableByLocalHuman)
 
             {
-
                 return false;
-
             }
 
 
@@ -120,9 +117,32 @@ namespace GameDevTV.RTS.Netplay
 
             }
 
+            if (command is GatherCommand)
 
+            {
+                Vector3 gatherPoint = hit.point;
+                GatherableSupply supply = hit.collider != null
+                    ? hit.collider.GetComponentInParent<GatherableSupply>()
+                    : null;
+                if (supply != null)
+                {
+                    gatherPoint = supply.transform.position;
+                }
 
-            // Gather/Attack: Handle trên client (cùng luồng UI); CmdUtsGather raycast server dễ miss supply.
+                commands.RequestUtsGather(identity.netId, gatherPoint, unitIndex);
+                return true;
+
+            }
+
+            if (command is AttackCommand)
+
+            {
+
+                commands.RequestUtsAttack(identity.netId, hit.point, unitIndex);
+
+                return true;
+
+            }
 
             return false;
 

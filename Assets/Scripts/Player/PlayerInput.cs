@@ -11,6 +11,7 @@ using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.Game.Startup;
 using GameDevTV.RTS.Netplay;
+using Mirror;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -1011,19 +1012,22 @@ namespace GameDevTV.RTS.Player
         {
             if (selectedUnits.Count == 0) { return; }
 
-            Ray cameraRay = camera.ScreenPointToRay(Mouse.current.position.ReadValue());
-
-            if (Mouse.current.rightButton.wasReleasedThisFrame
-                && Physics.Raycast(
-                    cameraRay,
-                    out RaycastHit hit,
-                    float.MaxValue,
-                    interactableLayers | floorLayers,
-                    QueryTriggerInteraction.Collide))
+            if (!Mouse.current.rightButton.wasReleasedThisFrame)
             {
-                List<AbstractUnit> abstractUnits = CollectSelectedAbstractUnits();
-                TryDispatchCommandsToUnits(abstractUnits, hit, commandBeingActivated: null, MouseButton.Right);
+                return;
             }
+
+            Ray cameraRay = camera.ScreenPointToRay(Mouse.current.position.ReadValue());
+            if (!GameplayWorldRaycastUtility.TryGetCommandRaycastHit(
+                cameraRay,
+                interactableLayers | floorLayers,
+                out RaycastHit hit))
+            {
+                return;
+            }
+
+            List<AbstractUnit> abstractUnits = CollectSelectedAbstractUnits();
+            TryDispatchCommandsToUnits(abstractUnits, hit, commandBeingActivated: null, MouseButton.Right);
         }
 
         private List<AbstractUnit> CollectSelectedAbstractUnits()
@@ -1116,11 +1120,7 @@ namespace GameDevTV.RTS.Player
                     continue;
                 }
 
-                bool relayGatherOrAttackLocally =
-                    command is GatherCommand or AttackCommand;
-
-                if (!relayGatherOrAttackLocally
-                    && PlayerInputNetworkBridge.ShouldRelayCommands
+                if (PlayerInputNetworkBridge.ShouldRelayCommands
                     && PlayerInputNetworkBridge.TryRelayUnitCommand != null
                     && PlayerInputNetworkBridge.TryRelayUnitCommand(
                         abstractUnits[i],
@@ -1314,12 +1314,10 @@ namespace GameDevTV.RTS.Player
             }
             else if (activeCommand != null
                 && !EventSystem.current.IsPointerOverGameObject()
-                && Physics.Raycast(
+                && GameplayWorldRaycastUtility.TryGetCommandRaycastHit(
                     cameraRay,
-                    out RaycastHit hit,
-                    float.MaxValue,
                     interactableLayers | floorLayers,
-                    QueryTriggerInteraction.Collide))
+                    out RaycastHit hit))
             {
                 ActivateAction(hit);
             }

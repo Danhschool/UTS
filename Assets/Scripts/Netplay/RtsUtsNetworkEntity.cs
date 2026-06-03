@@ -1,11 +1,9 @@
 using System.Collections;
 
+using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.Player;
-
 using GameDevTV.RTS.Units;
-
 using Mirror;
-
 using UnityEngine;
 
 
@@ -118,7 +116,7 @@ namespace GameDevTV.RTS.Netplay
 
         {
 
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 30; i++)
 
             {
 
@@ -159,6 +157,47 @@ namespace GameDevTV.RTS.Netplay
         public bool ServerCanAcceptOrdersFrom(int connectionId) =>
 
             connectionId == serverOwnerConnectionId;
+
+        /// <summary>
+        /// Mục tiêu: Client (P2) thấy worker gather sau server đã xử lý Command.
+        /// Cách hoạt động: Tìm mỏ gần điểm hit, gọi <see cref="Worker.MirrorGatherPresentation"/>.
+        /// </summary>
+        [ClientRpc]
+        public void RpcMirrorGatherPresentation(Vector3 supplyWorldPosition)
+        {
+            if (isServer || !TryGetComponent(out Worker worker))
+            {
+                return;
+            }
+
+            if (RtsUtsCommandMirrorUtility.TryFindGatherableSupplyNear(supplyWorldPosition, out GatherableSupply supply))
+            {
+                worker.MirrorGatherPresentation(supply);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client thấy unit attack đúng target sau server xử lý.
+        /// </summary>
+        [ClientRpc]
+        public void RpcMirrorAttackTarget(uint targetNetId)
+        {
+            if (isServer || !TryGetComponent(out IAttacker attacker))
+            {
+                return;
+            }
+
+            if (!NetworkClient.spawned.TryGetValue(targetNetId, out NetworkIdentity targetIdentity))
+            {
+                return;
+            }
+
+            IDamageable damageable = targetIdentity.GetComponentInParent<IDamageable>();
+            if (damageable != null)
+            {
+                attacker.Attack(damageable);
+            }
+        }
 
     }
 

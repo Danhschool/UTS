@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Explored Fog of War P2
-  m_Shader: {fileID: -6465566751694194690, guid: ce2a2dd512493d343af1a023e9496ae8, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 6dfee9e454835e549bd7fa5f73a42e8d, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []

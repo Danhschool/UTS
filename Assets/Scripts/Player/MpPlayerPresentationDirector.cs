@@ -20,7 +20,7 @@ namespace GameDevTV.RTS.Player
 
         PlayerInput _sharedPlayerInput;
         Owner _lastAppliedOwner = Owner.Invalid;
-        int _lastP2UnitsSynced = -1;
+        int _lastLocalUnitsFogSynced = -1;
         bool _inactiveFogPresentationsSuppressed;
 
         public bool HasConfiguredRigs => player1Rig != null || player2Rig != null;
@@ -82,7 +82,12 @@ namespace GameDevTV.RTS.Player
             bool ownerChanged = localOwner != _lastAppliedOwner;
             if (!MpFogRefreshThrottle.ShouldRunPresentationApply(ownerChanged))
             {
-                TryRefreshP2VisionLayersOnly(localOwner);
+                int throttledUnits = RefreshLocalUnitFogVisionLayers(localOwner);
+                MpPlayerPresentationRig throttledRig = localOwner == Owner.Player1 ? player1Rig : player2Rig;
+                FactionFogPresentation throttledFog = throttledRig?.FogPresentation;
+                TryRefreshFogAfterLocalUnitsIncreased(localOwner, throttledUnits, throttledFog);
+                ApplyLocalFogPresentationLayers(throttledFog, localOwner);
+                ApplyGameplayFogOverlayForOwner(localOwner);
                 return;
             }
 
@@ -119,9 +124,7 @@ namespace GameDevTV.RTS.Player
                 activeFog.ApplyOwnerCameraMasks();
                 activeFog.RefreshFogTextures();
 
-                FactionVisibilityUpdater updater =
-                    activeFog.GetComponentInChildren<FactionVisibilityUpdater>(true);
-
+                FactionVisibilityUpdater updater = EnsureVisibilityUpdaterOnFog(activeFog);
                 if (updater != null)
                 {
                     visibilityUpdater = updater;
@@ -130,14 +133,15 @@ namespace GameDevTV.RTS.Player
                 }
             }
 
+            int localUnits = RefreshLocalUnitFogVisionLayers(localOwner);
+            TryRefreshFogAfterLocalUnitsIncreased(localOwner, localUnits, activeFog);
+
+            ApplyLocalFogPresentationLayers(activeFog, localOwner);
+            ApplyGameplayFogOverlayForOwner(localOwner);
+
             if (localOwner == Owner.Player2)
             {
-                int p2Units = RefreshP2UnitFogVisionLayers();
-                if (p2Units > _lastP2UnitsSynced)
-                {
-                    _lastP2UnitsSynced = p2Units;
-                    visibilityUpdater?.RefreshVisibilityAfterVisionLayers();
-                }
+                ValidatePlayer2PresentationSetup(activeRig, activeFog);
             }
 
             if (ownerChanged)
@@ -148,42 +152,86 @@ namespace GameDevTV.RTS.Player
                     activeRig?.SuppliesHud,
                     activeRig?.MinimapUnitIcons,
                     activeRig?.MinimapFog);
+            }
+        }
 
-                ApplyGameplayFogOverlayForOwner(localOwner);
+        /// <summary>
+        /// Mục tiêu: Unit local replicate sau Apply đầu — vision RT + visibility + overlay phải rebuild (P2 hay bị kẹt đen).
+        /// Cách hoạt động: Khi đếm unit local tăng, RefreshFogTextures, bind updater, overlay plane layer 17.
+        /// </summary>
+        void TryRefreshFogAfterLocalUnitsIncreased(
+            Owner localOwner,
+            int localUnits,
+            FactionFogPresentation activeFog)
+        {
+            if (localUnits <= _lastLocalUnitsFogSynced)
+            {
+                return;
+            }
 
-                if (localOwner == Owner.Player2)
+            _lastLocalUnitsFogSynced = localUnits;
+
+            if (activeFog != null)
+            {
+                activeFog.SetPresentationActive(true);
+                activeFog.FogSystemReference?.EnsureReferences();
+                activeFog.RefreshFogTextures();
+
+                FactionVisibilityUpdater updater =
+                    visibilityUpdater ?? EnsureVisibilityUpdaterOnFog(activeFog);
+                if (updater != null)
                 {
-                    ValidatePlayer2PresentationSetup(activeRig, activeFog);
+                    visibilityUpdater = updater;
+                    updater.BindVisionCamera(activeFog.VisionFogCamera);
+                    updater.BindLocalOwner(localOwner);
+                    updater.RefreshVisibilityAfterVisionLayers();
                 }
             }
+
+            ApplyGameplayFogOverlayForOwner(localOwner);
+            MpFogVisionSpawnRefresh.RequestDebouncedVisibilityRefresh();
         }
 
         /// <summary>
-        /// Mục tiêu: Apply bị throttle — vẫn sync layer vision khi unit P2 spawn thêm.
+        /// Mục tiêu: MP — sau LocalOwner + spawn, gán plane (17) + vision (15) + overlay cho phe local.
+        /// Cách hoạt động: Gọi từ Director Apply và MpFogVisionSpawnRefresh retry.
         /// </summary>
-        void TryRefreshP2VisionLayersOnly(Owner localOwner)
+        public void ApplyStartupFogLayersForLocalOwner(Owner localOwner)
         {
-            if (localOwner != Owner.Player2)
+            if (!HumanFogVisionUtility.EmitsFogVision(localOwner))
             {
                 return;
             }
 
-            int p2Units = RefreshP2UnitFogVisionLayers();
-            if (p2Units <= _lastP2UnitsSynced)
+            MpPlayerPresentationRig rig = localOwner == Owner.Player1 ? player1Rig : player2Rig;
+            ApplyLocalFogPresentationLayers(rig?.FogPresentation, localOwner);
+            RefreshLocalUnitFogVisionLayers(localOwner);
+            ApplyGameplayFogOverlayForOwner(localOwner);
+        }
+
+        static void ApplyLocalFogPresentationLayers(FactionFogPresentation activeFog, Owner localOwner)
+        {
+            if (activeFog == null)
             {
                 return;
             }
 
-            _lastP2UnitsSynced = p2Units;
-            visibilityUpdater?.RefreshVisibilityAfterVisionLayers();
+            activeFog.ApplyFogPlaneLayer();
+            activeFog.ApplyOwnerCameraMasks();
+            activeFog.RefreshFogTextures();
         }
 
         /// <summary>
-        /// Mục tiêu: Client P2 — unit replicate trước presentation; gán layer 14 + chỉ local P2 bật Vision.
+        /// Mục tiêu: Client — unit replicate trước presentation; gán layer vision đúng phe + bật Vision local.
         /// </summary>
-        int RefreshP2UnitFogVisionLayers()
+        public int RefreshLocalUnitFogVisionLayers(Owner localOwner)
         {
-            int p2Units = 0;
+            if (!HumanFogVisionUtility.EmitsFogVision(localOwner))
+            {
+                return 0;
+            }
+
+            int count = 0;
 
             AbstractCommandable[] commandables = Object.FindObjectsByType<AbstractCommandable>(
                 FindObjectsInactive.Include,
@@ -192,16 +240,29 @@ namespace GameDevTV.RTS.Player
             for (int i = 0; i < commandables.Length; i++)
             {
                 AbstractCommandable commandable = commandables[i];
-                if (commandable == null || commandable.Owner != Owner.Player2)
+                if (commandable == null)
                 {
                     continue;
                 }
 
-                commandable.SyncOwnerAndFogVision(Owner.Player2);
-                p2Units++;
+                Owner unitOwner = commandable.Owner;
+                if (NetworkClient.active
+                    && commandable.TryGetComponent(out RtsUtsNetworkEntity networkEntity)
+                    && networkEntity.UtsOwner != Owner.Invalid)
+                {
+                    unitOwner = networkEntity.UtsOwner;
+                }
+
+                if (unitOwner != localOwner)
+                {
+                    continue;
+                }
+
+                commandable.SyncOwnerAndFogVision(localOwner);
+                count++;
             }
 
-            return p2Units;
+            return count;
         }
 
         /// <summary>
@@ -226,6 +287,8 @@ namespace GameDevTV.RTS.Player
                 : null;
             int overlayMask = overlayCam != null ? overlayCam.cullingMask : -1;
             bool overlayMaskOk = overlayMask == expectedOverlayMask;
+            bool hasVisibilityUpdater = activeFog != null
+                && activeFog.GetComponentInChildren<FactionVisibilityUpdater>(true) != null;
 
             if (player2Rig == null)
             {
@@ -241,11 +304,17 @@ namespace GameDevTV.RTS.Player
             }
             else if (!visionMaskOk)
             {
-                Debug.LogError($"[P2 Fog] Vision mask={visionMask}, cần {expectedVisionMask} (layer Fog of War Vision / 14).");
+                Debug.LogError(
+                    $"[P2 Fog] Vision mask={visionMask}, cần {expectedVisionMask} (layer Fog of War Vision / 14).");
             }
             else if (!overlayMaskOk)
             {
                 Debug.LogError($"[P2 Fog] Overlay mask={overlayMask}, cần {expectedOverlayMask} (layer Fog of War Plane P2).");
+            }
+            else if (!hasVisibilityUpdater)
+            {
+                Debug.LogError(
+                    "[P2 Fog] Thiếu FactionVisibilityUpdater trên Fog P2 — chạy ProjectRTS/Gameplay/★ Prepare Open Scene As Gameplay Map.");
             }
         }
 
@@ -298,9 +367,42 @@ namespace GameDevTV.RTS.Player
                     continue;
                 }
 
-                bool isActiveBranch = presentation.PresentationOwner == localOwner;
+                bool isHumanBranch = HumanFogVisionUtility.EmitsFogVision(presentation.PresentationOwner);
+                bool isActiveBranch = isHumanBranch && presentation.PresentationOwner == localOwner;
                 presentation.SetPresentationActive(isActiveBranch);
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Scene thiếu FactionVisibilityUpdater trên Fog P2 — client P2 không rebuild hideables đúng RT.
+        /// Cách hoạt động: Tìm trên fog root; nếu thiếu thì gắn trên Vision camera (giống editor setup).
+        /// </summary>
+        static FactionVisibilityUpdater EnsureVisibilityUpdaterOnFog(FactionFogPresentation activeFog)
+        {
+            if (activeFog == null)
+            {
+                return null;
+            }
+
+            FactionVisibilityUpdater updater = activeFog.GetComponentInChildren<FactionVisibilityUpdater>(true);
+            if (updater != null)
+            {
+                return updater;
+            }
+
+            Camera visionCam = activeFog.VisionFogCamera;
+            if (visionCam == null)
+            {
+                return null;
+            }
+
+            updater = visionCam.GetComponent<FactionVisibilityUpdater>();
+            if (updater == null)
+            {
+                updater = visionCam.gameObject.AddComponent<FactionVisibilityUpdater>();
+            }
+
+            return updater;
         }
 
         void DeactivateAllRigs()

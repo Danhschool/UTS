@@ -156,6 +156,27 @@ namespace ProjectRTS.Netplay
             UpdateStartButton();
         }
 
+        /// <summary>
+        /// Mục tiêu: Mirror chỉ đọc NetworkManager.authenticator — đồng bộ cả reference UI (nếu có).
+        /// </summary>
+        void ApplyAuthenticatorPlayerName(bool asHost)
+        {
+            string resolved = asHost
+                ? RtsLobbyPlayerNameResolver.ForHost()
+                : RtsLobbyPlayerNameResolver.ForClient();
+
+            RtsUniqueNameAuthenticator.ApplyPlayerNameForSession(asHost);
+
+            if (authenticator != null)
+            {
+                authenticator.playerName = resolved;
+            }
+            else
+            {
+                authenticator = RtsUniqueNameAuthenticator.ResolveActive();
+            }
+        }
+
         void WireActionButtons()
         {
             if (readyButton != null)
@@ -185,10 +206,7 @@ namespace ProjectRTS.Netplay
                 return;
             }
 
-            if (authenticator != null)
-            {
-                authenticator.playerName = RtsLobbyPlayerNameResolver.ForHost();
-            }
+            ApplyAuthenticatorPlayerName(asHost: true);
 
             _localHostAddress = RtsNetworkAddressUtility.GetLoopbackOrLan();
             Net?.SetNetworkAddress(_localHostAddress);
@@ -286,10 +304,7 @@ namespace ProjectRTS.Netplay
                 return;
             }
 
-            if (authenticator != null)
-            {
-                authenticator.playerName = RtsLobbyPlayerNameResolver.ForClient();
-            }
+            ApplyAuthenticatorPlayerName(asHost: false);
 
             string connectAddress = RtsNetworkAddressUtility.ResolveClientConnectAddress(hostAddress);
             Net?.SetNetworkAddress(connectAddress);

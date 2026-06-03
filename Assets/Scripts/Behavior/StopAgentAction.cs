@@ -23,7 +23,12 @@ namespace GameDevTV.RTS.Behavior
                     animator.SetBool(AnimationConstants.IS_MOVING, false);
                 }
 
-                agent.ResetPath();
+                // ResetPath chỉ hợp lệ khi agent bật và đã nằm trên NavMesh (spawn MP / đổi lệnh sớm).
+                if (agent.enabled && agent.isOnNavMesh)
+                {
+                    agent.ResetPath();
+                }
+
                 return Status.Success;
             }
 

@@ -14,8 +14,8 @@ namespace GameDevTV.RTS.Netplay
     /// </summary>
     public sealed class MpFogVisionSpawnRefresh : MonoBehaviour
     {
-        const int MaxRetryFrames = 10;
-        const int VisionLayerRescanIntervalFrames = 12;
+        const int MaxRetryFrames = 60;
+        const int VisionLayerRescanIntervalFrames = 8;
 
         static MpFogVisionSpawnRefresh _instance;
         static bool _retryCoroutineRunning;
@@ -85,6 +85,7 @@ namespace GameDevTV.RTS.Netplay
                     }
 
                     RefreshActiveFogPresentation();
+                    ApplyStartupFogLayersIfReady();
 
                     if (frame % VisionLayerRescanIntervalFrames == 0)
                     {
@@ -94,10 +95,12 @@ namespace GameDevTV.RTS.Netplay
                     if (frame == MaxRetryFrames - 1)
                     {
                         RefreshLocalFactionVisibility(force: true);
+                        ApplyStartupFogLayersIfReady();
                     }
 
                     if (IsPresentationReady())
                     {
+                        ApplyStartupFogLayersIfReady();
                         LocalHumanCameraSpawnFocus.RequestRefocusForLocalHuman();
                         yield break;
                     }
@@ -179,16 +182,33 @@ namespace GameDevTV.RTS.Netplay
             for (int i = 0; i < commandables.Length; i++)
             {
                 AbstractCommandable commandable = commandables[i];
-                if (commandable != null && commandable.Owner == localOwner)
+                if (commandable == null)
                 {
-                    commandable.SyncOwnerAndFogVision(localOwner);
-                    localUnitCount++;
+                    continue;
                 }
+
+                Owner unitOwner = commandable.Owner;
+                if (commandable.TryGetComponent(out RtsUtsNetworkEntity networkEntity)
+                    && networkEntity.UtsOwner != Owner.Invalid)
+                {
+                    unitOwner = networkEntity.UtsOwner;
+                }
+
+                if (unitOwner != localOwner)
+                {
+                    continue;
+                }
+
+                commandable.SyncOwnerAndFogVision(localOwner);
+                localUnitCount++;
             }
 
             if (localUnitCount > _lastSyncedLocalUnitCount)
             {
-                RefreshLocalFactionVisibility();
+                RefreshActiveFogPresentation();
+                MpPlayerPresentationDirector director = MpFogRefreshThrottle.ResolvePresentationDirector();
+                director?.ApplyStartupFogLayersForLocalOwner(localOwner);
+                RefreshLocalFactionVisibility(force: true);
             }
 
             _lastSyncedLocalUnitCount = localUnitCount;
@@ -288,9 +308,27 @@ namespace GameDevTV.RTS.Netplay
                 FactionFogPresentation presentation = presentations[i];
                 if (presentation != null && presentation.PresentationOwner == service.LocalOwner)
                 {
+                    presentation.ApplyFogPlaneLayer();
+                    presentation.ApplyOwnerCameraMasks();
                     presentation.RefreshFogTextures();
                 }
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: P2 client — gán layer plane 17 + vision 15 ngay khi LocalOwner và rig sẵn sàng.
+        /// </summary>
+        static void ApplyStartupFogLayersIfReady()
+        {
+            LocalHumanOwnerService service = LocalHumanOwnerService.Instance;
+            if (service == null || !service.IsInitialized)
+            {
+                return;
+            }
+
+            MpPlayerPresentationDirector director =
+                MpFogRefreshThrottle.ResolvePresentationDirector();
+            director?.ApplyStartupFogLayersForLocalOwner(service.LocalOwner);
         }
     }
 }

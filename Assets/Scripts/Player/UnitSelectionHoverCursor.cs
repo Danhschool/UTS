@@ -133,19 +133,7 @@ namespace GameDevTV.RTS.Player
             }
 
             Ray ray = gameCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
-            RaycastHit[] hits = Physics.RaycastAll(
-                ray,
-                float.MaxValue,
-                worldHoverLayers,
-                QueryTriggerInteraction.Collide);
-            if (hits.Length == 0)
-            {
-                TransitionToSystemDefault();
-                return;
-            }
-
-            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
-            if (!TryGetFirstVisibilityEligibleHit(hits, out RaycastHit hit))
+            if (!GameplayWorldRaycastUtility.TryGetCommandRaycastHit(ray, worldHoverLayers, out RaycastHit hit))
             {
                 TransitionToSystemDefault();
                 return;
@@ -288,37 +276,6 @@ namespace GameDevTV.RTS.Player
             {
                 Destroy(texture);
             }
-        }
-
-        private static bool TryGetFirstVisibilityEligibleHit(RaycastHit[] sortedHits, out RaycastHit hit)
-        {
-            for (int i = 0; i < sortedHits.Length; i++)
-            {
-                if (IsRayHitEligibleForCommandCursor(sortedHits[i]))
-                {
-                    hit = sortedHits[i];
-                    return true;
-                }
-            }
-
-            hit = default;
-            return false;
-        }
-
-        private static bool IsRayHitEligibleForCommandCursor(RaycastHit h)
-        {
-            if (h.collider == null)
-            {
-                return false;
-            }
-
-            IHideable hideable = h.collider.GetComponentInParent<IHideable>();
-            if (hideable == null)
-            {
-                return true;
-            }
-
-            return hideable.IsVisible;
         }
 
         private static bool PassesOptionalLayerMask(LayerMask mask, int gameObjectLayer)

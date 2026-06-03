@@ -111,8 +111,12 @@ namespace ProjectRTS.Netplay
                 return;
             }
 
-            lobbyGameplayScene = RtsNetSceneUtility.NormalizeSceneName(sceneName);
-            lobbyMapIndex = index < 0 ? 0 : index;
+            string normalizedScene = RtsNetSceneUtility.NormalizeSceneName(sceneName);
+            int clampedIndex = index < 0 ? 0 : index;
+            bool mapUnchanged = lobbyMapIndex == clampedIndex && lobbyGameplayScene == normalizedScene;
+
+            lobbyGameplayScene = normalizedScene;
+            lobbyMapIndex = clampedIndex;
             RtsLobbyRoomMapSession.SetPending(lobbyMapIndex, lobbyGameplayScene);
 
             if (NetworkManager.singleton is RtsNetworkManager networkManager)
@@ -123,8 +127,25 @@ namespace ProjectRTS.Netplay
             Debug.Log(
                 $"[RtsLobbyPlayer] Host map → index={lobbyMapIndex}, scene='{lobbyGameplayScene}' (conn={connectionToClient?.connectionId}).");
 
+            if (!IsNetworkSpawned())
+            {
+                return;
+            }
+
+            if (mapUnchanged)
+            {
+                return;
+            }
+
             RpcSyncLobbyMapToClients(lobbyMapIndex, lobbyGameplayScene);
         }
+
+        /// <summary>
+        /// Mục tiêu: Mirror ClientRpc chỉ hợp lệ sau AddPlayerForConnection.
+        /// Cách hoạt động: Kiểm tra netId đã gán trên server.
+        /// </summary>
+        bool IsNetworkSpawned() =>
+            netIdentity != null && netIdentity.netId != 0;
 
         [ClientRpc]
         void RpcSyncLobbyMapToClients(int index, string sceneName)

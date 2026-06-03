@@ -1,3 +1,4 @@
+using GameDevTV.RTS.Game.Startup;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
 using Mirror;
@@ -38,6 +39,7 @@ namespace GameDevTV.RTS.Netplay
             }
 
             _lastSceneRefreshFrame = frame;
+            MpFogRefreshThrottle.InvalidateCaches();
 
             int teamIndex = ResolveLocalTeamIndex();
             ApplyTeamAndPresentation(teamIndex);
@@ -114,12 +116,18 @@ namespace GameDevTV.RTS.Netplay
 
         /// <summary>
         /// Mục tiêu: Lobby player → cache; client thuần MP = team 1; host = team 0.
+        /// Cách hoạt động: Client không chạy server luôn ưu tiên team 1 (1v1) — tránh SyncVar team 0 lệch trên clone.
         /// </summary>
         public static int ResolveLocalTeamIndex()
         {
             if (!NetworkClient.active && !NetworkServer.active)
             {
                 return -1;
+            }
+
+            if (NetworkClient.active && !NetworkServer.active)
+            {
+                return 1;
             }
 
             if (NetworkClient.localPlayer != null)
@@ -136,13 +144,7 @@ namespace GameDevTV.RTS.Netplay
                 return RtsLocalHumanOwnerNotifier.CachedLocalTeamIndex;
             }
 
-            // Client thuần (ParrelSync clone) trong 1v1 luôn là slot 1 / Player2.
-            if (NetworkClient.active && !NetworkServer.active)
-            {
-                return 1;
-            }
-
-            return -1;
+            return NetworkServer.active ? 0 : 1;
         }
     }
 }

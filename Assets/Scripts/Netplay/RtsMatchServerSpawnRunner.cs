@@ -12,7 +12,8 @@ namespace GameDevTV.RTS.Netplay
     [DisallowMultipleComponent]
     public sealed class RtsMatchServerSpawnRunner : MonoBehaviour
     {
-        const int MaxFrames = 120;
+        const int MaxFrames = 300;
+        const int DiagnosticLogFrame = 150;
 
         static RtsMatchServerSpawnRunner _instance;
 
@@ -73,21 +74,27 @@ namespace GameDevTV.RTS.Netplay
                     yield break;
                 }
 
-                int spawnedTeams = RtsMatchServerSpawnOrchestrator.TrySpawnMatchGameplay();
-            if (spawnedTeams > 0)
-            {
-                RtsServerGameplayNotifier.MatchSpawnCompleted = true;
-                GameMatchOverlayStateSync.EnsureServerInstance();
-                yield break;
-            }
+                if (RtsMatchServerSpawnOrchestrator.TryMarkMatchSpawnComplete())
+                {
+                    RtsServerGameplayNotifier.MatchSpawnCompleted = true;
+                    GameMatchOverlayStateSync.EnsureServerInstance();
+                    MpFogVisionSpawnRefresh.SchedulePresentationRetries();
+                    yield break;
+                }
+
+                if (frame == DiagnosticLogFrame)
+                {
+                    RtsMatchServerSpawnOrchestrator.LogSpawnFailureDiagnostics();
+                }
 
                 yield return null;
             }
 
             if (!RtsServerGameplayNotifier.MatchSpawnCompleted)
             {
+                RtsMatchServerSpawnOrchestrator.LogSpawnFailureDiagnostics();
                 Debug.LogError(
-                    "[RtsMatchServerSpawnRunner] Không spawn được CC/worker sau khi vào RtsNet_Game. " +
+                    "[RtsMatchServerSpawnRunner] Không spawn được CC/worker sau khi vào scene trận. " +
                     "Kiểm tra: 2 client Ready, RtsUtsGameSceneSetup spawn points + prefab, Spawn Prefabs trên NetworkManager.");
             }
         }

@@ -16,7 +16,8 @@ namespace GameDevTV.RTS.Commands
             // Right-click: chỉ địch có Owner khác unit đang ra lệnh (không “attack” đồng minh / chính mình).
             if (context.Button == UnityEngine.InputSystem.LowLevel.MouseButton.Right)
             {
-                if (!context.Hit.collider.TryGetComponent(out IDamageable damageable) || !IsHitColliderVisible(context))
+                IDamageable damageable = context.Hit.collider.GetComponentInParent<IDamageable>();
+                if (damageable == null || !IsHitColliderVisible(context))
                 {
                     return false;
                 }
@@ -30,7 +31,8 @@ namespace GameDevTV.RTS.Commands
         public override void Handle(CommandContext context)
         {
             IAttacker attacker = context.Commandable as IAttacker;
-            if (context.Hit.collider.TryGetComponent(out IDamageable damageable) && IsHitColliderVisible(context))
+            IDamageable damageable = context.Hit.collider.GetComponentInParent<IDamageable>();
+            if (damageable != null && IsHitColliderVisible(context))
             {
                 if (damageable.Owner != context.Commandable.Owner)
                 {

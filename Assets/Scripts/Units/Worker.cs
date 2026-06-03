@@ -261,6 +261,23 @@ namespace GameDevTV.RTS.Units
         public void ClearGatherAssignmentLock() => gatherAssignmentLock.Clear();
 
         /// <summary>
+        /// Mục tiêu: Client MP — blackboard Gather không replicate từ server; mirror presentation local.
+        /// Cách hoạt động: Clear lock, gán Supply/Target, Command = Gather (không chạy lại server logic).
+        /// </summary>
+        public void MirrorGatherPresentation(GatherableSupply supply)
+        {
+            if (supply == null || supply.Amount <= 0 || graphAgent == null)
+            {
+                return;
+            }
+
+            gatherAssignmentLock.Clear();
+            gatherAssignmentLock.Assign(supply);
+            SyncGatherBlackboard(supply);
+            graphAgent.SetVariableValue("Command", UnitCommands.Gather);
+        }
+
+        /// <summary>
         /// Mục tiêu: Ngắt hẳn gather BT (blackboard + animation) trước Stop/Build — tránh vừa trừ tài nguyên vừa đào.
         /// Cách hoạt động: Xóa Supply/GatherableSupplies/Target; reset SupplyAmountHeld; tắt isEngaging.
         /// </summary>

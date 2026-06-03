@@ -60,6 +60,7 @@ namespace GameDevTV.RTS.Editor.Netplay
 
         public static void WireInOpenScene()
         {
+            CleanupOrphanFogPresentations();
             EnsureMpPresentationPrerequisites();
 
             MpPlayerPresentationDirector director =
@@ -534,10 +535,75 @@ namespace GameDevTV.RTS.Editor.Netplay
         static void DisableLegacyPlayerViewBinder()
         {
             PlayerViewBinder legacyBinder = Object.FindFirstObjectByType<PlayerViewBinder>(FindObjectsInactive.Include);
-            if (legacyBinder != null)
+            if (legacyBinder == null)
             {
-                legacyBinder.enabled = false;
-                EditorUtility.SetDirty(legacyBinder);
+                return;
+            }
+
+            SerializedObject so = new SerializedObject(legacyBinder);
+            so.FindProperty("presentationPlayer1").objectReferenceValue = FindPresentation(Owner.Player1);
+            so.FindProperty("presentationPlayer2").objectReferenceValue = FindPresentation(Owner.Player2);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            legacyBinder.enabled = false;
+            EditorUtility.SetDirty(legacyBinder);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Xóa Fog P2 trùng / owner AI (Game 2) — FindPresentation và rig chỉ giữ bản human đúng owner.
+        /// Cách hoạt động: Giữ fog gắn MpPlayerPresentationRig; xóa presentation không phải Player1/Player2 hoặc trùng owner.
+        /// </summary>
+        static void CleanupOrphanFogPresentations()
+        {
+            var keep = new System.Collections.Generic.HashSet<FactionFogPresentation>();
+            MpPlayerPresentationRig[] rigs = Object.FindObjectsByType<MpPlayerPresentationRig>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            for (int i = 0; i < rigs.Length; i++)
+            {
+                FactionFogPresentation fog = rigs[i] != null ? rigs[i].FogPresentation : null;
+                if (fog != null)
+                {
+                    keep.Add(fog);
+                }
+            }
+
+            FactionFogPresentation[] all = Object.FindObjectsByType<FactionFogPresentation>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            for (int i = 0; i < all.Length; i++)
+            {
+                FactionFogPresentation presentation = all[i];
+                if (presentation == null)
+                {
+                    continue;
+                }
+
+                Owner owner = presentation.PresentationOwner;
+                if (!HumanFogVisionUtility.EmitsFogVision(owner))
+                {
+                    Debug.LogWarning(
+                        $"[MpPresentation] Xóa fog orphan owner={owner} trên '{presentation.gameObject.name}'.");
+                    Object.DestroyImmediate(presentation.gameObject);
+                    continue;
+                }
+
+                if (keep.Contains(presentation))
+                {
+                    continue;
+                }
+
+                bool hasRigOnRoot = presentation.GetComponent<MpPlayerPresentationRig>() != null;
+                if (hasRigOnRoot)
+                {
+                    keep.Add(presentation);
+                    continue;
+                }
+
+                Debug.LogWarning(
+                    $"[MpPresentation] Xóa fog trùng owner={owner} trên '{presentation.gameObject.name}'.");
+                Object.DestroyImmediate(presentation.gameObject);
             }
         }
 

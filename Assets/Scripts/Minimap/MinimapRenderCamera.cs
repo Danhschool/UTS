@@ -54,8 +54,8 @@ namespace GameDevTV.RTS.Minimap
         }
 
         /// <summary>
-        /// Mục tiêu: Minimap không vẽ layer vision RT dù tên layer đổi trong Project Settings.
-        /// Cách hoạt động: Đọc layer index từ <see cref="OwnerFogVisionLayers"/> cho P1/P2.
+        /// Mục tiêu: Minimap không vẽ layer vision RT (14 + Fog Vision Player2/15 nếu có trong TagManager).
+        /// Cách hoạt động: Đọc <see cref="OwnerFogVisionLayers"/> — human P1/P2 cùng 14; minimap loại trừ thêm 15.
         /// </summary>
         private void ResolveFogVisionLayersFromProject()
         {
@@ -65,11 +65,10 @@ namespace GameDevTV.RTS.Minimap
                 fogVisionLayer = player1Layer;
             }
 
-            int player2Layer = OwnerFogVisionLayers.GetLayer(Owner.Player2);
-            if (player2Layer >= 0)
-            {
-                fogVisionLayerPlayer2 = player2Layer;
-            }
+            int dedicatedP2Vision = OwnerFogVisionLayers.GetDedicatedPlayer2VisionLayerIndex();
+            fogVisionLayerPlayer2 = dedicatedP2Vision >= 0
+                ? dedicatedP2Vision
+                : OwnerFogVisionLayers.GetLayer(Owner.Player2);
         }
 
         private void LateUpdate()

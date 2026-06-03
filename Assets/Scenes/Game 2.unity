@@ -871,6 +871,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 290333082740126989, guid: d55437f9f89fad64792a834766885c9d, type: 3}
+      propertyPath: presentationOwner
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 329568967210149131, guid: d55437f9f89fad64792a834766885c9d, type: 3}
+      propertyPath: factionOwner
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 1889120746218286390, guid: d55437f9f89fad64792a834766885c9d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -912,9 +920,17 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3272289577878407264, guid: d55437f9f89fad64792a834766885c9d, type: 3}
+      propertyPath: m_TargetTexture
+      value: 
+      objectReference: {fileID: 8400000, guid: c2c57d8e612001e4eab90a32ce425337, type: 2}
+    - target: {fileID: 3272289577878407264, guid: d55437f9f89fad64792a834766885c9d, type: 3}
       propertyPath: m_CullingMask.m_Bits
       value: 16384
       objectReference: {fileID: 0}
+    - target: {fileID: 3762379450056402713, guid: d55437f9f89fad64792a834766885c9d, type: 3}
+      propertyPath: m_TargetTexture
+      value: 
+      objectReference: {fileID: 8400000, guid: 6e6d2fd0482f1db47a42b1858c5f629a, type: 2}
     - target: {fileID: 3762379450056402713, guid: d55437f9f89fad64792a834766885c9d, type: 3}
       propertyPath: m_CullingMask.m_Bits
       value: 16384
@@ -938,6 +954,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7843173393854284557, guid: d55437f9f89fad64792a834766885c9d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 17096397}
+    - targetCorrespondingSourceObject: {fileID: 9004438745524096858, guid: d55437f9f89fad64792a834766885c9d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 17096400}
   m_SourcePrefab: {fileID: 100100000, guid: d55437f9f89fad64792a834766885c9d, type: 3}
 --- !u!114 &17096395 stripped
 MonoBehaviour:
@@ -975,6 +994,33 @@ MonoBehaviour:
   playerInput: {fileID: 330585549}
   minimapUnitIcons: {fileID: 0}
   minimapFog: {fileID: 0}
+--- !u!1 &17096398 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9004438745524096858, guid: d55437f9f89fad64792a834766885c9d, type: 3}
+  m_PrefabInstance: {fileID: 17096394}
+  m_PrefabAsset: {fileID: 0}
+--- !u!20 &17096399 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 3272289577878407264, guid: d55437f9f89fad64792a834766885c9d, type: 3}
+  m_PrefabInstance: {fileID: 17096394}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &17096400
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 17096398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eed0152dab9bebf4e949cd9c12a88bc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Player.FactionVisibilityUpdater
+  visionFogCamera: {fileID: 17096399}
+  localHumanOwnerService: {fileID: 0}
+  visionReadIntervalFrames: 2
+  hideablesUpdatedPerFrame: 250
+  pruneHideablesIntervalFrames: 90
 --- !u!1001 &24435788
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13041,7 +13087,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Player.PlayerViewBinder
   localHumanOwnerService: {fileID: 330585553}
   presentationPlayer1: {fileID: 1961407892}
-  presentationPlayer2: {fileID: 2261031102472619864}
+  presentationPlayer2: {fileID: 17096395}
   visibilityUpdater: {fileID: 7206060467835035833}
   hudBinder: {fileID: 330585555}
 --- !u!114 &330585552
@@ -78899,90 +78945,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 09948da8c6adb9c4e97d51ef7083b03e, type: 3}
---- !u!114 &2261031102472619864 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 290333082740126989, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-  m_PrefabInstance: {fileID: 7016014339019920140}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6b9bda309cbaf984d9f5dc81ed16ed79, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Player.FactionFogPresentation
---- !u!1001 &7016014339019920140
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 290333082740126989, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: presentationOwner
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 329568967210149131, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: factionOwner
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 1889120746218286390, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1889120746218286390, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1889120746218286390, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1889120746218286390, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1889120746218286390, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1889120746218286390, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1889120746218286390, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1889120746218286390, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1889120746218286390, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1889120746218286390, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3272289577878407264, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_CullingMask.m_Bits
-      value: 32768
-      objectReference: {fileID: 0}
-    - target: {fileID: 7843173393854284557, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_Name
-      value: Fog of War P2
-      objectReference: {fileID: 0}
-    - target: {fileID: 7843173393854284557, guid: d55437f9f89fad64792a834766885c9d, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: d55437f9f89fad64792a834766885c9d, type: 3}
 --- !u!1001 &7206060467835035830
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -79167,7 +79129,6 @@ SceneRoots:
   - {fileID: 1918564347251628585}
   - {fileID: 1339117016}
   - {fileID: 7206060467835035830}
-  - {fileID: 7016014339019920140}
   - {fileID: 17096394}
   - {fileID: 1124118815}
   - {fileID: 184842336}
