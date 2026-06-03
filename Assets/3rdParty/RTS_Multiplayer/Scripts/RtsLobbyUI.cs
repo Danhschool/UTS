@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Mirror;
 using UnityEngine;
 using UnityEngine.UI;
@@ -5,55 +6,158 @@ using UnityEngine.UI;
 namespace ProjectRTS.Netplay
 {
     /// <summary>
-    /// Mục tiêu: UI offline/lobby — đặt tên, Host/Client, địa chỉ, Ready, nút bắt đầu (host).
-    /// Cách hoạt động: Gán tên vào RtsUniqueNameAuthenticator trước StartHost/StartClient; Ready gửi Command qua RtsLobbyPlayer.
+    /// SRP: Lobby MP trên SSScene — tạo phòng Host, client join qua scrollview, Ready/Start, không chat.
     /// </summary>
     public class RtsLobbyUI : MonoBehaviour
     {
         public static RtsLobbyUI Instance { get; private set; }
 
-        [SerializeField] InputField networkAddressInput;
-        [SerializeField] InputField usernameInput;
-        [SerializeField] Button hostButton;
-        [SerializeField] Button clientButton;
+        [Header("Room list")]
+        [SerializeField] Transform roomListContent;
+        [SerializeField] GameObject roomEntryPrefab;
+
+        [Header("Actions")]
         [SerializeField] Button readyButton;
         [SerializeField] Button startGameButton;
-        [SerializeField] Text statusText;
+        [SerializeField] GameObject readyHoverPanel;
+        [SerializeField] Image readyButtonImage;
+        [SerializeField] Color readyActiveColor = Color.white;
+        [SerializeField] Color readyInactiveColor = Color.black;
+        [SerializeField] Image startGameButtonImage;
+        [SerializeField] Color startEnabledColor = Color.white;
+        [SerializeField] Color startDisabledColor = Color.black;
+
+        ColorBlock readyButtonDefaultColors;
+
+        [Header("Network")]
         [SerializeField] RtsUniqueNameAuthenticator authenticator;
-        [SerializeField] GameObject loginPanel;
-        [SerializeField] GameObject lobbyPanel;
+        [SerializeField] RtsLobbyRoomBroadcast roomBroadcast;
+
+        [Header("Room")]
+        [SerializeField] string defaultRoomName = "Phòng 1";
+
+        readonly Dictionary<string, RtsLobbyRoomEntryView> roomEntries = new();
+        readonly List<GameObject> runtimeEntryObjects = new();
 
         RtsNetworkManager Net => NetworkManager.singleton as RtsNetworkManager;
         RtsLobbyPlayer _localPlayer;
+        string _localHostAddress;
+        bool _isHostingRoom;
 
-        string _cachedAddress = "localhost";
+        public bool IsInNetworkSession => NetworkClient.active || NetworkServer.active;
+        public bool IsHost => NetworkServer.active && NetworkClient.isConnected;
 
         void Awake()
         {
+            ResolveRoomListContentReference();
             Instance = this;
-            if (Net != null && string.IsNullOrWhiteSpace(Net.networkAddress))
-                Net.networkAddress = _cachedAddress;
-            WireLobbyButtons();
+            if (roomBroadcast == null)
+            {
+                roomBroadcast = GetComponent<RtsLobbyRoomBroadcast>();
+            }
+
+            if (roomBroadcast == null)
+            {
+                roomBroadcast = gameObject.AddComponent<RtsLobbyRoomBroadcast>();
+            }
+
+            WireActionButtons();
+            CacheReadyButtonDefaults();
+            ResolveReadyHoverPanelReference();
+            roomBroadcast.RoomDiscovered += OnRoomDiscovered;
         }
 
-        /// <summary>
-        /// Mục tiêu: Đảm bảo Host/Client/Ready/Bắt đầu trận luôn có callback — file scene có thể không lưu UnityEvent PersistentCall từ lúc Generate.
-        /// Cách hoạt động: Xóa listener cũ (nếu có) rồi AddListener tới các hàm public của cùng component.
-        /// </summary>
-        void WireLobbyButtons()
+        void ResolveReadyHoverPanelReference()
         {
-            if (hostButton != null)
+            if (readyButton == null)
             {
-                hostButton.onClick.RemoveAllListeners();
-                hostButton.onClick.AddListener(OnClickHost);
+                return;
             }
 
-            if (clientButton != null)
+            if (readyHoverPanel != null && readyHoverPanel != readyButton.gameObject)
             {
-                clientButton.onClick.RemoveAllListeners();
-                clientButton.onClick.AddListener(OnClickClient);
+                return;
             }
 
+            Transform hoverChild = readyButton.transform.Find("Hover Panel");
+            if (hoverChild == null)
+            {
+                for (int i = 0; i < readyButton.transform.childCount; i++)
+                {
+                    Transform child = readyButton.transform.GetChild(i);
+                    if (child != null && child.name.Contains("Hover"))
+                    {
+                        hoverChild = child;
+                        break;
+                    }
+                }
+            }
+
+            readyHoverPanel = hoverChild != null && hoverChild.gameObject != readyButton.gameObject
+                ? hoverChild.gameObject
+                : null;
+        }
+
+        void CacheReadyButtonDefaults()
+        {
+            if (readyButton != null)
+            {
+                readyButtonDefaultColors = readyButton.colors;
+            }
+
+            if (readyButtonImage == null && readyButton != null)
+            {
+                readyButtonImage = readyButton.GetComponent<Image>();
+            }
+
+            if (startGameButtonImage == null && startGameButton != null)
+            {
+                startGameButtonImage = startGameButton.GetComponent<Image>();
+            }
+        }
+
+        void OnEnable()
+        {
+            UnityMainThreadDispatcher.EnsureInitialized();
+            ResolveRoomListContentReference();
+            PrepareRoomListContent();
+            roomBroadcast.StartListening();
+            if (_isHostingRoom || NetworkClient.active || NetworkServer.active)
+            {
+                SetActionButtonsVisible(true);
+                UpdateReadyHoverLock();
+                UpdateStartButton();
+            }
+            else
+            {
+                ResetLobbyVisualState();
+            }
+        }
+
+        void OnDisable()
+        {
+            roomBroadcast.StopListening();
+        }
+
+        void OnDestroy()
+        {
+            roomBroadcast.RoomDiscovered -= OnRoomDiscovered;
+            roomBroadcast.StopAdvertising();
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
+
+        void Update()
+        {
+            RefreshAllRoomEntries();
+            UpdateReadyHoverLock();
+            UpdateStartButton();
+        }
+
+        void WireActionButtons()
+        {
             if (readyButton != null)
             {
                 readyButton.onClick.RemoveAllListeners();
@@ -65,137 +169,308 @@ namespace ProjectRTS.Netplay
                 startGameButton.onClick.RemoveAllListeners();
                 startGameButton.onClick.AddListener(OnClickStartGame);
             }
-        }
 
-        void Start()
-        {
-            if (networkAddressInput != null)
-            {
-                if (Net != null)
-                    networkAddressInput.text = Net.networkAddress;
-                networkAddressInput.onValueChanged.AddListener(OnAddressChanged);
-            }
-
-            if (usernameInput != null)
-                usernameInput.onValueChanged.AddListener(OnUsernameChanged);
-
-            ToggleLoginButtons();
-            ShowLoginPanel(true);
-        }
-
-        void OnDestroy()
-        {
-            if (Instance == this)
-                Instance = null;
-        }
-
-        void OnAddressChanged(string v)
-        {
-            if (string.IsNullOrWhiteSpace(v))
-            {
-                _cachedAddress = string.Empty;
-                return;
-            }
-
-            _cachedAddress = NormalizeLoopbackAddress(v);
-            Net?.SetNetworkAddress(_cachedAddress);
-            if (networkAddressInput != null && Net != null && networkAddressInput.text != Net.networkAddress)
-                networkAddressInput.text = Net.networkAddress;
+            SetActionButtonsVisible(false);
         }
 
         /// <summary>
-        /// Mục tiêu: Chuẩn hóa ô địa chỉ để tránh lỗi gõ phổ biến (126.0.0.1 thay vì 127.0.0.1).
-        /// Cách hoạt động: Trim; nếu rỗng dùng localhost; nếu đúng chuỗi nhầm thì đổi sang 127.0.0.1.
+        /// Mục tiêu: Host tạo phòng từ SSScene (nút Tạo phòng).
+        /// Cách hoạt động: Gán tên+H, IP LAN tự động, StartHost và quảng bá phòng qua UDP.
         /// </summary>
-        static string NormalizeLoopbackAddress(string v)
+        public void CreateHostRoom()
         {
-            if (string.IsNullOrWhiteSpace(v))
-                return "localhost";
-            string t = v.Trim();
-            if (t == "126.0.0.1")
-                return "127.0.0.1";
-            return t;
-        }
+            if (NetworkClient.active || NetworkServer.active)
+            {
+                Debug.LogWarning("[RtsLobbyUI] Đã có session mạng — bỏ qua CreateHostRoom.");
+                return;
+            }
 
-        void OnUsernameChanged(string _)
-        {
-            ToggleLoginButtons();
-        }
+            if (authenticator != null)
+            {
+                authenticator.playerName = RtsLobbyPlayerNameResolver.ForHost();
+            }
 
-        void ToggleLoginButtons()
-        {
-            bool ok = usernameInput != null && !string.IsNullOrWhiteSpace(usernameInput.text);
-            if (hostButton != null)
-                hostButton.interactable = ok;
-            if (clientButton != null)
-                clientButton.interactable = ok;
-        }
-
-        public void OnClickHost()
-        {
-            if (authenticator != null && usernameInput != null)
-                authenticator.playerName = usernameInput.text.Trim();
-            RefreshAddressFromUi();
-            if (string.IsNullOrWhiteSpace(_cachedAddress))
-                _cachedAddress = "localhost";
-            Net?.SetNetworkAddress(_cachedAddress);
+            _localHostAddress = RtsNetworkAddressUtility.GetLoopbackOrLan();
+            Net?.SetNetworkAddress(_localHostAddress);
             Net?.StartHost();
-            OnConnectedUi();
-        }
 
-        public void OnClickClient()
-        {
-            if (authenticator != null && usernameInput != null)
-                authenticator.playerName = usernameInput.text.Trim();
-            RefreshAddressFromUi();
-            if (string.IsNullOrWhiteSpace(_cachedAddress))
-                ApplyDefaultClientAddress();
-            Net?.SetNetworkAddress(_cachedAddress);
-            Net?.StartClient();
-            OnConnectedUi();
-        }
-
-        /// <summary>
-        /// Mục tiêu: Tự điền IP mặc định khi bấm Client mà ô địa chỉ đang trống.
-        /// Cách hoạt động: Dùng loopback 127.0.0.1 cho test local và đồng bộ lại InputField/NetworkManager.
-        /// </summary>
-        void ApplyDefaultClientAddress()
-        {
-            _cachedAddress = "127.0.0.1";
-            if (networkAddressInput != null)
-                networkAddressInput.text = _cachedAddress;
-        }
-
-        /// <summary>
-        /// Mục tiêu: Đồng bộ địa chỉ từ ô nhập ngay trước khi Host/Client để bắt lỗi gõ 126.0.0.1.
-        /// Cách hoạt động: Chuẩn hóa chuỗi, cập nhật NetworkManager và sửa text ô nhập nếu đã sửa loopback.
-        /// </summary>
-        void RefreshAddressFromUi()
-        {
-            if (networkAddressInput == null)
-                return;
-            if (string.IsNullOrWhiteSpace(networkAddressInput.text))
+            _isHostingRoom = true;
+            roomBroadcast.StartAdvertising(defaultRoomName, _localHostAddress);
+            UpsertLocalHostRoomEntry();
+            SetActionButtonsVisible(true);
+            if (readyButton == null)
             {
-                _cachedAddress = string.Empty;
+                Debug.LogWarning("[RtsLobbyUI] readyButton chưa gán — chạy ProjectRTS/Pregame/Wire SSScene MP Lobby UI.", this);
+            }
+
+            Debug.Log($"[RtsLobbyUI] Host tạo phòng '{defaultRoomName}' tại {_localHostAddress}.", this);
+        }
+
+        void ResolveRoomListContentReference()
+        {
+            if (roomListContent != null)
+            {
                 return;
             }
 
-            _cachedAddress = NormalizeLoopbackAddress(networkAddressInput.text);
-            if (networkAddressInput.text.Trim() != _cachedAddress)
-                networkAddressInput.text = _cachedAddress;
+            ScrollRect scrollRect = GetComponentInChildren<ScrollRect>(true);
+            if (scrollRect != null && scrollRect.content != null)
+            {
+                roomListContent = scrollRect.content;
+            }
         }
 
-        void OnConnectedUi()
+        void OnRoomDiscovered(string roomName, string hostAddress)
         {
-            ShowLoginPanel(false);
-            if (statusText != null)
-                statusText.text = "Lobby — chat và bấm Ready khi sẵn sàng.";
+            if (_isHostingRoom || NetworkClient.active || NetworkServer.active)
+            {
+                return;
+            }
+
+            string key = BuildRoomKey(roomName, hostAddress);
+            if (roomEntries.ContainsKey(key))
+            {
+                RefreshAllRoomEntries();
+                return;
+            }
+
+            Debug.Log($"[RtsLobbyUI] Phát hiện phòng '{roomName}' tại {hostAddress}.", this);
+            CreateRoomEntry(
+                key,
+                BuildRoomStatusText(roomName, "—", false, false, "—", false),
+                () => JoinDiscoveredRoom(roomName, hostAddress),
+                interactable: true);
         }
 
         /// <summary>
-        /// Mục tiêu: Ẩn canvas lobby khi đã vào RtsNet_Game.
-        /// Cách hoạt động: Tắt mọi RtsLobbyUI trong scene (kể cả khi Instance null).
+        /// Mục tiêu: Xóa button phòng tĩnh cũ trong Content (Button_Room...) trước khi spawn runtime.
+        /// Cách hoạt động: Giữ template prefab (ẩn), xóa mọi child không phải RoomEntry_ runtime.
         /// </summary>
+        void PrepareRoomListContent()
+        {
+            if (roomListContent == null)
+            {
+                return;
+            }
+
+            for (int i = roomListContent.childCount - 1; i >= 0; i--)
+            {
+                Transform child = roomListContent.GetChild(i);
+                if (child == null)
+                {
+                    continue;
+                }
+
+                if (child.name.StartsWith("RoomEntry_", System.StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (roomEntryPrefab != null && child.gameObject == roomEntryPrefab)
+                {
+                    roomEntryPrefab.SetActive(false);
+                    continue;
+                }
+
+                if (Application.isPlaying)
+                {
+                    Destroy(child.gameObject);
+                }
+            }
+        }
+
+        void JoinDiscoveredRoom(string roomName, string hostAddress)
+        {
+            if (NetworkClient.active || NetworkServer.active)
+            {
+                return;
+            }
+
+            if (authenticator != null)
+            {
+                authenticator.playerName = RtsLobbyPlayerNameResolver.ForClient();
+            }
+
+            string connectAddress = RtsNetworkAddressUtility.ResolveClientConnectAddress(hostAddress);
+            Net?.SetNetworkAddress(connectAddress);
+            Net?.StartClient();
+            SetActionButtonsVisible(true);
+            Debug.Log($"[RtsLobbyUI] Client join phòng '{roomName}' tại {connectAddress} (broadcast: {hostAddress}).", this);
+        }
+
+        void UpsertLocalHostRoomEntry()
+        {
+            string key = BuildRoomKey(defaultRoomName, _localHostAddress);
+            CreateRoomEntry(
+                key,
+                BuildRoomStatusText(defaultRoomName, RtsLobbyPlayerNameResolver.ForHost(), false, false, "—", false),
+                onClick: null,
+                interactable: false);
+        }
+
+        void CreateRoomEntry(string key, string text, UnityEngine.Events.UnityAction onClick, bool interactable)
+        {
+            if (roomListContent == null)
+            {
+                Debug.LogWarning("[RtsLobbyUI] Thiếu roomListContent.", this);
+                return;
+            }
+
+            if (roomEntries.TryGetValue(key, out RtsLobbyRoomEntryView existing))
+            {
+                existing.Configure(key, text, onClick, interactable);
+                return;
+            }
+
+            GameObject instance = roomEntryPrefab != null
+                ? Instantiate(roomEntryPrefab, roomListContent)
+                : CreateFallbackRoomEntryObject();
+
+            instance.name = $"RoomEntry_{key}";
+            RtsLobbyRoomEntryView view = instance.GetComponent<RtsLobbyRoomEntryView>();
+            if (view == null)
+            {
+                view = instance.AddComponent<RtsLobbyRoomEntryView>();
+            }
+
+            view.Configure(key, text, onClick, interactable);
+            roomEntries[key] = view;
+            runtimeEntryObjects.Add(instance);
+        }
+
+        GameObject CreateFallbackRoomEntryObject()
+        {
+            GameObject root = new GameObject("RoomEntry", typeof(RectTransform), typeof(Image), typeof(Button));
+            root.transform.SetParent(roomListContent, false);
+
+            RectTransform rect = root.GetComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(420f, 96f);
+
+            GameObject labelGo = new GameObject("Label", typeof(RectTransform));
+            labelGo.transform.SetParent(root.transform, false);
+            Text label = labelGo.AddComponent<Text>();
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = 16;
+            label.alignment = TextAnchor.UpperLeft;
+            label.color = Color.white;
+            label.supportRichText = false;
+
+            RectTransform labelRect = labelGo.GetComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = new Vector2(12f, 8f);
+            labelRect.offsetMax = new Vector2(-12f, -8f);
+
+            return root;
+        }
+
+        void RefreshAllRoomEntries()
+        {
+            CollectSlotStates(
+                out string p1Name,
+                out bool p1Ready,
+                out bool p2Connected,
+                out string p2Name,
+                out bool p2Ready);
+
+            foreach (KeyValuePair<string, RtsLobbyRoomEntryView> pair in roomEntries)
+            {
+                string roomName = ExtractRoomNameFromKey(pair.Key);
+                pair.Value.SetDisplayText(
+                    BuildRoomStatusText(roomName, p1Name, p1Ready, p2Connected, p2Name, p2Ready));
+            }
+        }
+
+        static void CollectSlotStates(
+            out string p1Name,
+            out bool p1Ready,
+            out bool p2Connected,
+            out string p2Name,
+            out bool p2Ready)
+        {
+            p1Name = "—";
+            p2Name = "—";
+            p1Ready = false;
+            p2Ready = false;
+            p2Connected = false;
+
+            if (NetworkServer.active)
+            {
+                foreach (KeyValuePair<int, NetworkConnectionToClient> pair in NetworkServer.connections)
+                {
+                    NetworkConnectionToClient connection = pair.Value;
+                    if (connection?.identity == null)
+                    {
+                        continue;
+                    }
+
+                    ApplyLobbyPlayerState(connection.identity.GetComponent<RtsLobbyPlayer>(),
+                        ref p1Name, ref p1Ready, ref p2Connected, ref p2Name, ref p2Ready);
+                }
+
+                return;
+            }
+
+            if (!NetworkClient.active)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<uint, NetworkIdentity> pair in NetworkClient.spawned)
+            {
+                ApplyLobbyPlayerState(pair.Value.GetComponent<RtsLobbyPlayer>(),
+                    ref p1Name, ref p1Ready, ref p2Connected, ref p2Name, ref p2Ready);
+            }
+        }
+
+        static void ApplyLobbyPlayerState(
+            RtsLobbyPlayer player,
+            ref string p1Name,
+            ref bool p1Ready,
+            ref bool p2Connected,
+            ref string p2Name,
+            ref bool p2Ready)
+        {
+            if (player == null)
+            {
+                return;
+            }
+
+            if (player.PlayerTeamIndex <= 0)
+            {
+                p1Name = player.DisplayName;
+                p1Ready = player.IsReady;
+                return;
+            }
+
+            p2Connected = true;
+            p2Name = player.DisplayName;
+            p2Ready = player.IsReady;
+        }
+
+        static string BuildRoomStatusText(
+            string roomName,
+            string p1Name,
+            bool p1Ready,
+            bool p2Connected,
+            string p2Name,
+            bool p2Ready)
+        {
+            string p1Status = p1Ready ? "SS" : string.Empty;
+            string p2Status = p2Ready ? "SS" : string.Empty;
+            string p2DisplayName = p2Connected ? p2Name : "—";
+            return $"{roomName}\nP1 | {p1Name} | {p1Status}\nP2 | {p2DisplayName} | {p2Status}";
+        }
+
+        static string BuildRoomKey(string roomName, string hostAddress) =>
+            $"{roomName}|{hostAddress}";
+
+        static string ExtractRoomNameFromKey(string key)
+        {
+            int split = key.IndexOf('|');
+            return split > 0 ? key.Substring(0, split) : key;
+        }
+
         public static void HideLobbyCanvasForGameplay()
         {
             RtsLobbyUI[] all = Object.FindObjectsByType<RtsLobbyUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -210,109 +485,181 @@ namespace ProjectRTS.Netplay
 
         public void ShowLoginAgain()
         {
-            ShowLoginPanel(true);
-            if (usernameInput != null)
+            ResetLobbyVisualState();
+            ClearRoomEntries();
+            _isHostingRoom = false;
+            _localPlayer = null;
+            roomBroadcast.StopAdvertising();
+        }
+
+        void ResetLobbyVisualState()
+        {
+            SetActionButtonsVisible(false);
+            ApplyReadyHoverVisual(false);
+        }
+
+        void ClearRoomEntries()
+        {
+            roomEntries.Clear();
+            for (int i = runtimeEntryObjects.Count - 1; i >= 0; i--)
             {
-                usernameInput.text = "";
-                usernameInput.ActivateInputField();
+                if (runtimeEntryObjects[i] != null)
+                {
+                    Destroy(runtimeEntryObjects[i]);
+                }
             }
-            ToggleLoginButtons();
-            if (statusText != null)
-                statusText.text = "Đã ngắt kết nối.";
+
+            runtimeEntryObjects.Clear();
         }
 
-        void ShowLoginPanel(bool login)
+        public void OnLocalPlayerAssigned(RtsLobbyPlayer player)
         {
-            if (loginPanel != null)
-                loginPanel.SetActive(login);
-            if (lobbyPanel != null)
-                lobbyPanel.SetActive(!login);
-        }
-
-        public void OnLocalPlayerAssigned(RtsLobbyPlayer p)
-        {
-            _localPlayer = p;
-            RtsLobbyChat.SetLocalNameForChat(p.DisplayName);
+            _localPlayer = player;
+            SetActionButtonsVisible(true);
             if (readyButton != null)
+            {
                 readyButton.interactable = true;
+            }
+
+            UpdateStartButton();
+            RefreshAllRoomEntries();
+        }
+
+        public void OnLobbyPlayerStateChanged()
+        {
+            RefreshAllRoomEntries();
             UpdateStartButton();
         }
 
         public void OnClickReady()
         {
             if (_localPlayer == null)
+            {
                 return;
+            }
+
             bool next = !_localPlayer.IsReady;
             _localPlayer.CmdSetReady(next);
+        }
+
+        void UpdateReadyHoverLock()
+        {
+            if (_localPlayer == null)
+            {
+                ApplyReadyHoverVisual(false);
+                return;
+            }
+
+            ApplyReadyHoverVisual(_localPlayer.IsReady);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Giữ trạng thái hover/sáng của nút Ready khi đã bật sẵn sàng.
+        /// Cách hoạt động: Bật panel hover (nếu có) và đổi màu Button/Image theo trạng thái ready.
+        /// </summary>
+        void ApplyReadyHoverVisual(bool readyActive)
+        {
+            if (readyHoverPanel != null
+                && readyButton != null
+                && readyHoverPanel != readyButton.gameObject)
+            {
+                readyHoverPanel.SetActive(readyActive);
+            }
+
             if (readyButton != null)
             {
-                var label = readyButton.GetComponentInChildren<Text>();
-                if (label != null)
-                    label.text = next ? "Hủy Ready" : "Ready";
+                ColorBlock colors = readyButtonDefaultColors;
+                if (readyActive)
+                {
+                    colors.normalColor = readyButtonDefaultColors.highlightedColor;
+                    colors.selectedColor = readyButtonDefaultColors.highlightedColor;
+                }
+
+                readyButton.colors = colors;
+            }
+
+            if (readyButtonImage != null)
+            {
+                readyButtonImage.color = readyActive ? readyActiveColor : readyInactiveColor;
             }
         }
 
         public void OnClickStartGame()
         {
-            Net?.ServerTryStartMatch();
-        }
+            if (!IsHost)
+            {
+                return;
+            }
 
-        void Update()
-        {
-            UpdateStartButton();
+            if (RtsLobbyRoomMapSync.TryGetHostLobbyPlayer(out RtsLobbyPlayer hostPlayer))
+            {
+                hostPlayer.ApplyLobbyMapOnServer(
+                    RtsLobbyRoomMapSession.PendingIndex,
+                    RtsLobbyRoomMapSession.PendingSceneName);
+            }
+
+            Net?.ServerTryStartMatch();
         }
 
         void UpdateStartButton()
         {
             if (startGameButton == null || Net == null)
+            {
                 return;
-            bool host = NetworkServer.active && NetworkClient.isConnected;
-            startGameButton.interactable = host && NetIsReadyForMatch();
+            }
+
+            bool host = IsHost;
+            bool canStart = host && NetIsReadyForMatch();
+            startGameButton.interactable = canStart;
+
+            if (startGameButtonImage != null)
+            {
+                if (!host)
+                {
+                    startGameButtonImage.color = startDisabledColor;
+                    return;
+                }
+
+                startGameButtonImage.color = canStart ? startEnabledColor : startDisabledColor;
+            }
         }
 
         bool NetIsReadyForMatch()
         {
-            if (!NetworkServer.active)
-                return false;
-            if (NetworkServer.connections.Count < 2)
-                return false;
-            foreach (var kvp in NetworkServer.connections)
+            if (!NetworkServer.active || NetworkServer.connections.Count < 2)
             {
-                var c = kvp.Value;
-                if (c?.identity == null)
-                    return false;
-                var lp = c.identity.GetComponent<RtsLobbyPlayer>();
-                if (lp == null || !lp.IsReady)
-                    return false;
+                return false;
             }
+
+            foreach (KeyValuePair<int, NetworkConnectionToClient> pair in NetworkServer.connections)
+            {
+                NetworkConnectionToClient connection = pair.Value;
+                if (connection?.identity == null)
+                {
+                    return false;
+                }
+
+                RtsLobbyPlayer lobbyPlayer = connection.identity.GetComponent<RtsLobbyPlayer>();
+                if (lobbyPlayer == null || !lobbyPlayer.IsReady)
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
-#if UNITY_EDITOR
-        /// <summary>Chỉ gọi từ Editor khi sinh scene.</summary>
-        public void EditorAssignUi(
-            InputField networkAddress,
-            InputField username,
-            Button host,
-            Button client,
-            Button ready,
-            Button startGame,
-            Text status,
-            RtsUniqueNameAuthenticator auth,
-            GameObject login,
-            GameObject lobby)
+        void SetActionButtonsVisible(bool visible)
         {
-            networkAddressInput = networkAddress;
-            usernameInput = username;
-            hostButton = host;
-            clientButton = client;
-            readyButton = ready;
-            startGameButton = startGame;
-            statusText = status;
-            authenticator = auth;
-            loginPanel = login;
-            lobbyPanel = lobby;
+            if (readyButton != null)
+            {
+                readyButton.gameObject.SetActive(visible);
+            }
+
+            if (startGameButton != null)
+            {
+                startGameButton.gameObject.SetActive(visible);
+            }
         }
-#endif
     }
 }

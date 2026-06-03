@@ -35,11 +35,31 @@ namespace GameDevTV.RTS.UI.Pregame
 
         UiExclusiveSelectGroup _mapSelectGroup;
         PregameMapEntry[] _activeMaps = Array.Empty<PregameMapEntry>();
+        bool _interactionEnabled = true;
+        bool _suppressSelectionBroadcast;
 
         public event Action<int> SelectionChanged;
 
         public int SelectedIndex { get; private set; }
         public int MapCount => _activeMaps.Length;
+
+        /// <summary>
+        /// Mục tiêu: Bỏ qua gói SyncVar tạm (index/scene lệch frame) trước khi áp UI client.
+        /// Cách hoạt động: So sánh scene tại index trong catalog với scene host gửi (đã normalize).
+        /// </summary>
+        public bool IsIndexScenePairConsistent(int index, string gameplaySceneName)
+        {
+            if (_activeMaps.Length == 0 || string.IsNullOrWhiteSpace(gameplaySceneName))
+            {
+                return false;
+            }
+
+            index = Mathf.Clamp(index, 0, _activeMaps.Length - 1);
+            string catalogScene = ProjectRTS.Netplay.RtsNetSceneUtility.NormalizeSceneName(
+                _activeMaps[index].gameplaySceneName);
+            string hostScene = ProjectRTS.Netplay.RtsNetSceneUtility.NormalizeSceneName(gameplaySceneName);
+            return catalogScene == hostScene;
+        }
 
         /// <summary>
         /// Mục tiêu: Cho controller đọc scene gameplay của map đang chọn khi bấm Start.
@@ -70,6 +90,7 @@ namespace GameDevTV.RTS.UI.Pregame
             SpawnMapButtons();
             RefreshSelectGroup();
             WireSpawnedMapButtons();
+            ApplyInteractionStateToItems();
             ApplySelectedMapPresentation(0);
             SelectedIndex = 0;
         }
@@ -104,11 +125,82 @@ namespace GameDevTV.RTS.UI.Pregame
             }
         }
 
+        /// <summary>
+        /// Mục tiêu: Khóa/mở chọn map (client trong phòng chỉ xem map host chọn).
+        /// Cách hoạt động: Tắt interactable và đổi màu nút map theo trạng thái enabled.
+        /// </summary>
+        public void SetInteractionEnabled(bool enabled)
+        {
+            _interactionEnabled = enabled;
+            ApplyInteractionStateToItems();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client áp map host chọn qua mạng mà không gửi lại server.
+        /// Cách hoạt động: Select exclusive group với notify=false và refresh preview.
+        /// </summary>
+        public void ApplyNetworkSelection(int index)
+        {
+            if (_mapSelectGroup == null || _activeMaps.Length == 0)
+            {
+                return;
+            }
+
+            index = Mathf.Clamp(index, 0, _activeMaps.Length - 1);
+            _suppressSelectionBroadcast = true;
+            _mapSelectGroup.Select(index, notify: false);
+            SelectedIndex = index;
+            ApplySelectedMapPresentation(index);
+            _suppressSelectionBroadcast = false;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Fallback khi index khác giữa hai máy nhưng scene name trùng catalog.
+        /// Cách hoạt động: Tìm index theo gameplaySceneName rồi gọi ApplyNetworkSelection.
+        /// </summary>
+        public void ApplyNetworkSelectionByScene(string gameplaySceneName)
+        {
+            if (_activeMaps.Length == 0 || string.IsNullOrWhiteSpace(gameplaySceneName))
+            {
+                return;
+            }
+
+            string normalized = ProjectRTS.Netplay.RtsNetSceneUtility.NormalizeSceneName(gameplaySceneName);
+            for (int i = 0; i < _activeMaps.Length; i++)
+            {
+                string catalogScene = ProjectRTS.Netplay.RtsNetSceneUtility.NormalizeSceneName(_activeMaps[i].gameplaySceneName);
+                if (catalogScene == normalized)
+                {
+                    ApplyNetworkSelection(i);
+                    return;
+                }
+            }
+        }
+
+        void ApplyInteractionStateToItems()
+        {
+            if (mapListContent == null)
+            {
+                return;
+            }
+
+            PregameMapSelectItemView[] itemViews =
+                mapListContent.GetComponentsInChildren<PregameMapSelectItemView>(false);
+
+            for (int i = 0; i < itemViews.Length; i++)
+            {
+                itemViews[i].SetInteractionEnabled(_interactionEnabled);
+            }
+        }
+
         void HandleMapSelectionChanged(int index)
         {
             SelectedIndex = index;
             ApplySelectedMapPresentation(index);
-            SelectionChanged?.Invoke(index);
+            if (!_suppressSelectionBroadcast)
+            {
+                SelectionChanged?.Invoke(SelectedIndex);
+            }
         }
 
         void ApplySelectedMapPresentation(int index)

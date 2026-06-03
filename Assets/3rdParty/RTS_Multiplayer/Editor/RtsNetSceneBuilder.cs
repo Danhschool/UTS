@@ -126,11 +126,11 @@ namespace ProjectRTS.Netplay.Editor
             nm.transport = tp;
             nm.playerPrefab = playerPrefab;
             nm.unitPrefab = unitPrefab;
-            nm.lobbyScene = "RtsNet_Lobby";
-            nm.gameScene = "RtsNet_Game";
+            nm.lobbyScene = "SSScene";
+            nm.gameScene = "Game 1";
             nm.maxConnections = 2;
             nm.networkAddress = "localhost";
-            nm.offlineScene = "RtsNet_Lobby";
+            nm.offlineScene = "SSScene";
             nm.onlineScene = "";
             nm.spawnPrefabs.Add(unitPrefab);
 
@@ -151,114 +151,82 @@ namespace ProjectRTS.Netplay.Editor
             canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             canvasGo.AddComponent<GraphicRaycaster>();
 
-            var loginPanel = CreatePanel(canvasGo.transform, "LoginPanel", out RectTransform loginRt);
-            loginRt.anchorMin = new Vector2(0.35f, 0.35f);
-            loginRt.anchorMax = new Vector2(0.65f, 0.65f);
-            loginRt.offsetMin = Vector2.zero;
-            loginRt.offsetMax = Vector2.zero;
+            var mpPanel = CreatePanel(canvasGo.transform, "MP Panel", out RectTransform mpRt);
+            mpRt.anchorMin = new Vector2(0.1f, 0.1f);
+            mpRt.anchorMax = new Vector2(0.9f, 0.9f);
+            mpRt.offsetMin = Vector2.zero;
+            mpRt.offsetMax = Vector2.zero;
 
-            var addr = CreateInputField(loginPanel.transform, "AddressInput", "127.0.0.1");
-            var user = CreateInputField(loginPanel.transform, "UsernameInput", "Player");
-            var hostBtn = CreateButton(loginPanel.transform, "HostButton", "Host");
-            var clientBtn = CreateButton(loginPanel.transform, "ClientButton", "Client");
+            Transform roomListContent = CreateScrollViewContent(mpPanel.transform);
 
-            var lobbyPanel = CreatePanel(canvasGo.transform, "LobbyPanel", out RectTransform lobbyRt);
-            lobbyRt.anchorMin = new Vector2(0.1f, 0.1f);
-            lobbyRt.anchorMax = new Vector2(0.9f, 0.9f);
-            lobbyRt.offsetMin = Vector2.zero;
-            lobbyRt.offsetMax = Vector2.zero;
-            lobbyPanel.SetActive(false);
-
-            var chatHistory = CreateText(lobbyPanel.transform, "ChatHistory", "", 14, TextAnchor.LowerLeft);
-            var chatRt = chatHistory.rectTransform;
-            chatRt.anchorMin = new Vector2(0f, 0.15f);
-            chatRt.anchorMax = new Vector2(1f, 1f);
-            chatRt.offsetMin = new Vector2(8f, 8f);
-            chatRt.offsetMax = new Vector2(-8f, -8f);
-
-            var chatInput = CreateInputField(lobbyPanel.transform, "ChatInput", "");
-            var chatInputRt = chatInput.GetComponent<RectTransform>();
-            chatInputRt.anchorMin = new Vector2(0f, 0f);
-            chatInputRt.anchorMax = new Vector2(0.75f, 0.12f);
-            chatInputRt.offsetMin = new Vector2(8f, 8f);
-            chatInputRt.offsetMax = new Vector2(-4f, -4f);
-
-            var sendBtn = CreateButton(lobbyPanel.transform, "SendChat", "Gửi");
-            var sendRt = sendBtn.GetComponent<RectTransform>();
-            sendRt.anchorMin = new Vector2(0.76f, 0f);
-            sendRt.anchorMax = new Vector2(1f, 0.12f);
-            sendRt.offsetMin = new Vector2(4f, 8f);
-            sendRt.offsetMax = new Vector2(-8f, -4f);
-
-            var readyBtn = CreateButton(lobbyPanel.transform, "ReadyButton", "Ready");
+            var readyBtn = CreateButton(mpPanel.transform, "Button Ready", "Ready");
             var readyRt = readyBtn.GetComponent<RectTransform>();
-            readyRt.anchorMin = new Vector2(0.35f, 0.12f);
-            readyRt.anchorMax = new Vector2(0.5f, 0.18f);
+            readyRt.anchorMin = new Vector2(0.1f, 0.04f);
+            readyRt.anchorMax = new Vector2(0.45f, 0.12f);
             readyRt.offsetMin = Vector2.zero;
             readyRt.offsetMax = Vector2.zero;
 
-            var startBtn = CreateButton(lobbyPanel.transform, "StartGameButton", "Bắt đầu trận (Host)");
+            var startBtn = CreateButton(mpPanel.transform, "Button Start Game", "Bắt đầu trận");
             var startRt = startBtn.GetComponent<RectTransform>();
-            startRt.anchorMin = new Vector2(0.52f, 0.12f);
-            startRt.anchorMax = new Vector2(0.85f, 0.18f);
+            startRt.anchorMin = new Vector2(0.55f, 0.04f);
+            startRt.anchorMax = new Vector2(0.9f, 0.12f);
             startRt.offsetMin = Vector2.zero;
             startRt.offsetMax = Vector2.zero;
 
-            var status = CreateText(lobbyPanel.transform, "StatusText", "Lobby", 16, TextAnchor.UpperLeft);
-            var stRt = status.rectTransform;
-            stRt.anchorMin = new Vector2(0f, 0.78f);
-            stRt.anchorMax = new Vector2(1f, 1f);
-            stRt.offsetMin = new Vector2(8f, -8f);
-            stRt.offsetMax = new Vector2(-8f, -4f);
-
-            var scroll = new GameObject("Scrollbar");
-            scroll.transform.SetParent(lobbyPanel.transform, false);
-            var sb = scroll.AddComponent<Scrollbar>();
-            sb.direction = Scrollbar.Direction.BottomToTop;
-            var sbRt = scroll.GetComponent<RectTransform>();
-            sbRt.anchorMin = new Vector2(1f, 0.15f);
-            sbRt.anchorMax = new Vector2(1f, 1f);
-            sbRt.offsetMin = new Vector2(-24f, 8f);
-            sbRt.offsetMax = new Vector2(-4f, -8f);
-
-            var chatGo = new GameObject("LobbyChat");
-            chatGo.AddComponent<NetworkIdentity>();
-            var lobbyChat = chatGo.AddComponent<RtsLobbyChat>();
-            lobbyChat.EditorAssignUi(chatHistory, sb, chatInput, sendBtn);
-
-            var ui = canvasGo.AddComponent<RtsLobbyUI>();
-            ui.EditorAssignUi(addr, user, hostBtn, clientBtn, readyBtn, startBtn, status, auth, loginPanel, lobbyPanel);
-
-            hostBtn.onClick.AddListener(ui.OnClickHost);
-            clientBtn.onClick.AddListener(ui.OnClickClient);
-            readyBtn.onClick.AddListener(ui.OnClickReady);
-            startBtn.onClick.AddListener(ui.OnClickStartGame);
-            sendBtn.onClick.AddListener(lobbyChat.UiSendMessage);
-            chatInput.onValueChanged.AddListener(lobbyChat.UiOnMessageChanged);
-            chatInput.onEndEdit.AddListener(lobbyChat.UiOnEndEdit);
-
-            var addrRt = addr.GetComponent<RectTransform>();
-            addrRt.anchorMin = new Vector2(0f, 0.72f);
-            addrRt.anchorMax = new Vector2(1f, 0.88f);
-            addrRt.offsetMin = new Vector2(8f, 0f);
-            addrRt.offsetMax = new Vector2(-8f, 0f);
-            var userRt = user.GetComponent<RectTransform>();
-            userRt.anchorMin = new Vector2(0f, 0.52f);
-            userRt.anchorMax = new Vector2(1f, 0.68f);
-            userRt.offsetMin = new Vector2(8f, 0f);
-            userRt.offsetMax = new Vector2(-8f, 0f);
-            var hRt = hostBtn.GetComponent<RectTransform>();
-            hRt.anchorMin = new Vector2(0f, 0.32f);
-            hRt.anchorMax = new Vector2(0.48f, 0.46f);
-            hRt.offsetMin = new Vector2(8f, 0f);
-            hRt.offsetMax = new Vector2(-4f, 0f);
-            var cRt = clientBtn.GetComponent<RectTransform>();
-            cRt.anchorMin = new Vector2(0.52f, 0.32f);
-            cRt.anchorMax = new Vector2(1f, 0.46f);
-            cRt.offsetMin = new Vector2(4f, 0f);
-            cRt.offsetMax = new Vector2(-8f, 0f);
+            var ui = mpPanel.AddComponent<RtsLobbyUI>();
+            SerializedObject lobbySerialized = new SerializedObject(ui);
+            lobbySerialized.FindProperty("roomListContent").objectReferenceValue = roomListContent;
+            lobbySerialized.FindProperty("readyButton").objectReferenceValue = readyBtn;
+            lobbySerialized.FindProperty("startGameButton").objectReferenceValue = startBtn;
+            lobbySerialized.FindProperty("authenticator").objectReferenceValue = auth;
+            lobbySerialized.FindProperty("readyButtonImage").objectReferenceValue = readyBtn.GetComponent<Image>();
+            lobbySerialized.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.SaveScene(scene, LobbyScenePath);
+        }
+
+        static Transform CreateScrollViewContent(Transform parent)
+        {
+            var scrollGo = new GameObject("Scroll View");
+            scrollGo.transform.SetParent(parent, false);
+            var scrollRt = scrollGo.AddComponent<RectTransform>();
+            scrollRt.anchorMin = new Vector2(0.05f, 0.16f);
+            scrollRt.anchorMax = new Vector2(0.95f, 0.95f);
+            scrollRt.offsetMin = Vector2.zero;
+            scrollRt.offsetMax = Vector2.zero;
+
+            var scrollRect = scrollGo.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+
+            var viewportGo = new GameObject("Viewport");
+            viewportGo.transform.SetParent(scrollGo.transform, false);
+            var viewportRt = viewportGo.AddComponent<RectTransform>();
+            viewportRt.anchorMin = Vector2.zero;
+            viewportRt.anchorMax = Vector2.one;
+            viewportRt.offsetMin = Vector2.zero;
+            viewportRt.offsetMax = Vector2.zero;
+            viewportGo.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.15f);
+            viewportGo.AddComponent<Mask>().showMaskGraphic = false;
+
+            var contentGo = new GameObject("Content");
+            contentGo.transform.SetParent(viewportGo.transform, false);
+            var contentRt = contentGo.AddComponent<RectTransform>();
+            contentRt.anchorMin = new Vector2(0f, 1f);
+            contentRt.anchorMax = new Vector2(1f, 1f);
+            contentRt.pivot = new Vector2(0.5f, 1f);
+            contentRt.sizeDelta = new Vector2(0f, 0f);
+            var layout = contentGo.AddComponent<VerticalLayoutGroup>();
+            layout.childControlHeight = true;
+            layout.childControlWidth = true;
+            layout.childForceExpandHeight = false;
+            layout.childForceExpandWidth = true;
+            layout.spacing = 8f;
+            contentGo.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            scrollRect.viewport = viewportRt;
+            scrollRect.content = contentRt;
+            return contentGo.transform;
         }
 
         static void BuildGameScene()

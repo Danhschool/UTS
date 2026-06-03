@@ -123,6 +123,23 @@ namespace GameDevTV.RTS.UI.Components
             }
         }
 
+        /// <summary>
+        /// Mục tiêu: Giữ panel/hover bật liên tục (ví dụ nút Ready đã bật).
+        /// Cách hoạt động: Bật cờ lock và force show panel; tắt lock thì ẩn nếu không hover.
+        /// </summary>
+        public void SetLockedVisible(bool locked)
+        {
+            isLockedVisible = locked;
+            if (locked)
+            {
+                ShowPanelForce();
+            }
+            else
+            {
+                ClearLock();
+            }
+        }
+
         void HidePanel()
         {
             if (panel == null || IsPanelAncestorOfThis(panel.transform))

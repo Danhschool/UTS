@@ -4,6 +4,7 @@ using System.Linq;
 using GameDevTV.RTS.Audio;
 using GameDevTV.RTS.UI.Components;
 using GameDevTV.RTS.UI.Pregame;
+using ProjectRTS.Netplay;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -79,6 +80,14 @@ namespace GameDevTV.RTS.EditorTools
             serialized.FindProperty("buttonExit").objectReferenceValue = buttonExit;
             serialized.FindProperty("buttonCreateRoom").objectReferenceValue = buttonCreateRoom;
             serialized.FindProperty("createExitButtonIfMissing").boolValue = buttonExit == null;
+
+            RtsLobbyUI lobbyUi = mpPanel != null ? mpPanel.GetComponent<RtsLobbyUI>() : null;
+            if (lobbyUi == null && mpPanel != null)
+            {
+                lobbyUi = mpPanel.GetComponentInChildren<RtsLobbyUI>(true);
+            }
+
+            serialized.FindProperty("lobbyUi").objectReferenceValue = lobbyUi;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(controller);
         }

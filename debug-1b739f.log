@@ -1,0 +1,14 @@
+{"sessionId":"1b739f","hypothesisId":"F","location":"PregameMpLobbyCoordinator.BindDependencies","message":"bound","data":{"binderId":1798642,"binderNull":false,"mapCount":2},"timestamp":1780456835664}
+{"sessionId":"1b739f","hypothesisId":"F","location":"PregameMpLobbyCoordinator.BindDependencies","message":"bound","data":{"binderId":1798642,"binderNull":false,"mapCount":2},"timestamp":1780456835668}
+{"sessionId":"1b739f","hypothesisId":"K","location":"RtsLobbyPlayer.ApplyLobbyMapOnServer","message":"apply+rpc","data":{"index":0,"scene":"Game 1"},"timestamp":1780456837562}
+{"sessionId":"1b739f","hypothesisId":"K","location":"RtsLobbyPlayer.ApplyLobbyMapOnServer","message":"apply+rpc","data":{"index":0,"scene":"Game 1"},"timestamp":1780456837640}
+{"sessionId":"1b739f","hypothesisId":"K","location":"RtsLobbyPlayer.ApplyLobbyMapOnServer","message":"apply+rpc","data":{"index":0,"scene":"Game 1"},"timestamp":1780456837651}
+{"sessionId":"1b739f","hypothesisId":"K","location":"RtsLobbyPlayer.ApplyLobbyMapOnServer","message":"apply+rpc","data":{"index":0,"scene":"Game 1"},"timestamp":1780456837674}
+{"sessionId":"1b739f","hypothesisId":"K","location":"RtsLobbyPlayer.ApplyLobbyMapOnServer","message":"apply+rpc","data":{"index":1,"scene":"Game 2"},"timestamp":1780456844812}
+{"sessionId":"1b739f","hypothesisId":"K","location":"RtsLobbyPlayer.ApplyLobbyMapOnServer","message":"apply+rpc","data":{"index":0,"scene":"Game 1"},"timestamp":1780456845796}
+{"sessionId":"1b739f","hypothesisId":"K","location":"RtsLobbyPlayer.ApplyLobbyMapOnServer","message":"apply+rpc","data":{"index":1,"scene":"Game 2"},"timestamp":1780456846368}
+{"sessionId":"1b739f","hypothesisId":"K","location":"RtsLobbyPlayer.ApplyLobbyMapOnServer","message":"apply+rpc","data":{"index":1,"scene":"Game 2"},"timestamp":1780456856231}
+{"sessionId":"1b739f","hypothesisId":"K","location":"RtsLobbyPlayer.ApplyLobbyMapOnServer","message":"apply+rpc","data":{"index":1,"scene":"Game 2"},"timestamp":1780456856345}
+{"sessionId":"1b739f","hypothesisId":"K","location":"RtsLobbyPlayer.ApplyLobbyMapOnServer","message":"apply+rpc","data":{"index":1,"scene":"Game 2"},"timestamp":1780456856346}
+{"sessionId":"1b739f","hypothesisId":"K","location":"RtsLobbyPlayer.ApplyLobbyMapOnServer","message":"apply+rpc","data":{"index":1,"scene":"Game 2"},"timestamp":1780456863473}
+{"sessionId":"1b739f","hypothesisId":"K","location":"RtsLobbyPlayer.ApplyLobbyMapOnServer","message":"apply+rpc","data":{"index":1,"scene":"Game 2"},"timestamp":1780456863474}

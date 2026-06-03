@@ -33,5 +33,25 @@ namespace ProjectRTS.Netplay
 
             return false;
         }
+
+        /// <summary>
+        /// Mục tiêu: Mirror [Scene] có thể lưu path — chuẩn hóa về tên scene trong Build Settings.
+        /// Cách hoạt động: Lấy file name không .unity; giữ nguyên nếu đã là tên ngắn.
+        /// </summary>
+        public static string NormalizeSceneName(string sceneField)
+        {
+            if (string.IsNullOrWhiteSpace(sceneField))
+            {
+                return PregameGameplaySceneFallback.DefaultScene;
+            }
+
+            sceneField = sceneField.Trim();
+            if (sceneField.EndsWith(".unity", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return System.IO.Path.GetFileNameWithoutExtension(sceneField);
+            }
+
+            return sceneField;
+        }
     }
 }

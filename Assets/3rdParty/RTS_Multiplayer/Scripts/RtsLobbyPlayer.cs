@@ -18,9 +18,17 @@ namespace ProjectRTS.Netplay
         [SyncVar(hook = nameof(HookReady))]
         bool ready;
 
+        [SyncVar(hook = nameof(HookLobbyMapIndex))]
+        int lobbyMapIndex;
+
+        [SyncVar(hook = nameof(HookLobbyGameplayScene))]
+        string lobbyGameplayScene = PregameGameplaySceneFallback.DefaultScene;
+
         public string DisplayName => displayName;
         public int PlayerTeamIndex => playerTeamIndex;
         public bool IsReady => ready;
+        public int LobbyMapIndex => lobbyMapIndex;
+        public string LobbyGameplayScene => lobbyGameplayScene;
 
         public override void OnStartServer()
         {
@@ -28,6 +36,11 @@ namespace ProjectRTS.Netplay
                 displayName = n;
             else
                 displayName = "Player";
+
+            if (playerTeamIndex == 0)
+            {
+                ApplyLobbyMapOnServer(RtsLobbyRoomMapSession.PendingIndex, RtsLobbyRoomMapSession.PendingSceneName);
+            }
         }
 
         bool _serverSlotApplied;
@@ -50,7 +63,10 @@ namespace ProjectRTS.Netplay
                 $"[RtsLobbyPlayer] ServerInitSlot → team {playerTeamIndex} ({(playerTeamIndex == 0 ? "Player1" : "Player2")}), conn={connectionToClient?.connectionId}");
         }
 
-        void HookName(string oldV, string newV) { }
+        void HookName(string oldV, string newV)
+        {
+            RtsLobbyUI.Instance?.OnLobbyPlayerStateChanged();
+        }
 
         void HookTeam(int oldV, int newV)
         {
@@ -58,9 +74,77 @@ namespace ProjectRTS.Netplay
             {
                 PublishLocalTeamIndex();
             }
+
+            RtsLobbyUI.Instance?.OnLobbyPlayerStateChanged();
         }
 
-        void HookReady(bool oldV, bool newV) { }
+        void HookReady(bool oldV, bool newV)
+        {
+            RtsLobbyUI.Instance?.OnLobbyPlayerStateChanged();
+        }
+
+        void HookLobbyMapIndex(int oldValue, int newValue)
+        {
+        }
+
+        void HookLobbyGameplayScene(string oldValue, string newValue)
+        {
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            if (PlayerTeamIndex == 0 && !isLocalPlayer)
+            {
+                BroadcastLobbyMapToUiClients(lobbyMapIndex, lobbyGameplayScene);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Host đặt map phòng; client nhận qua ClientRpc (một lần, cặp index+scene đúng).
+        /// Cách hoạt động: Server cập nhật SyncVar + Rpc; không notify qua từng SyncVar hook.
+        /// </summary>
+        public void ApplyLobbyMapOnServer(int index, string sceneName)
+        {
+            if (!NetworkServer.active || PlayerTeamIndex != 0)
+            {
+                return;
+            }
+
+            lobbyGameplayScene = RtsNetSceneUtility.NormalizeSceneName(sceneName);
+            lobbyMapIndex = index < 0 ? 0 : index;
+            RtsLobbyRoomMapSession.SetPending(lobbyMapIndex, lobbyGameplayScene);
+
+            if (NetworkManager.singleton is RtsNetworkManager networkManager)
+            {
+                networkManager.SetMatchGameplayScene(lobbyGameplayScene);
+            }
+
+            Debug.Log(
+                $"[RtsLobbyPlayer] Host map → index={lobbyMapIndex}, scene='{lobbyGameplayScene}' (conn={connectionToClient?.connectionId}).");
+
+            RpcSyncLobbyMapToClients(lobbyMapIndex, lobbyGameplayScene);
+        }
+
+        [ClientRpc]
+        void RpcSyncLobbyMapToClients(int index, string sceneName)
+        {
+            BroadcastLobbyMapToUiClients(index, sceneName);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client lobby UI bám map host qua một event đồng bộ (không lệch hook SyncVar).
+        /// Cách hoạt động: RaiseMapSelectionChanged; host local player bỏ qua (UI tự chọn map).
+        /// </summary>
+        static void BroadcastLobbyMapToUiClients(int index, string sceneName)
+        {
+            if (NetworkServer.active && NetworkClient.isConnected)
+            {
+                return;
+            }
+
+            RtsLobbyRoomMapSync.RaiseMapSelectionChanged(index, sceneName);
+        }
 
         public override void OnStartLocalPlayer()
         {
@@ -68,10 +152,6 @@ namespace ProjectRTS.Netplay
             RtsLobbyUI.Instance?.OnLocalPlayerAssigned(this);
         }
 
-        /// <summary>
-        /// Mục tiêu: Gán LocalOwner (P1/P2) cho fog/UI/input trên máy local.
-        /// Cách hoạt động: Gọi RtsLocalHumanOwnerNotifier với PlayerTeamIndex.
-        /// </summary>
         void PublishLocalTeamIndex()
         {
             RtsLocalHumanOwnerNotifier.NotifyLocalTeamIndex(PlayerTeamIndex);

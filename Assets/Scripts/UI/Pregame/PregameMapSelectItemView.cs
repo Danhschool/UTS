@@ -16,6 +16,9 @@ namespace GameDevTV.RTS.UI.Pregame
 
         [SerializeField] Button button;
         [SerializeField] TMP_Text label;
+        [SerializeField] Image buttonImage;
+        [SerializeField] Color enabledColor = Color.white;
+        [SerializeField] Color disabledColor = Color.black;
 
         UiExclusiveSelectOption _selectOption;
         UiExclusiveSelectGroup _group;
@@ -58,6 +61,24 @@ namespace GameDevTV.RTS.UI.Pregame
 
             DisableHoverRevealPanel();
             ConfigureSelectOption();
+            SetInteractionEnabled(true);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client không chọn map — hiển thị đen giống nút Lưu settings khi disabled.
+        /// Cách hoạt động: Tắt Button.interactable và đổi màu Image nền nút.
+        /// </summary>
+        public void SetInteractionEnabled(bool enabled)
+        {
+            if (button != null)
+            {
+                button.interactable = enabled;
+            }
+
+            if (buttonImage != null)
+            {
+                buttonImage.color = enabled ? enabledColor : disabledColor;
+            }
         }
 
         void OnButtonClicked()
@@ -83,6 +104,11 @@ namespace GameDevTV.RTS.UI.Pregame
             if (label == null)
             {
                 label = GetComponentInChildren<TMP_Text>(true);
+            }
+
+            if (buttonImage == null && button != null)
+            {
+                buttonImage = button.GetComponent<Image>();
             }
         }
 

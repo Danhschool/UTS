@@ -1,6 +1,8 @@
 using GameDevTV.RTS.AI;
 using GameDevTV.RTS.Game.Pregame;
 using GameDevTV.RTS.UI.Components;
+using Mirror;
+using ProjectRTS.Netplay;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -43,6 +45,10 @@ namespace GameDevTV.RTS.UI.Pregame
         [Header("Exit confirm")]
         [SerializeField] ExitConfirmDialog exitConfirmDialog;
 
+        [Header("Multiplayer lobby")]
+        [SerializeField] RtsLobbyUI lobbyUi;
+        [SerializeField] PregameMpLobbyCoordinator mpLobbyCoordinator;
+
         [Header("Optional auto-bind")]
         [SerializeField] Transform searchRoot;
 
@@ -61,6 +67,10 @@ namespace GameDevTV.RTS.UI.Pregame
             TryResolveButton(root, "Button Back", ref buttonBack);
             TryResolveButton(root, "Button Exit", ref buttonExit);
             TryResolveButton(root, "Button Start (1)", ref buttonCreateRoom);
+            if (lobbyUi == null && multiplayerPanel != null)
+            {
+                lobbyUi = multiplayerPanel.GetComponentInChildren<RtsLobbyUI>(true);
+            }
 
             if (buttonExit == null && createExitButtonIfMissing)
             {
@@ -69,6 +79,7 @@ namespace GameDevTV.RTS.UI.Pregame
 
             EnsureMapSelectBinder();
             mapSelectBinder.BuildMapList();
+            EnsureMpLobbyCoordinator();
 
             BootstrapDifficultySelectOptions();
             difficultySelectGroup?.RefreshOptions();
@@ -79,9 +90,13 @@ namespace GameDevTV.RTS.UI.Pregame
         void OnEnable()
         {
             ApplyPlayMode(PregameSessionState.PlayMode);
+            EnsureMpLobbyCoordinator();
 
             mapSelectBinder?.SubscribeSelectionChanged();
-            mapSelectBinder?.SelectDefaultMap();
+            if (!ShouldSkipDefaultMapOnEnable())
+            {
+                mapSelectBinder?.SelectDefaultMap();
+            }
 
             if (difficultySelectGroup != null && PregameSessionState.PlayMode == PregamePlayMode.SinglePlayer)
             {
@@ -111,6 +126,27 @@ namespace GameDevTV.RTS.UI.Pregame
             Unbind(buttonCreateRoom, OnCreateRoomClicked);
         }
 
+        void EnsureMpLobbyCoordinator()
+        {
+            if (mpLobbyCoordinator == null)
+            {
+                mpLobbyCoordinator = GetComponent<PregameMpLobbyCoordinator>();
+            }
+
+            if (mpLobbyCoordinator == null)
+            {
+                mpLobbyCoordinator = GetComponentInChildren<PregameMpLobbyCoordinator>(true);
+            }
+
+            if (mpLobbyCoordinator == null)
+            {
+                mpLobbyCoordinator = gameObject.AddComponent<PregameMpLobbyCoordinator>();
+            }
+
+            EnsureMapSelectBinder();
+            mpLobbyCoordinator.BindDependencies(mapSelectBinder, lobbyUi);
+        }
+
         void EnsureMapSelectBinder()
         {
             if (mapSelectBinder != null)
@@ -121,9 +157,22 @@ namespace GameDevTV.RTS.UI.Pregame
             mapSelectBinder = GetComponent<PregameMapSelectScrollBinder>();
             if (mapSelectBinder == null)
             {
+                mapSelectBinder = GetComponentInChildren<PregameMapSelectScrollBinder>(true);
+            }
+
+            if (mapSelectBinder == null)
+            {
                 mapSelectBinder = gameObject.AddComponent<PregameMapSelectScrollBinder>();
             }
         }
+
+        /// <summary>
+        /// Mục tiêu: Client trong phòng MP không bị reset map về mục đầu mỗi lần panel bật lại.
+        /// Cách hoạt động: Bỏ SelectDefaultMap khi đã có phiên Mirror (host hoặc client).
+        /// </summary>
+        bool ShouldSkipDefaultMapOnEnable() =>
+            PregameSessionState.PlayMode == PregamePlayMode.Multiplayer
+            && PregameMpLobbyCoordinator.IsInNetworkSession();
 
         void ApplyPlayMode(PregamePlayMode mode)
         {
@@ -180,6 +229,36 @@ namespace GameDevTV.RTS.UI.Pregame
 
         public void OnBackClicked()
         {
+            if (PregameSessionState.PlayMode == PregamePlayMode.Multiplayer
+                && PregameMpLobbyCoordinator.IsInNetworkSession())
+            {
+                LeaveMultiplayerRoom();
+                return;
+            }
+
+            PregameMenuSceneNavigator.LoadMainMenu();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client/host thoát phòng MP qua nút Quay lại.
+        /// Cách hoạt động: StopHost/StopClient, reset lobby UI rồi về MainMenu.
+        /// </summary>
+        void LeaveMultiplayerRoom()
+        {
+            NetworkManager networkManager = NetworkManager.singleton;
+            if (networkManager != null)
+            {
+                if (NetworkServer.active && NetworkClient.isConnected)
+                {
+                    networkManager.StopHost();
+                }
+                else if (NetworkClient.active)
+                {
+                    networkManager.StopClient();
+                }
+            }
+
+            lobbyUi?.ShowLoginAgain();
             PregameMenuSceneNavigator.LoadMainMenu();
         }
 
@@ -198,12 +277,23 @@ namespace GameDevTV.RTS.UI.Pregame
         {
             if (mapSelectBinder == null)
             {
+                Debug.LogError("[PregameSetup] Thiếu PregameMapSelectScrollBinder.", this);
                 return;
             }
 
             int mapIndex = mapSelectBinder.SelectedIndex;
             string sceneName = mapSelectBinder.GetSelectedGameplayScene();
             PregameSessionState.ConfigureMultiplayer(mapIndex, sceneName);
+            RtsLobbyRoomMapSession.SetPending(mapIndex, sceneName);
+
+            if (lobbyUi != null)
+            {
+                lobbyUi.CreateHostRoom();
+                mpLobbyCoordinator?.NotifyHostRoomCreated();
+                return;
+            }
+
+            Debug.LogWarning("[PregameSetup] Thiếu RtsLobbyUI trên MP Panel — fallback sang scene lobby cũ.", this);
             PregameMenuSceneNavigator.LoadLobby();
         }
 

@@ -32,6 +32,16 @@ namespace ProjectRTS.Netplay
             maxConnections = 2;
             if (string.IsNullOrWhiteSpace(networkAddress))
                 networkAddress = "localhost";
+            gameScene = RtsNetSceneUtility.NormalizeSceneName(gameScene);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Đồng bộ scene gameplay MP từ map host (tên ngắn, không path .unity).
+        /// Cách hoạt động: Gán gameScene đã chuẩn hóa cho Mirror ServerChangeScene.
+        /// </summary>
+        public void SetMatchGameplayScene(string sceneName)
+        {
+            gameScene = RtsNetSceneUtility.NormalizeSceneName(sceneName);
         }
 
         public override void OnStartServer()
@@ -82,6 +92,12 @@ namespace ProjectRTS.Netplay
             if (lobby != null)
             {
                 lobby.ServerInitSlot(slot);
+                if (slot == 0)
+                {
+                    lobby.ApplyLobbyMapOnServer(
+                        RtsLobbyRoomMapSession.PendingIndex,
+                        RtsLobbyRoomMapSession.PendingSceneName);
+                }
             }
 
             NetworkServer.AddPlayerForConnection(conn, player);
@@ -138,7 +154,30 @@ namespace ProjectRTS.Netplay
                 return;
             }
 
-            ServerChangeScene(gameScene);
+            string targetScene = ResolveMatchGameplayScene();
+            SetMatchGameplayScene(targetScene);
+            Debug.Log($"[RtsNetworkManager] Bắt đầu trận → scene '{targetScene}'.", this);
+            ServerChangeScene(targetScene);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Lấy map gameplay host đã chọn (SyncVar), không dùng giá trị Inspector cũ.
+        /// Cách hoạt động: Ưu tiên host player P1, fallback buffer pending rồi gameScene.
+        /// </summary>
+        string ResolveMatchGameplayScene()
+        {
+            if (RtsLobbyRoomMapSync.TryGetHostLobbyPlayer(out RtsLobbyPlayer hostPlayer)
+                && !string.IsNullOrWhiteSpace(hostPlayer.LobbyGameplayScene))
+            {
+                return hostPlayer.LobbyGameplayScene;
+            }
+
+            if (!string.IsNullOrWhiteSpace(RtsLobbyRoomMapSession.PendingSceneName))
+            {
+                return RtsLobbyRoomMapSession.PendingSceneName;
+            }
+
+            return gameScene;
         }
 
         /// <summary>
