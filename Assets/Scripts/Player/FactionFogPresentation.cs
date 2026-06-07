@@ -222,6 +222,10 @@ namespace GameDevTV.RTS.Player
 
             if (material == null)
             {
+                Debug.LogError(
+                    $"[FactionFogPresentation] Fog plane '{fogPlaneRenderer.gameObject.name}' "
+                    + $"owner={presentationOwner} thiếu material — overlay đen sẽ không hiện. "
+                    + "Chạy ProjectRTS/Fog of War/★ Setup P2 Fog (Course Section 9).");
                 return;
             }
 

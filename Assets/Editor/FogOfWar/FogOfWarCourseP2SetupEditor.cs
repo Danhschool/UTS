@@ -20,14 +20,45 @@ namespace GameDevTV.RTS.Editor.FogOfWar
         const string ExploredRtP2Path = "Assets/Textures/Explored Fog of War Render Texture P2.renderTexture";
         const string FogMatP2Path = "Assets/Materials/Fog of War P2.mat";
         const string ExploredMatP2Path = "Assets/Materials/Explored Fog of War P2.mat";
+        const string FogOverlayRendererPath = "Assets/Settings/Fog of War_Renderer.asset";
 
         [MenuItem("ProjectRTS/Fog of War/★ Setup P2 Fog (Course Section 9)")]
         public static void SetupP2FogMenu()
         {
             EnsureP2RenderTexturesFromP1();
+            EnsureFogOverlayRendererIncludesP2Plane();
             ApplyCourseSection9ToPrefab(FogP2PrefabPath, Owner.Player2);
             AssetDatabase.SaveAssets();
             Debug.Log("[FogOfWar] Đã áp dụng Section 9 cho prefab Fog of War P2.");
+        }
+
+        /// <summary>
+        /// Mục tiêu: Overlay camera (Fog of War_Renderer) phải vẽ được plane P2 layer 17 — nếu thiếu, client P2 không bôi đen fog.
+        /// Cách hoạt động: OR bitmask layer 13 + 14 + 17 vào Opaque/Transparent mask của UniversalRendererData.
+        /// </summary>
+        public static void EnsureFogOverlayRendererIncludesP2Plane()
+        {
+            UniversalRendererData renderer =
+                AssetDatabase.LoadAssetAtPath<UniversalRendererData>(FogOverlayRendererPath);
+            if (renderer == null)
+            {
+                Debug.LogWarning($"[FogOfWar] Không tìm thấy {FogOverlayRendererPath}");
+                return;
+            }
+
+            int requiredMask = (1 << OwnerFogPlaneLayers.DefaultPlayer1PlaneLayer)
+                | (1 << OwnerFogVisionLayers.DefaultPlayer1VisionLayer)
+                | (1 << OwnerFogPlaneLayers.DefaultPlayer2PlaneLayer);
+
+            if (renderer.opaqueLayerMask == (LayerMask)requiredMask
+                && renderer.transparentLayerMask == (LayerMask)requiredMask)
+            {
+                return;
+            }
+
+            renderer.opaqueLayerMask = requiredMask;
+            renderer.transparentLayerMask = requiredMask;
+            EditorUtility.SetDirty(renderer);
         }
 
         /// <summary>
