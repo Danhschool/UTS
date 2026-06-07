@@ -689,53 +689,72 @@
         },
         {
             "CommandId": "build_storehouse",
-            "PrimaryPhrase": "xay nha kho",
+            "PrimaryPhrase": "xay dung nha kho",
             "Aliases": [
                 "dung nha kho",
                 "nha kho",
+                "xay dung kho",
+                "xay dung nha kho",
                 "xay kho",
+                "xay nha kho",
+                "xây dựng kho",
+                "xây dựng nhà kho",
                 "xây kho",
                 "xây nhà kho"
             ]
         },
         {
             "CommandId": "build_forge",
-            "PrimaryPhrase": "xay lo ren",
+            "PrimaryPhrase": "xay dung lo ren",
             "Aliases": [
                 "dung lo ren",
                 "lo ren",
                 "lò rèn",
+                "xay dung lo ren",
                 "xay lo ren",
+                "xây dựng lò rèn",
                 "xây lò rèn"
             ]
         },
         {
             "CommandId": "build_barracks",
-            "PrimaryPhrase": "xay nha linh",
+            "PrimaryPhrase": "xay dung nha linh",
             "Aliases": [
                 "doanh trại",
                 "nha linh",
+                "xay dung doanh trai",
+                "xay dung nha linh",
                 "xay doanh trai",
+                "xay nha linh",
+                "xây dựng doanh trại",
+                "xây dựng nhà lính",
                 "xây nhà lính"
             ]
         },
         {
             "CommandId": "build_corral",
-            "PrimaryPhrase": "xay corral",
+            "PrimaryPhrase": "xay dung chuong",
             "Aliases": [
+                "chuong nuoi",
                 "chuồng nuôi",
                 "xay chuong",
+                "xay corral",
+                "xay dung chuong",
+                "xay dung chuong nuoi",
+                "xây dựng chuồng",
                 "xây chuồng"
             ]
         },
         {
             "CommandId": "build_defense_tower",
-            "PrimaryPhrase": "xay thap canh",
+            "PrimaryPhrase": "xay dung thap canh",
             "Aliases": [
                 "dung thap",
                 "thap canh",
                 "tháp canh",
+                "xay dung thap canh",
                 "xay thap canh",
+                "xây dựng tháp canh",
                 "xây tháp canh"
             ]
         },

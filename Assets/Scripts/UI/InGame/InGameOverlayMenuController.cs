@@ -1,3 +1,4 @@
+using System.Collections;
 using GameDevTV.RTS.Game;
 using GameDevTV.RTS.UI.Components;
 using GameDevTV.RTS.UI.Pregame;
@@ -41,8 +42,8 @@ namespace GameDevTV.RTS.UI.InGame
         [SerializeField] InGameSettingsPanelOpener settingsOpener;
         [SerializeField] ExitConfirmDialog surrenderConfirmDialog;
 
-        [Header("Defeat")]
-        [SerializeField] string defeatSceneName = MatchOutcomeFlow.DefaultDefeatScene;
+        [Header("Match end")]
+        [SerializeField] string endSceneName = MatchOutcomeFlow.DefaultEndScene;
 
         [Header("Optional auto-bind")]
         [SerializeField] Transform searchRoot;
@@ -63,6 +64,8 @@ namespace GameDevTV.RTS.UI.InGame
 
         void Awake()
         {
+            MatchOutcomeFlow.SetActiveEndScene(endSceneName);
+
             Transform root = searchRoot != null ? searchRoot : transform;
             TryResolveReferences(root);
             HideAllPanels();
@@ -150,14 +153,40 @@ namespace GameDevTV.RTS.UI.InGame
             }
 
             _surrenderDialogOpen = true;
-            surrenderConfirmDialog.Show(SurrenderMessage, OnSurrenderConfirmed, OnSurrenderCancelled);
+            ShowSurrenderConfirmDialogDeferred();
+
             SyncGameplayPause();
         }
 
         void OnSurrenderCancelled()
         {
             _surrenderDialogOpen = false;
+
             SyncGameplayPause();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Tránh click Surrender rơi xuống nút OK cùng frame (dialog vừa bật).
+        /// Cách hoạt động: Hoãn ShowMatchEndConfirm sang frame sau khi EventSystem xử lý xong click Surrender.
+        /// </summary>
+        void ShowSurrenderConfirmDialogDeferred()
+        {
+            StartCoroutine(ShowSurrenderConfirmDialogDeferredRoutine());
+        }
+
+        IEnumerator ShowSurrenderConfirmDialogDeferredRoutine()
+        {
+            yield return null;
+
+            if (!_surrenderDialogOpen || surrenderConfirmDialog == null)
+            {
+                yield break;
+            }
+
+            surrenderConfirmDialog.ShowMatchEndConfirm(
+                SurrenderMessage,
+                OnSurrenderConfirmed,
+                OnSurrenderCancelled);
         }
 
         void OnPauseResumeClicked()
@@ -167,6 +196,10 @@ namespace GameDevTV.RTS.UI.InGame
             SyncGameplayPause();
         }
 
+        /// <summary>
+        /// Mục tiêu: Chỉ chạy sau khi người chơi bấm OK trên ExitConfirmDialog đầu hàng.
+        /// Cách hoạt động: Đóng overlay, rồi load scene End qua MatchOutcomeDetector.
+        /// </summary>
         void OnSurrenderConfirmed()
         {
             _surrenderDialogOpen = false;
@@ -179,7 +212,12 @@ namespace GameDevTV.RTS.UI.InGame
                 return;
             }
 
-            MatchOutcomeFlow.LoadDefeatScene(defeatSceneName);
+            ProceedToEndAfterSurrenderConfirmed();
+        }
+
+        void ProceedToEndAfterSurrenderConfirmed()
+        {
+            MatchOutcomeDetector.ShowSurrenderDefeat(endSceneName);
         }
 
         void OnSpeedPresetSelected(int index)
@@ -454,7 +492,10 @@ namespace GameDevTV.RTS.UI.InGame
 
                 if (surrenderDialog && surrenderConfirmDialog != null && !surrenderConfirmDialog.IsVisible)
                 {
-                    surrenderConfirmDialog.Show(SurrenderMessage, OnSurrenderConfirmed, OnSurrenderCancelled);
+                    surrenderConfirmDialog.ShowMatchEndConfirm(
+                        SurrenderMessage,
+                        OnSurrenderConfirmed,
+                        OnSurrenderCancelled);
                 }
                 else if (!surrenderDialog && surrenderConfirmDialog != null && surrenderConfirmDialog.IsVisible)
                 {
@@ -476,15 +517,7 @@ namespace GameDevTV.RTS.UI.InGame
 
         public static void ApplyRemoteMatchEndFromSurrender()
         {
-            InGameOverlayMenuController[] controllers = Object.FindObjectsByType<InGameOverlayMenuController>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-
-            string scene = controllers.Length > 0
-                ? controllers[0].defeatSceneName
-                : MatchOutcomeFlow.DefaultDefeatScene;
-
-            MatchOutcomeFlow.LoadDefeatScene(scene);
+            MatchOutcomeDetector.ShowSurrenderDefeat(MatchOutcomeFlow.ActiveEndSceneName);
         }
 
         bool HasBlockingOverlay()

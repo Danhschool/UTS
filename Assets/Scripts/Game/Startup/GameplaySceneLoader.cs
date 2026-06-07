@@ -1,4 +1,5 @@
 using GameDevTV.RTS.Audio;
+using GameDevTV.RTS.Game.FactionSummary;
 using GameDevTV.RTS.PvAI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -42,6 +43,7 @@ namespace GameDevTV.RTS.Game.Startup
             pendingUseNetworkHandoff = false;
             enteredGameplayFromLoader = false;
             loadFlowActive = true;
+            FactionSummaryTracker.ResetForNewGameplay();
             PvAiOfflineSessionPrep.OnGameplayLoadRequested();
             PregameAudioTransition.StopMenuMusicForGameplay();
 

@@ -213,6 +213,134 @@
       "bold": false
     },
     {
+      "text": "Điều khiển giọng nói",
+      "bold": true
+    },
+    {
+      "text": "Nhấn phím V, nói một câu ngắn (một ý). Game chỉ nhận diện các câu lệnh liệt kê trong mục này — không hiểu câu tự do (ví dụ: \"đi lên núi\", \"mở bản đồ\" sẽ không chạy). Có hoặc không dấu tiếng Việt đều được.",
+      "bold": false
+    },
+    {
+      "text": "Chiến đấu và di chuyển",
+      "bold": true
+    },
+    {
+      "text": "• dừng lại — dừng mọi unit đang chọn (tương đương H). Có thể nói: đứng yên, hủy lệnh.",
+      "bold": false
+    },
+    {
+      "text": "• di chuyển — bật lệnh Move; sau đó click map để chỉ đích. Có thể nói: đi đến đó.",
+      "bold": false
+    },
+    {
+      "text": "• tấn công — quân đang chọn tấn công địch trên màn hình (nếu tấn công được). Có thể nói: đánh, khai hỏa.",
+      "bold": false
+    },
+    {
+      "text": "Chọn quân và dân (trên màn hình)",
+      "bold": true
+    },
+    {
+      "text": "• chọn toàn bộ quân — chọn hết dân, bộ binh, cung thủ, đá binh trong khung nhìn camera.",
+      "bold": false
+    },
+    {
+      "text": "• chọn dân / chọn n dân (n = 1…10) — ví dụ: chọn một dân, chọn ba dân, chọn 5 dân.",
+      "bold": false
+    },
+    {
+      "text": "• chọn bộ binh / chọn n bộ binh — ví dụ: chọn bộ binh, chọn hai bộ binh.",
+      "bold": false
+    },
+    {
+      "text": "• chọn cung thủ / chọn n cung thủ — ví dụ: chọn cung thủ, chọn 5 cung thủ.",
+      "bold": false
+    },
+    {
+      "text": "• chọn đá binh / chọn n đá binh — ví dụ: chọn đá binh, chọn mười đá binh.",
+      "bold": false
+    },
+    {
+      "text": "Kinh tế — thu thập và xây dựng",
+      "bold": true
+    },
+    {
+      "text": "• thu gỗ — tự chọn dân rồi đi thu gỗ. Có thể nói: chặt cây.",
+      "bold": false
+    },
+    {
+      "text": "• thu đá — tự chọn dân rồi đi thu đá. Có thể nói: đào đá.",
+      "bold": false
+    },
+    {
+      "text": "• thu thịt — tự chọn dân rồi đi thu thịt.",
+      "bold": false
+    },
+    {
+      "text": "• xây dựng nhà kho — tự chọn dân, mở Build (7) rồi nhà kho (2); click map đặt nhà. Cũng nhận: xây nhà kho, xây kho.",
+      "bold": false
+    },
+    {
+      "text": "• xây dựng lò rèn — tương tự nhà kho, slot 7 → 5. Cũng nhận: xây lò rèn, lò rèn.",
+      "bold": false
+    },
+    {
+      "text": "• xây dựng nhà lính — slot 7 → 4. Cũng nhận: xây nhà lính, doanh trại.",
+      "bold": false
+    },
+    {
+      "text": "• xây dựng chuồng — slot 7 → 3. Cũng nhận: xây chuồng.",
+      "bold": false
+    },
+    {
+      "text": "• xây dựng tháp canh — slot 7 → 6. Cũng nhận: xây tháp canh.",
+      "bold": false
+    },
+    {
+      "text": "Sản xuất unit và nâng cấp",
+      "bold": true
+    },
+    {
+      "text": "• tạo dân — tự chọn Civil Central, lệnh 1. Có thể nói: tuyển dân, huấn luyện dân.",
+      "bold": false
+    },
+    {
+      "text": "• tạo bộ binh — tự chọn Barracks, lệnh 1. Có thể nói: tuyển bộ binh.",
+      "bold": false
+    },
+    {
+      "text": "• tạo cung thủ — Barracks, lệnh 2.",
+      "bold": false
+    },
+    {
+      "text": "• tạo đá binh — Barracks, lệnh 3.",
+      "bold": false
+    },
+    {
+      "text": "• nâng cấp sát thương — tự chọn Forge, lệnh 1.",
+      "bold": false
+    },
+    {
+      "text": "• nâng cấp tốc đánh — Forge, lệnh 2. Có thể nói: nâng cấp tốc độ đánh.",
+      "bold": false
+    },
+    {
+      "text": "• nâng cấp thu thập — Forge, lệnh 3.",
+      "bold": false
+    },
+    {
+      "text": "• nâng cấp thời gian thu thập — Forge, lệnh 4. Có thể nói: nâng cấp tốc độ thu thập.",
+      "bold": false
+    },
+    {
+      "text": "• nâng cấp máu — Forge, lệnh 5.",
+      "bold": false
+    },
+    {
+      "text": "• nâng cấp tốc độ — Forge, lệnh 6 (tốc độ di chuyển quân).",
+      "bold": false
+    },
+    {
       "text": "Mẹo",
       "bold": true
     },
@@ -230,6 +358,10 @@
     },
     {
       "text": "Lưu ý – Phím A/S/D chọn công trình, không dùng để pan camera. Chỉ chọn unit/nhà có trong khung nhìn camera.",
+      "bold": false
+    },
+    {
+      "text": "V – Nói lệnh thoại (nhấn V). Chỉ các câu trong mục \"Điều khiển giọng nói\" ở trên mới được game nhận.",
       "bold": false
     }
   ]

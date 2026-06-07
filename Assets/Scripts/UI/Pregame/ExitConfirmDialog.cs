@@ -23,36 +23,32 @@ namespace GameDevTV.RTS.UI.Pregame
 
         Action _customConfirmAction;
         Action _customCancelAction;
+        bool _requireCustomConfirm;
 
         void Awake()
         {
-            Hide();
+            // Không gọi Hide() ở đây: Awake chạy lần đầu khi dialogRoot được SetActive(true),
+            // Hide() sẽ xóa _customConfirmAction ngay sau Show() (đầu hàng lần 1 fail).
             ApplyMessage();
+            WireButtonsOnce();
         }
 
-        void OnEnable()
+        /// <summary>
+        /// Mục tiêu: Tránh listener trùng trên OK/Hủy (OnEnable nhiều lần → OK gọi 2 lần, lần 2 thoát game).
+        /// Cách hoạt động: Gắn listener một lần trong Awake; Remove trước Add để dedupe.
+        /// </summary>
+        void WireButtonsOnce()
         {
             if (confirmButton != null)
             {
+                confirmButton.onClick.RemoveListener(OnConfirmClicked);
                 confirmButton.onClick.AddListener(OnConfirmClicked);
             }
 
             if (cancelButton != null)
             {
-                cancelButton.onClick.AddListener(OnCancelClicked);
-            }
-        }
-
-        void OnDisable()
-        {
-            if (confirmButton != null)
-            {
-                confirmButton.onClick.RemoveListener(OnConfirmClicked);
-            }
-
-            if (cancelButton != null)
-            {
                 cancelButton.onClick.RemoveListener(OnCancelClicked);
+                cancelButton.onClick.AddListener(OnCancelClicked);
             }
         }
 
@@ -88,9 +84,32 @@ namespace GameDevTV.RTS.UI.Pregame
 
             _customConfirmAction = onConfirm;
             _customCancelAction = onCancel;
+            _requireCustomConfirm = onConfirm != null;
             message = string.IsNullOrWhiteSpace(messageOverride) ? DefaultMessage : messageOverride;
             ApplyMessage();
+            WireButtonsOnce();
             UiPanelActivation.ShowDeferred(dialogRoot, this);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Xác nhận đầu hàng / kết thúc trận — không bao giờ fallback thoát game.
+        /// </summary>
+        public void ShowMatchEndConfirm(string messageOverride, Action onConfirm, Action onCancel)
+        {
+            if (onConfirm == null)
+            {
+                Debug.LogError(
+                    $"{nameof(ExitConfirmDialog)}.{nameof(ShowMatchEndConfirm)}: thiếu onConfirm.",
+                    this);
+                return;
+            }
+
+            _requireCustomConfirm = true;
+            Show(messageOverride, onConfirm, onCancel);
+            // Awake có thể vừa chạy sau SetActive(true) — gán lại delegate sau khi dialog sẵn sàng.
+            _customConfirmAction = onConfirm;
+            _customCancelAction = onCancel;
+            _requireCustomConfirm = true;
         }
 
         public bool IsVisible => dialogRoot != null && dialogRoot.activeSelf;
@@ -104,16 +123,27 @@ namespace GameDevTV.RTS.UI.Pregame
 
             _customConfirmAction = null;
             _customCancelAction = null;
+            _requireCustomConfirm = false;
         }
 
         void OnConfirmClicked()
         {
             Action confirm = _customConfirmAction;
+            bool requireCustom = _requireCustomConfirm;
+
             Hide();
 
             if (confirm != null)
             {
                 confirm.Invoke();
+                return;
+            }
+
+            if (requireCustom)
+            {
+                Debug.LogWarning(
+                    $"{nameof(ExitConfirmDialog)}: OK thiếu custom action trong chế độ xác nhận tùy chỉnh — không thoát game.",
+                    this);
                 return;
             }
 

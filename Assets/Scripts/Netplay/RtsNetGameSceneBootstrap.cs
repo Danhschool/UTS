@@ -1,6 +1,8 @@
 using System.Collections;
 using GameDevTV.RTS.Game;
+using GameDevTV.RTS.Game.FactionSummary;
 using GameDevTV.RTS.Game.Startup;
+using GameDevTV.RTS.UI.InGame;
 using GameDevTV.RTS.Player;
 using Mirror;
 using ProjectRTS.Netplay;
@@ -24,6 +26,8 @@ namespace GameDevTV.RTS.Netplay
             }
 
             LocalHumanOwnerService.EnsureExists();
+            FactionSummaryTracker.EnsureExists();
+            MatchOutcomeDetector.EnsureExists();
             RtsLobbyUI.HideLobbyCanvasForGameplay();
         }
 

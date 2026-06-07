@@ -12857,6 +12857,7 @@ MonoBehaviour:
   placementNavMeshObstacleProbeLayers:
     serializedVersion: 2
     m_Bits: 960
+  voiceCommandGameplayPrefabs: {fileID: 11400000, guid: cdb320bef35bc2f4da485198b2eaf8ab, type: 2}
 --- !u!114 &330585550
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12940,8 +12941,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a161b6fd5116906419ac8538a13a9e54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Player.FogLocalOwnerDebugHotkeys
-  player1Key: 28
-  player2Key: 27
+  player1Key: 94
+  player2Key: 60
 --- !u!114 &330585555
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -77137,6 +77138,12 @@ MonoBehaviour:
   spawnStartingUnits: 1
   startingUnits:
   - unitPrefab: {fileID: 6510919576379171628, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
+    count: 3
+  - unitPrefab: {fileID: 3127381923673660962, guid: f66f116ca87be0142970f69d81af2967, type: 3}
+    count: 3
+  - unitPrefab: {fileID: 2977037207688881033, guid: b77683e095dae404aa87a1b4e5fbc574, type: 3}
+    count: 3
+  - unitPrefab: {fileID: 1000013931707134, guid: 3bc6b0cf0b103a048b598a956a4e71b7, type: 3}
     count: 3
   unitSpawnFirstOffsetLocal: {x: 0, y: 0, z: 0}
   unitSpawnSphereRadius: 3

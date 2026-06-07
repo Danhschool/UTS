@@ -2095,51 +2095,55 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4363137715285075741, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4363137715285075741, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4480451870336377714, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4480451870336377714, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4480451870336377714, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: -17
       objectReference: {fileID: 0}
     - target: {fileID: 7068650454524137378, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: -440
       objectReference: {fileID: 0}
     - target: {fileID: 8559796552643366010, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
       propertyPath: m_Name
       value: Panel Setting
       objectReference: {fileID: 0}
+    - target: {fileID: 8559796552643366010, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8655419147062310901, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8655419147062310901, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8655419147062310901, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 683
       objectReference: {fileID: 0}
     - target: {fileID: 8655419147062310901, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 341.5
       objectReference: {fileID: 0}
     - target: {fileID: 8655419147062310901, guid: 500a411070425cf4dbc5869f6857abcd, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -35
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2433,6 +2437,10 @@ PrefabInstance:
     - target: {fileID: 939261674729512414, guid: 3c5ef49925597a242ab97ca75c51d273, type: 3}
       propertyPath: m_Name
       value: Panel Exit Confirm
+      objectReference: {fileID: 0}
+    - target: {fileID: 939261674729512414, guid: 3c5ef49925597a242ab97ca75c51d273, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7582732546715041274, guid: 3c5ef49925597a242ab97ca75c51d273, type: 3}
       propertyPath: m_Pivot.x

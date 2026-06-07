@@ -60,6 +60,11 @@ namespace GameDevTV.RTS.Player
         /// Mục tiêu: Tránh NullRef khi PlayerViewBinder/FactionHudBinder gọi trước Supplies.Awake (UI chưa active).
         /// Cách hoạt động: Tạo dictionary static một lần với giá trị mặc định cho mọi Owner.
         /// </summary>
+        /// <summary>
+        /// Mục tiêu: Module khác (ví dụ summary UI) đọc dictionary tài nguyên an toàn trước Awake HUD.
+        /// </summary>
+        public static void EnsureReady() => EnsureDictionariesInitialized();
+
         static void EnsureDictionariesInitialized()
         {
             if (Stone != null)
@@ -75,9 +80,9 @@ namespace GameDevTV.RTS.Player
 
             foreach (Owner owner in Enum.GetValues(typeof(Owner)))
             {
-                Stone.Add(owner, 100);
-                Wood.Add(owner, 100);
-                Food.Add(owner, 100);
+                Stone.Add(owner, 500);
+                Wood.Add(owner, 500);
+                Food.Add(owner, 500);
                 Population.Add(owner, 0);
                 PopulationLimit.Add(owner, 0);
             }

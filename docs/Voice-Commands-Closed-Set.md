@@ -39,7 +39,7 @@ Whisper được gợi ý qua prompt build từ profile lệnh; resolver fuzzy s
 |----------------|-----------|----------------|
 | **dừng lại** | `stop` | Mọi **unit đang chọn** nhận lệnh `Stop()` — dừng di chuyển, gather, combat path. Tương đương phím **H**. |
 | **di chuyển** | `move` | Cần unit đang chọn → bấm **lệnh 1** trên action bar (Move). **Bước tiếp:** click map để chỉ đích. |
-| **tấn công** | `attack` | Cần quân đang chọn → quét bán kính **~45m** quanh selection; nếu có unit **owner khác** thì chọn địch gần nhất và gửi lệnh tấn công (chuột phải). Không cần click thêm nếu đã thấy địch. |
+| **tấn công** | `attack` | Cần quân đang chọn → quét **địch trên màn hình** (viewport); chọn địch gần selection nhất mà **AttackCommand** cho phép → gửi lệnh tấn công. Không cần click thêm nếu tìm được mục tiêu. |
 
 > **Lưu ý:** *di chuyển* vẫn là lệnh **hai bước** (voice + click map). *tấn công* tự tìm mục tiêu gần nếu có địch trong vùng quét.
 
@@ -72,12 +72,12 @@ Whisper được gợi ý qua prompt build từ profile lệnh; resolver fuzzy s
 
 | Câu lệnh chuẩn | CommandId | Cách hoạt động |
 |----------------|-----------|----------------|
-| **thu gỗ** | `gather_wood` | Nếu **chưa chọn dân** → tự chọn **1 dân rảnh** trên màn hình. Nếu **đã chọn dân** → dùng selection hiện tại. Sau đó tìm mỏ **gỗ** gần camera và gửi lệnh gather. |
+| **thu gỗ** | `gather_wood` | Tự chọn dân bằng **logic AI** (`TryPickGatherWorker`): ưu tiên dân rảnh → redirect dân đang thu gần CC → bất kỳ dân có lệnh Gather. Ngắt gather cũ nếu cần → tìm mỏ gần camera → gather. |
 | **thu đá** | `gather_stone` | Giống *thu gỗ* với mỏ **đá**. |
 | **thu thịt** | `gather_food` | Giống *thu gỗ* với nguồn **thịt / food**. |
 
-> *Dân rảnh* = không đang gather, không đang xây / cam kết công trình.  
-> Nếu không có dân rảnh → *"Không có dân rảnh để thu tài nguyên"*.  
+> Quét **toàn bộ dân phe bạn** (không chỉ trên màn hình), giống AI đối thủ.  
+> Chỉ thất bại khi **không còn dân nào** hoặc **tất cả đang xây / không có GatherCommand**.  
 > Nếu không có mỏ phù hợp gần → *"Không tìm mỏ phù hợp gần camera"*.
 
 ---
@@ -86,7 +86,7 @@ Whisper được gợi ý qua prompt build từ profile lệnh; resolver fuzzy s
 
 | Câu lệnh chuẩn | CommandId | Slot UI (1-based) | Cách hoạt động |
 |----------------|-----------|-------------------|----------------|
-| **xây nhà kho** | `build_storehouse` | **7** → **2** | Đảm bảo có dân (rảnh nếu chưa chọn) → mở menu Build (**7**) → chọn nhà kho (**2**) → ghost đặt nhà, **click map**. |
+| **xây nhà kho** | `build_storehouse` | **7** → **2** | Tự chọn dân qua **TryPickBuilderWorker** (AI): rảnh → redirect gather → dân khả dụng. Stop gather nếu redirect → **7** → **2** → click map. |
 | **xây lò rèn** | `build_forge` | **7** → **5** | Giống nhà kho; slot **5** = lò rèn. |
 | **xây nhà lính** | `build_barracks` | **7** → **4** | Đảm bảo có dân → mở menu Build (**7**) → **lệnh 4** → ghost đặt nhà. |
 | **xây chuồng** | `build_corral` | **7** → **3** | Đảm bảo có dân → **7** → **lệnh 3**. |
@@ -148,6 +148,8 @@ sequenceDiagram
 
 Dưới đây là **câu chuẩn** (PrimaryPhrase) và vài alias tiêu biểu — đầy đủ nằm trong JSON.
 
+> **Trong game:** nội dung mục này cũng có trong **Hướng dẫn** (Main Menu → Dialog Hướng Dẫn / `Assets/Resources/UI/game_manual_vi.json`). Người chơi **chỉ** nên dùng các câu liệt kê ở đó — hệ thống không nhận câu tự do.
+
 ### Chiến đấu & di chuyển
 
 | Chuẩn | Alias ví dụ |
@@ -173,11 +175,11 @@ Dưới đây là **câu chuẩn** (PrimaryPhrase) và vài alias tiêu biểu �
 | thu gỗ | thu gỗ, chặt cây |
 | thu đá | thu đá, đào đá |
 | thu thịt | thu thịt |
-| xây nhà kho | xây nhà kho, xây kho |
-| xây lò rèn | xây lò rèn, lò rèn |
-| xây nhà lính | xây nhà lính, doanh trại |
-| xây chuồng | xây chuồng |
-| xây tháp canh | xây tháp canh |
+| xây nhà kho | xây dựng nhà kho, xây nhà kho, xây kho |
+| xây lò rèn | xây dựng lò rèn, xây lò rèn, lò rèn |
+| xây nhà lính | xây dựng nhà lính, xây nhà lính, doanh trại |
+| xây chuồng | xây dựng chuồng, xây chuồng |
+| xây tháp canh | xây dựng tháp canh, xây tháp canh |
 
 ### Sản xuất & nghiên cứu
 
@@ -227,6 +229,8 @@ Các `CommandId` sau **có trong JSON** nhưng **không** thuộc danh sách b�
 | `Assets/Resources/VoiceCommands/rts_voice_commands_uts_units_vi.json` | Bảng câu nói ↔ CommandId |
 | `VoiceCommandOneShotTranscriptMapper.cs` | STT → CommandId |
 | `VoiceCommandExecutionPlan.cs` | CommandId → kế hoạch thực thi (slot UI, gather, attack…) |
+| `AIPlayerWorkerSnapshotUtility.cs` | Snapshot phe player cho chọn dân (dùng chung logic AI) |
+| `AIInfraBuildUtility.cs` | `TryPickGatherWorker` / `TryPickBuilderWorker` |
 | `PlayerInput.Voice.cs` | Thực thi selection / slot / gather / attack |
 | `VoiceCommandGameplayExecutor.cs` | Nối mapper → PlayerInput |
 

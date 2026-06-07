@@ -12,6 +12,7 @@ using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.Game.Startup;
 using GameDevTV.RTS.Netplay;
 using Mirror;
+using ProjectRTS.SpeechRecognition;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -40,6 +41,8 @@ namespace GameDevTV.RTS.Player
         [Tooltip("Bán kính > 0: OverlapSphere bổ sung — nếu chạm collider có NavMeshObstacle (bật) thì coi là không đặt được. 0 = chỉ dùng Restrictions trên lệnh.")]
         [SerializeField] private float placementNavMeshObstacleProbeRadius;
         [SerializeField] private LayerMask placementNavMeshObstacleProbeLayers = ~0;
+        [Tooltip("Prefab nhà/unit cho voice — gán VoiceCommandGameplayPrefabs asset (train/research/chọn quân).")]
+        [SerializeField] private VoiceCommandGameplayPrefabs voiceCommandGameplayPrefabs;
 
         private Vector2 startingMousePosition;
 

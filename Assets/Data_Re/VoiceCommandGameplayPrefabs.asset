@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 707fd88d1ebdc8b46ababfdd99ee8d9b, type: 3}
+  m_Name: VoiceCommandGameplayPrefabs
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectRTS.SpeechRecognition.VoiceCommandGameplayPrefabs
+  civilCentralBuildingPrefab: {fileID: 2665764001411241133, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
+  storeHouseBuildingPrefab: {fileID: 7208533299743434618, guid: 809b18f36e667d34b8b033d8c5144ce2, type: 3}
+  corralBuildingPrefab: {fileID: 4587507429451976044, guid: fe1a144e82883874c99874085f717b13, type: 3}
+  forgeBuildingPrefab: {fileID: 122455736906959572, guid: c7d08169c1952864cafddb72cc47383e, type: 3}
+  barracksBuildingPrefab: {fileID: 1789053669275132042, guid: 11147ad8983b6f44780f2369c5180822, type: 3}
+  defenseTowerBuildingPrefab: {fileID: 1101349339577557291, guid: 3336afde973f8e54f9d08daa8384792a, type: 3}
+  fieldBuildingPrefab: {fileID: 1640189813048852855, guid: f634799887d325b43abfdcde3aafe5df, type: 3}
+  workerUnitPrefab: {fileID: 6510919576379171628, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
+  warriorUnitPrefab: {fileID: 3127381923673660962, guid: f66f116ca87be0142970f69d81af2967, type: 3}
+  archerUnitPrefab: {fileID: 2977037207688881033, guid: b77683e095dae404aa87a1b4e5fbc574, type: 3}
+  rockWarriorUnitPrefab: {fileID: 1000013931707134, guid: 3bc6b0cf0b103a048b598a956a4e71b7, type: 3}

@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using GameDevTV.RTS.AI;
+using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.UI;
 using GameDevTV.RTS.UI.GameEventLog;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Utilities;
+using ProjectRTS.SpeechRecognition;
 using ProjectRTS.SpeechRecognition.Core;
 using UnityEngine;
 using UnityEngine.InputSystem.LowLevel;
@@ -16,15 +18,23 @@ namespace GameDevTV.RTS.Player
     /// </summary>
     public partial class PlayerInput
     {
-        const float VoiceAttackScanRadius = 45f;
+        /// <summary>
+        /// Mục tiêu: Gán catalog prefab voice từ Inspector hoặc VoiceCommandGameplayExecutor.
+        /// Cách hoạt động: Thay reference runtime; ưu tiên khi resolve nhà/unit voice.
+        /// </summary>
+        public void ConfigureVoiceCommandGameplayPrefabs(VoiceCommandGameplayPrefabs catalog)
+        {
+            if (catalog != null)
+            {
+                voiceCommandGameplayPrefabs = catalog;
+            }
+        }
 
         GameObject cachedWorkerPrefab;
         GameObject cachedWarriorPrefab;
         GameObject cachedArcherPrefab;
         GameObject cachedRockWarriorPrefab;
-        GameObject cachedCivilCentralPrefab;
-        GameObject cachedForgePrefab;
-        GameObject cachedBarrackPrefab;
+        readonly System.Collections.Generic.Dictionary<VoiceCommandBuildingTarget, GameObject> voiceBuildingPrefabCache = new(8);
         SupplySO cachedStoneSupply;
         SupplySO cachedWoodSupply;
         SupplySO cachedFoodSupply;
@@ -106,9 +116,9 @@ namespace GameDevTV.RTS.Player
                 return false;
             }
 
-            if (!VoiceTryFindNearestHostile(attackers, out AbstractUnit hostile, out RaycastHit hit))
+            if (!VoiceTryFindAttackableHostileOnScreen(attackers, out AbstractUnit hostile, out RaycastHit hit))
             {
-                GameEventLog.Post("[VoiceCmd] Không thấy địch gần đơn vị đang chọn.", GameEventLogCategory.Warning);
+                GameEventLog.Post("[VoiceCmd] Không thấy địch trên màn hình có thể tấn công.", GameEventLogCategory.Warning);
                 return false;
             }
 
@@ -133,27 +143,24 @@ namespace GameDevTV.RTS.Player
             return any;
         }
 
-        bool VoiceTryFindNearestHostile(
-            List<AbstractUnit> referenceUnits,
+        /// <summary>
+        /// Mục tiêu: Tìm địch trên viewport gần selection mà quân đang chọn thực sự tấn công được.
+        /// Cách hoạt động: Lọc owner khác + on-screen → thử AttackCommand.CanHandle theo khoảng cách gần nhất.
+        /// </summary>
+        bool VoiceTryFindAttackableHostileOnScreen(
+            List<AbstractUnit> attackers,
             out AbstractUnit hostile,
             out RaycastHit hit)
         {
             hostile = null;
             hit = default;
-            if (referenceUnits == null || referenceUnits.Count == 0)
+            if (attackers == null || attackers.Count == 0)
             {
                 return false;
             }
 
-            Vector3 center = Vector3.zero;
-            for (int i = 0; i < referenceUnits.Count; i++)
-            {
-                center += referenceUnits[i].transform.position;
-            }
-
-            center /= referenceUnits.Count;
+            Vector3 center = VoiceComputeSelectionCenter(attackers);
             Owner localOwner = ResolveLocalOwner();
-            float radiusSqr = VoiceAttackScanRadius * VoiceAttackScanRadius;
             float bestSqr = float.MaxValue;
 
             AbstractUnit[] units = FindObjectsByType<AbstractUnit>(
@@ -165,27 +172,80 @@ namespace GameDevTV.RTS.Player
                 if (candidate == null
                     || !candidate.gameObject.activeInHierarchy
                     || candidate.Owner == localOwner
-                    || candidate.Owner == Owner.Invalid)
+                    || candidate.Owner == Owner.Invalid
+                    || !IsCommandableOnScreen(candidate))
+                {
+                    continue;
+                }
+
+                if (!VoiceTryBuildHitForWorldPoint(candidate.transform.position, out RaycastHit candidateHit))
+                {
+                    continue;
+                }
+
+                if (!VoiceCanAnyAttackerStrikeHostile(attackers, candidateHit))
                 {
                     continue;
                 }
 
                 float sqr = (candidate.transform.position - center).sqrMagnitude;
-                if (sqr > radiusSqr || sqr >= bestSqr)
+                if (sqr >= bestSqr)
                 {
                     continue;
                 }
 
                 bestSqr = sqr;
                 hostile = candidate;
+                hit = candidateHit;
             }
 
-            if (hostile == null)
+            return hostile != null;
+        }
+
+        static Vector3 VoiceComputeSelectionCenter(List<AbstractUnit> units)
+        {
+            Vector3 center = Vector3.zero;
+            for (int i = 0; i < units.Count; i++)
             {
-                return false;
+                center += units[i].transform.position;
             }
 
-            return VoiceTryBuildHitForWorldPoint(hostile.transform.position, out hit);
+            return center / units.Count;
+        }
+
+        bool VoiceCanAnyAttackerStrikeHostile(List<AbstractUnit> attackers, RaycastHit hit)
+        {
+            for (int i = 0; i < attackers.Count; i++)
+            {
+                AbstractUnit attacker = attackers[i];
+                if (attacker is not IAttacker)
+                {
+                    continue;
+                }
+
+                if (!AvailableCommandsResolver.TryPickPrimaryRightClickCommand(
+                        attacker,
+                        hit,
+                        unitIndex: 0,
+                        MouseButton.Right,
+                        out BaseCommand command))
+                {
+                    continue;
+                }
+
+                if (command is not AttackCommand)
+                {
+                    continue;
+                }
+
+                CommandContext context = new(attacker, hit, unitIndex: 0, MouseButton.Right);
+                if (command.CanHandle(context))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         bool VoiceSelectAllUnitsOnScreen()
@@ -207,9 +267,8 @@ namespace GameDevTV.RTS.Player
 
         bool VoiceGatherSupplyWithWorkerFallback(AIEconomySupplyKindClassifier.Kind supplyKind)
         {
-            if (!VoiceEnsureWorkerSelectionForVoiceCommand())
+            if (!VoiceEnsureWorkerForGatherCommand())
             {
-                GameEventLog.Post("[VoiceCmd] Không có dân rảnh để thu tài nguyên.", GameEventLogCategory.Warning);
                 return false;
             }
 
@@ -218,9 +277,8 @@ namespace GameDevTV.RTS.Player
 
         bool VoiceWorkerOpenBuildThenSlot(int openBuildUiSlot, int buildUiSlot)
         {
-            if (!VoiceEnsureWorkerSelectionForVoiceCommand())
+            if (!VoiceEnsureWorkerForBuildCommand())
             {
-                GameEventLog.Post("[VoiceCmd] Không có dân rảnh để xây.", GameEventLogCategory.Warning);
                 return false;
             }
 
@@ -245,49 +303,81 @@ namespace GameDevTV.RTS.Player
         }
 
         /// <summary>
-        /// Mục tiêu: Đảm bảo có ít nhất một worker trong selection cho lệnh voice.
-        /// Cách hoạt động: Giữ worker đã chọn; nếu không có thì chọn một dân rảnh trên màn hình.
+        /// Mục tiêu: Chọn worker cho lệnh gather voice — dùng cùng logic AI (kể cả redirect dân đang thu).
+        /// Cách hoạt động: Snapshot phe local → TryPickGatherWorker → chọn + ngắt gather nếu cần.
         /// </summary>
-        bool VoiceEnsureWorkerSelectionForVoiceCommand()
+        bool VoiceEnsureWorkerForGatherCommand()
         {
-            if (SelectionHasLocalWorker())
+            if (!VoiceTryPickAndSelectWorker(AIInfraBuildUtility.TryPickGatherWorker, out _))
             {
-                return true;
+                GameEventLog.Post("[VoiceCmd] Không tìm được dân để thu tài nguyên.", GameEventLogCategory.Warning);
+                return false;
             }
 
-            if (!TryResolveUnitPrefab("worker", out GameObject workerPrefab))
+            return true;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Chọn worker cho lệnh xây voice — dùng cùng logic AI TryPickBuilderWorker.
+        /// Cách hoạt động: Snapshot phe local → pick builder → chọn + Stop gather nếu redirect.
+        /// </summary>
+        bool VoiceEnsureWorkerForBuildCommand()
+        {
+            if (!VoiceTryPickAndSelectWorker(AIInfraBuildUtility.TryPickBuilderWorker, out _))
+            {
+                GameEventLog.Post("[VoiceCmd] Không tìm được dân để xây.", GameEventLogCategory.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
+        delegate bool VoiceWorkerPickDelegate(
+            AIWorldStateSnapshot snapshot,
+            Vector3 anchor,
+            out Worker worker,
+            out bool mustStopGatherFirst);
+
+        bool VoiceTryPickAndSelectWorker(VoiceWorkerPickDelegate pickWorker, out Worker worker)
+        {
+            worker = null;
+            Owner owner = ResolveLocalOwner();
+            if (!AIPlayerWorkerSnapshotUtility.TryBuildSnapshot(owner, out AIWorldStateSnapshot snapshot)
+                || snapshot.Workers.Count == 0)
             {
                 return false;
             }
 
-            List<AbstractUnit> workers = CollectUnitsOfKindOnScreen(workerPrefab);
-            for (int i = 0; i < workers.Count; i++)
+            Vector3 anchor = AIPlayerWorkerSnapshotUtility.GetEconomyAnchor(snapshot);
+            if (!pickWorker(snapshot, anchor, out worker, out bool mustStopGatherFirst) || worker == null)
             {
-                if (workers[i] is not Worker worker || !IsVoiceIdleWorker(worker))
-                {
-                    continue;
-                }
-
-                DeselectAllUnits();
-                TrySelectLocalOwned(worker);
-                return true;
+                return false;
             }
 
-            return false;
+            VoiceApplyWorkerSelectionForVoice(worker, mustStopGatherFirst);
+            return true;
         }
 
-        bool SelectionHasLocalWorker()
+        /// <summary>
+        /// Mục tiêu: Gán selection voice và chuẩn bị worker trước gather/build.
+        /// Cách hoạt động: Deselect → chọn worker; InterruptGather + Stop nếu AI báo redirect.
+        /// </summary>
+        void VoiceApplyWorkerSelectionForVoice(Worker worker, bool mustStopGatherFirst)
         {
-            List<AbstractUnit> selected = CollectSelectedAbstractUnits();
-            for (int i = 0; i < selected.Count; i++)
+            DeselectAllUnits();
+            TrySelectLocalOwned(worker);
+
+            if (mustStopGatherFirst)
             {
-                if (selected[i] is Worker && IsOwnedByLocalPlayer(selected[i]))
-                {
-                    return true;
-                }
+                worker.InterruptGatherWorkCycle();
+                worker.Stop();
+                return;
             }
 
-            return false;
+            if (worker.HasStaleGatherCommand)
+            {
+                worker.InterruptGatherWorkCycle();
+            }
         }
 
         bool VoiceTrySelectLocalBuilding(VoiceCommandBuildingTarget target)
@@ -342,26 +432,55 @@ namespace GameDevTV.RTS.Player
 
         GameObject VoiceResolveBuildingPrefab(VoiceCommandBuildingTarget target)
         {
-            switch (target)
+            if (voiceCommandGameplayPrefabs != null
+                && voiceCommandGameplayPrefabs.TryGetBuildingPrefab(target, out GameObject assigned))
             {
-                case VoiceCommandBuildingTarget.CivilCentral:
-                    return VoiceResolveBuildingPrefabByKey(ref cachedCivilCentralPrefab, "civil_central");
-                case VoiceCommandBuildingTarget.Forge:
-                    return VoiceResolveBuildingPrefabByKey(ref cachedForgePrefab, "forge");
-                case VoiceCommandBuildingTarget.Barracks:
-                    return VoiceResolveBuildingPrefabByKey(ref cachedBarrackPrefab, "barrack");
-                default:
-                    return null;
+                VoiceCacheBuildingPrefab(target, assigned);
+                return assigned;
+            }
+
+            if (voiceBuildingPrefabCache.TryGetValue(target, out GameObject cached) && cached != null)
+            {
+                return cached;
+            }
+
+            if (!VoiceTryResolveBuildingSearchKey(target, out string searchKey))
+            {
+                return null;
+            }
+
+            GameObject resolved = VoiceResolveBuildingPrefabByKey(searchKey);
+            VoiceCacheBuildingPrefab(target, resolved);
+            return resolved;
+        }
+
+        void VoiceCacheBuildingPrefab(VoiceCommandBuildingTarget target, GameObject prefab)
+        {
+            if (prefab != null)
+            {
+                voiceBuildingPrefabCache[target] = prefab;
             }
         }
 
-        GameObject VoiceResolveBuildingPrefabByKey(ref GameObject cache, string key)
+        static bool VoiceTryResolveBuildingSearchKey(VoiceCommandBuildingTarget target, out string searchKey)
         {
-            if (cache != null)
+            searchKey = target switch
             {
-                return cache;
-            }
+                VoiceCommandBuildingTarget.CivilCentral => "civil_central",
+                VoiceCommandBuildingTarget.StoreHouse => "store_house",
+                VoiceCommandBuildingTarget.Corral => "corral",
+                VoiceCommandBuildingTarget.Forge => "forge",
+                VoiceCommandBuildingTarget.Barracks => "barrack",
+                VoiceCommandBuildingTarget.DefenseTower => "defense_tower",
+                VoiceCommandBuildingTarget.Field => "field",
+                _ => null
+            };
 
+            return searchKey != null;
+        }
+
+        GameObject VoiceResolveBuildingPrefabByKey(string key)
+        {
             BaseBuilding[] buildings = FindObjectsByType<BaseBuilding>(
                 FindObjectsInactive.Exclude,
                 FindObjectsSortMode.None);
@@ -376,8 +495,7 @@ namespace GameDevTV.RTS.Player
                 string name = RecognizedSpeechPhraseNormalizer.ToDatasetPhraseForm(building.BuildingSO.name);
                 if (name.Contains(key, System.StringComparison.Ordinal))
                 {
-                    cache = building.BuildingSO.Prefab;
-                    return cache;
+                    return building.BuildingSO.Prefab;
                 }
             }
 
@@ -553,6 +671,15 @@ namespace GameDevTV.RTS.Player
             }
 
             string key = archetype.Trim().ToLowerInvariant();
+
+            if (voiceCommandGameplayPrefabs != null
+                && voiceCommandGameplayPrefabs.TryGetUnitPrefab(key, out GameObject assignedPrefab))
+            {
+                prefab = assignedPrefab;
+                VoiceCacheUnitPrefab(key, assignedPrefab);
+                return true;
+            }
+
             switch (key)
             {
                 case "worker":
@@ -575,6 +702,17 @@ namespace GameDevTV.RTS.Player
             }
 
             prefab = VoiceFindPrefabFromLocalUnits(key);
+            VoiceCacheUnitPrefab(key, prefab);
+            return prefab != null;
+        }
+
+        void VoiceCacheUnitPrefab(string key, GameObject prefab)
+        {
+            if (prefab == null)
+            {
+                return;
+            }
+
             switch (key)
             {
                 case "worker":
@@ -590,8 +728,6 @@ namespace GameDevTV.RTS.Player
                     cachedRockWarriorPrefab = prefab;
                     break;
             }
-
-            return prefab != null;
         }
 
         GameObject VoiceFindPrefabFromLocalUnits(string archetype)
@@ -649,11 +785,5 @@ namespace GameDevTV.RTS.Player
                 }
             }
         }
-
-        static bool IsVoiceIdleWorker(Worker worker) =>
-            worker != null
-            && !worker.IsGatheringOrReturning
-            && !worker.IsBuilding
-            && !worker.IsCommittedToConstructionWork;
     }
 }

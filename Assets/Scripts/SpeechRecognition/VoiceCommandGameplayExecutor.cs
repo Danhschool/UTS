@@ -14,6 +14,8 @@ namespace ProjectRTS.SpeechRecognition
     {
         [SerializeField] private VoiceCommandOneShotTranscriptMapper _mapper;
         [SerializeField] private PlayerInput _playerInput;
+        [Tooltip("Prefab nhà/unit — gán để voice chọn CC/Forge/Barracks và unit chính xác.")]
+        [SerializeField] private VoiceCommandGameplayPrefabs _gameplayPrefabs;
 
         private void Awake()
         {
@@ -25,6 +27,11 @@ namespace ProjectRTS.SpeechRecognition
             if (_playerInput == null)
             {
                 _playerInput = FindFirstObjectByType<PlayerInput>();
+            }
+
+            if (_playerInput != null && _gameplayPrefabs != null)
+            {
+                _playerInput.ConfigureVoiceCommandGameplayPrefabs(_gameplayPrefabs);
             }
         }
 

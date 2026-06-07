@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
@@ -545,6 +546,111 @@ namespace GameDevTV.RTS.AI
             }
 
             return worker != null;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Chọn worker cho lệnh gather (voice/player) — cùng fallback như AI economy.
+        /// Cách hoạt động: Rảnh gather → redirect gather gần anchor → bất kỳ worker có GatherCommand.
+        /// </summary>
+        public static bool TryPickGatherWorker(
+            AIWorldStateSnapshot snapshot,
+            Vector3 anchor,
+            out Worker worker,
+            out bool mustStopGatherFirst)
+        {
+            mustStopGatherFirst = false;
+
+            if (TryPickIdleGatherWorker(snapshot, out worker))
+            {
+                return true;
+            }
+
+            if (TryPickGatheringWorkerToRedirect(snapshot, anchor, out worker))
+            {
+                mustStopGatherFirst = true;
+                return true;
+            }
+
+            worker = TryPickAnyGatherCapableWorker(snapshot);
+            if (worker != null)
+            {
+                mustStopGatherFirst = worker.IsInGatherWorkCycle;
+                return true;
+            }
+
+            worker = null;
+            return false;
+        }
+
+        public static bool TryPickIdleGatherWorker(AIWorldStateSnapshot snapshot, out Worker worker)
+        {
+            worker = null;
+            int bestId = int.MaxValue;
+
+            for (int i = 0; i < snapshot.Workers.Count; i++)
+            {
+                Worker candidate = snapshot.Workers[i];
+                if (candidate == null || !IsEligibleIdleGatherWorker(candidate))
+                {
+                    continue;
+                }
+
+                int id = candidate.GetInstanceID();
+                if (id < bestId)
+                {
+                    bestId = id;
+                    worker = candidate;
+                }
+            }
+
+            return worker != null;
+        }
+
+        static bool IsEligibleIdleGatherWorker(Worker worker) =>
+            worker != null
+            && WorkerHasGatherCommand(worker)
+            && !worker.IsCommittedToConstructionWork
+            && !worker.IsGatheringOrReturning
+            && !worker.HasSupplies;
+
+        static Worker TryPickAnyGatherCapableWorker(AIWorldStateSnapshot snapshot)
+        {
+            Worker best = null;
+            int bestId = int.MaxValue;
+
+            for (int i = 0; i < snapshot.Workers.Count; i++)
+            {
+                Worker candidate = snapshot.Workers[i];
+                if (candidate == null
+                    || candidate.IsCommittedToConstructionWork
+                    || !WorkerHasGatherCommand(candidate))
+                {
+                    continue;
+                }
+
+                int id = candidate.GetInstanceID();
+                if (id < bestId)
+                {
+                    bestId = id;
+                    best = candidate;
+                }
+            }
+
+            return best;
+        }
+
+        static bool WorkerHasGatherCommand(Worker worker)
+        {
+            List<BaseCommand> commands = AvailableCommandsResolver.GetFlattened(worker);
+            for (int i = 0; i < commands.Count; i++)
+            {
+                if (commands[i] is GatherCommand)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

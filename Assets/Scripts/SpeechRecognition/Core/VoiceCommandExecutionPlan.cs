@@ -51,8 +51,12 @@ namespace ProjectRTS.SpeechRecognition.Core
     {
         None,
         CivilCentral,
+        StoreHouse,
+        Corral,
         Forge,
-        Barracks
+        Barracks,
+        DefenseTower,
+        Field
     }
 
     /// <summary>
