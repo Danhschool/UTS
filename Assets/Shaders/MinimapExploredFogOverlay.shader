@@ -11,6 +11,8 @@ Shader "RTS/Minimap/Explored Fog Overlay"
         _VisionThreshold("Vision Threshold", Range(0, 1)) = 0.9
         _FogUvBottomLeft("Fog UV Bottom Left", Vector) = (0, 0, 0, 0)
         _FogUvTopRight("Fog UV Top Right", Vector) = (1, 1, 0, 0)
+        _VisionFogUvBottomLeft("Vision Fog UV Bottom Left", Vector) = (0, 0, 0, 0)
+        _VisionFogUvTopRight("Vision Fog UV Top Right", Vector) = (1, 1, 0, 0)
 
         _StencilComp("Stencil Comparison", Float) = 8
         _Stencil("Stencil ID", Float) = 0
@@ -65,6 +67,8 @@ Shader "RTS/Minimap/Explored Fog Overlay"
             fixed _VisionThreshold;
             float4 _FogUvBottomLeft;
             float4 _FogUvTopRight;
+            float4 _VisionFogUvBottomLeft;
+            float4 _VisionFogUvTopRight;
             float4 _ClipRect;
             float4 _MainTex_ST;
 
@@ -100,16 +104,17 @@ Shader "RTS/Minimap/Explored Fog Overlay"
 
             fixed4 frag(v2f input) : SV_Target
             {
-                float2 fogUv = saturate(lerp(_FogUvBottomLeft.xy, _FogUvTopRight.xy, input.worldUV));
-                fixed explored = tex2D(_ExploredTex, fogUv).r;
-                fixed vision = tex2D(_VisionTex, fogUv).r;
+                float2 exploredUv = saturate(lerp(_FogUvBottomLeft.xy, _FogUvTopRight.xy, input.worldUV));
+                float2 visionUv = saturate(lerp(_VisionFogUvBottomLeft.xy, _VisionFogUvTopRight.xy, input.worldUV));
+                fixed explored = tex2D(_ExploredTex, exploredUv).r;
+                fixed vision = tex2D(_VisionTex, visionUv).r;
 
+                fixed hasVision = step(_VisionThreshold, vision);
                 fixed isUnexplored = step(explored, _ExploredThreshold);
                 fixed isExplored = 1.0 - isUnexplored;
-                fixed hasVision = step(_VisionThreshold, vision);
 
                 fixed4 result = fixed4(0, 0, 0, 0);
-                result = lerp(result, _UnexploredColor, isUnexplored);
+                result = lerp(result, _UnexploredColor, isUnexplored * (1.0 - hasVision));
                 result = lerp(result, _ExploredFogColor, isExplored * (1.0 - hasVision));
 
                 result.a *= input.color.a;

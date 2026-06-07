@@ -29,6 +29,8 @@ namespace GameDevTV.RTS.Minimap
         public float VisionThreshold => visionThreshold;
         public Camera ExploredFogCamera => exploredFogCamera;
         public Camera VisionFogCamera => visionFogCamera;
+        public bool IsBoundToFactionFog => useFactionRegistryCache;
+        public Owner TrackedFactionOwner => trackedFactionOwner;
 
         private void Awake()
         {
@@ -42,13 +44,6 @@ namespace GameDevTV.RTS.Minimap
 
         private void LateUpdate()
         {
-            if (useFactionRegistryCache
-                && FactionFogSystemsRegistry.TryGet(trackedFactionOwner, out IFogMapQuery query)
-                && query is FactionFogSystemReference)
-            {
-                return;
-            }
-
             int interval = Mathf.Max(1, cacheReadIntervalFrames);
             int frame = Time.frameCount;
             if (lastExploredReadFrame < 0 || frame - lastExploredReadFrame >= interval)
@@ -85,6 +80,10 @@ namespace GameDevTV.RTS.Minimap
             visionTexture = factionFog.VisionRenderTexture;
             trackedFactionOwner = factionFog.FactionOwner;
             useFactionRegistryCache = true;
+            lastExploredReadFrame = -1;
+            lastVisionReadFrame = -1;
+            RefreshExploredCache();
+            RefreshVisionCache();
         }
 
         public void EnsureReferences()

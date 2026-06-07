@@ -144,14 +144,19 @@ namespace GameDevTV.RTS.Player
                 ValidatePlayer2PresentationSetup(activeRig, activeFog);
             }
 
+            hudBinder ??= FindFirstObjectByType<FactionHudBinder>(FindObjectsInactive.Include);
+            activeRig?.EnsureMinimapFogResolved();
             if (ownerChanged)
             {
-                hudBinder ??= FindFirstObjectByType<FactionHudBinder>(FindObjectsInactive.Include);
                 hudBinder?.Apply(
                     localOwner,
                     activeRig?.SuppliesHud,
                     activeRig?.MinimapUnitIcons,
                     activeRig?.MinimapFog);
+            }
+            else
+            {
+                hudBinder?.RebindMinimapFog(localOwner, activeRig?.MinimapFog);
             }
         }
 
@@ -190,6 +195,11 @@ namespace GameDevTV.RTS.Player
 
             ApplyGameplayFogOverlayForOwner(localOwner);
             MpFogVisionSpawnRefresh.RequestDebouncedVisibilityRefresh();
+
+            hudBinder ??= FindFirstObjectByType<FactionHudBinder>(FindObjectsInactive.Include);
+            MpPlayerPresentationRig rig = localOwner == Owner.Player1 ? player1Rig : player2Rig;
+            rig?.EnsureMinimapFogResolved();
+            hudBinder?.RebindMinimapFog(localOwner, rig?.MinimapFog);
         }
 
         /// <summary>

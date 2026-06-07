@@ -33,15 +33,15 @@ Whisper được gợi ý qua prompt build từ profile lệnh; resolver fuzzy s
 
 ## 2. Bảng lệnh — câu nói & hành động
 
-### 2.1 Điều khiển tác chiến (cần unit đang chọn)
+### 2.1 Điều khiển tác chiến
 
 | Câu lệnh chuẩn | CommandId | Cách hoạt động |
 |----------------|-----------|----------------|
 | **dừng lại** | `stop` | Mọi **unit đang chọn** nhận lệnh `Stop()` — dừng di chuyển, gather, combat path. Tương đương phím **H**. |
-| **di chuyển** | `move` | Bật lệnh **Move** trên action bar. **Bước tiếp:** click **chuột phải** (hoặc trái theo UI) lên điểm trên map → unit/formations di chuyển tới đó. |
-| **tấn công** | `attack` | Bật lệnh **Attack**. **Bước tiếp:** click lên **địch** hoặc vị trí trên map → unit tấn công mục tiêu / attack-move tới điểm. |
+| **di chuyển** | `move` | Cần unit đang chọn → bấm **lệnh 1** trên action bar (Move). **Bước tiếp:** click map để chỉ đích. |
+| **tấn công** | `attack` | Cần quân đang chọn → quét bán kính **~45m** quanh selection; nếu có unit **owner khác** thì chọn địch gần nhất và gửi lệnh tấn công (chuột phải). Không cần click thêm nếu đã thấy địch. |
 
-> **Lưu ý:** *di chuyển* / *tấn công* là lệnh **hai bước** (voice + click map), giống khi bấm nút trên thanh lệnh.
+> **Lưu ý:** *di chuyển* vẫn là lệnh **hai bước** (voice + click map). *tấn công* tự tìm mục tiêu gần nếu có địch trong vùng quét.
 
 ---
 
@@ -49,7 +49,7 @@ Whisper được gợi ý qua prompt build từ profile lệnh; resolver fuzzy s
 
 | Câu lệnh chuẩn | CommandId | Cách hoạt động |
 |----------------|-----------|----------------|
-| **chọn toàn bộ quân** | `select_all_military` | Bỏ chọn cũ → chọn **tất cả** warrior + archer + đá binh **đang trong viewport** (cùng phe bạn). |
+| **chọn toàn bộ quân** | `select_all_military` | Bỏ chọn cũ → chọn **tất cả** unit trên viewport: **dân + bộ binh + cung thủ + đá binh** (cùng phe bạn). |
 | **chọn dân** | `select_1_worker` | Bỏ chọn cũ → chọn **1** worker (dân / nông dân) trên màn hình. |
 | **chọn n dân** (n = 1…10) | `select_n_worker` | Bỏ chọn cũ → chọn tối đa **n** worker cùng loại trên màn hình (thiếu thì chọn hết số có). |
 
@@ -68,55 +68,55 @@ Whisper được gợi ý qua prompt build từ profile lệnh; resolver fuzzy s
 
 ---
 
-### 2.3 Thu thập tài nguyên (cần **dân đang chọn**)
+### 2.3 Thu thập tài nguyên
 
 | Câu lệnh chuẩn | CommandId | Cách hoạt động |
 |----------------|-----------|----------------|
-| **thu gỗ** | `gather_wood` | Tìm mỏ **gỗ** gần camera nhất còn tài nguyên → gửi lệnh gather (chuột phải) cho từng **worker** trong selection. |
-| **thu đá** | `gather_stone` | Tương tự với mỏ **đá**. |
-| **thu thịt** | `gather_food` | Tương tự với nguồn **thịt / food** (thú, berry, … tùy map). |
+| **thu gỗ** | `gather_wood` | Nếu **chưa chọn dân** → tự chọn **1 dân rảnh** trên màn hình. Nếu **đã chọn dân** → dùng selection hiện tại. Sau đó tìm mỏ **gỗ** gần camera và gửi lệnh gather. |
+| **thu đá** | `gather_stone` | Giống *thu gỗ* với mỏ **đá**. |
+| **thu thịt** | `gather_food` | Giống *thu gỗ* với nguồn **thịt / food**. |
 
-> Nếu chưa chọn dân → *"Chọn dân trước khi thu tài nguyên"*.  
+> *Dân rảnh* = không đang gather, không đang xây / cam kết công trình.  
+> Nếu không có dân rảnh → *"Không có dân rảnh để thu tài nguyên"*.  
 > Nếu không có mỏ phù hợp gần → *"Không tìm mỏ phù hợp gần camera"*.
 
 ---
 
-### 2.4 Xây dựng (cần **dân đang chọn**, thường worker)
+### 2.4 Xây dựng (worker + slot action bar)
 
-| Câu lệnh chuẩn | CommandId | Cách hoạt động |
-|----------------|-----------|----------------|
-| **xây nhà kho** | `build_storehouse` | Tìm lệnh **Build** nhà kho trên worker → bật chế độ **ghost đặt nhà**. **Bước tiếp:** click vị trí hợp lệ trên map. |
-| **xây lò rèn** | `build_forge` | Ghost đặt **lò rèn**. |
-| **xây nhà lính** | `build_barracks` | Ghost đặt **nhà lính / doanh trại**. |
-| **xây chuồng** | `build_corral` | Ghost đặt **chuồng (corral)**. |
-| **xây tháp canh** | `build_defense_tower` | Ghost đặt **tháp canh**. |
+| Câu lệnh chuẩn | CommandId | Slot UI (1-based) | Cách hoạt động |
+|----------------|-----------|-------------------|----------------|
+| **xây nhà kho** | `build_storehouse` | **7** → **2** | Đảm bảo có dân (rảnh nếu chưa chọn) → mở menu Build (**7**) → chọn nhà kho (**2**) → ghost đặt nhà, **click map**. |
+| **xây lò rèn** | `build_forge` | **7** → **5** | Giống nhà kho; slot **5** = lò rèn. |
+| **xây nhà lính** | `build_barracks` | **7** → **4** | Đảm bảo có dân → mở menu Build (**7**) → **lệnh 4** → ghost đặt nhà. |
+| **xây chuồng** | `build_corral` | **7** → **3** | Đảm bảo có dân → **7** → **lệnh 3**. |
+| **xây tháp canh** | `build_defense_tower` | **7** → **6** | Đảm bảo có dân → **7** → **lệnh 6**. |
 
 > Cần đủ tài nguyên và tech; vị trí phải pass `BuildingRestrictionSO`.
 
 ---
 
-### 2.5 Sản xuất unit (cần chọn **tòa nhà** có queue — CC, Barracks, …)
+### 2.5 Sản xuất unit (tự chọn tòa nhà + slot)
 
-| Câu lệnh chuẩn | CommandId | Cách hoạt động |
-|----------------|-----------|----------------|
-| **tạo dân** | `train_worker` | Tìm lệnh **Train worker** trên building đang chọn → đưa vào hàng đợi sản xuất (trừ cost nếu đủ tài nguyên). |
-| **tạo bộ binh** | `train_warrior` | Train **warrior** (thường từ Barracks). |
-| **tạo cung thủ** | `train_archer` | Train **archer**. |
-| **tạo đá binh** | `train_rockwarrior` | Train **rock warrior**. |
-
-> Ví dụ: chọn **Civil Central** → *"tạo dân"*; chọn **Barracks** → *"tạo bộ binh"*.
+| Câu lệnh chuẩn | CommandId | Slot | Cách hoạt động |
+|----------------|-----------|------|----------------|
+| **tạo dân** | `train_worker` | **1** | Tự chọn **Civil Central** gần camera → **lệnh 1** (train worker). |
+| **tạo bộ binh** | `train_warrior` | **1** | Tự chọn **Barracks** gần camera → **lệnh 1**. |
+| **tạo cung thủ** | `train_archer` | **2** | Chọn Barracks → **lệnh 2**. |
+| **tạo đá binh** | `train_rockwarrior` | **3** | Chọn Barracks → **lệnh 3**. |
 
 ---
 
-### 2.6 Nghiên cứu (cần chọn **tòa nhà** có tech — thường Forge / building nghiên cứu)
+### 2.6 Nghiên cứu (tự chọn Forge + slot)
 
-| Câu lệnh chuẩn | CommandId | Cách hoạt động |
-|----------------|-----------|----------------|
-| **nâng cấp sát thương** | `research_damage` | Bắt đầu nghiên cứu upgrade **sát thương** (nếu đã unlock và đủ tài nguyên). |
-| **nâng cấp máu** | `research_health` | Nghiên cứu **máu / sinh lực**. |
-| **nâng cấp tốc độ** | `research_move_speed` | Nghiên cứu **tốc độ di chuyển** quân. |
-| **nâng cấp tốc đánh** | `research_attack_delay` | Nghiên cứu **tốc độ đánh** (giảm delay tấn công). |
-| **nâng cấp thu thập** | `research_gather_amount` | Nghiên cứu **lượng thu thập** mỗi lần gather. |
+| Câu lệnh chuẩn | CommandId | Slot | Cách hoạt động |
+|----------------|-----------|------|----------------|
+| **nâng cấp sát thương** | `research_damage` | **1** | Tự chọn **Forge** gần camera → **lệnh 1**. |
+| **nâng cấp tốc đánh** | `research_attack_delay` | **2** | Forge → **lệnh 2**. |
+| **nâng cấp thu thập** | `research_gather_amount` | **3** | Forge → **lệnh 3**. |
+| **nâng cấp thời gian thu thập** | `research_gather_time` | **4** | Forge → **lệnh 4**. |
+| **nâng cấp máu** | `research_health` | **5** | Forge → **lệnh 5**. |
+| **nâng cấp tốc độ** | `research_move_speed` | **6** | Forge → **lệnh 6**. |
 
 ---
 
@@ -192,6 +192,7 @@ Dưới đây là **câu chuẩn** (PrimaryPhrase) và vài alias tiêu biểu �
 | nâng cấp tốc độ | nâng cấp tốc độ |
 | nâng cấp tốc đánh | nâng cấp tốc độ đánh |
 | nâng cấp thu thập | nâng cấp thu thập |
+| nâng cấp thời gian thu thập | nâng cấp tốc độ thu thập |
 
 ---
 
@@ -201,7 +202,6 @@ Các `CommandId` sau **có trong JSON** nhưng **không** thuộc danh sách b�
 
 - `attack_move`, `hold_position`
 - `select_idle_workers` (*chọn dân rảnh*)
-- `research_gather_time` (*nâng cấp tốc độ thu thập* — khác *nâng cấp thu thập*)
 - `cancel_research`, `cancel_production`, `cancel_building`
 
 Để **chỉ** nhận đúng 30 nhóm lệnh trên, giữ JSON/sync prompt Whisper **không** thêm alias ngoài bảng mục 2, hoặc tách file dataset riêng cho demo/bảo vệ đồ án.
@@ -212,11 +212,11 @@ Các `CommandId` sau **có trong JSON** nhưng **không** thuộc danh sách b�
 
 | Mục tiêu | Thứ tự lệnh thoại |
 |----------|-------------------|
-| Đưa 3 dân đi đá | *"chọn ba dân"* → *"thu đá"* |
-| Train quân | Chọn Barracks (click) → *"tạo bộ binh"* |
-| Tấn công khu vực | *"chọn toàn bộ quân"* → *"tấn công"* → click map |
-| Xây kho | *"chọn dân"* → *"xây nhà kho"* → click map |
-| Nâng cấp Forge | Chọn Forge → *"nâng cấp sát thương"* |
+| Thu đá không chọn dân | *"thu đá"* (tự chọn 1 dân rảnh) |
+| Train quân | *"tạo bộ binh"* (tự chọn Barracks + lệnh 1) |
+| Tấn công địch gần | *"chọn toàn bộ quân"* → *"tấn công"* |
+| Xây kho | *"xây nhà kho"* (dân rảnh + lệnh 7→2) → click map |
+| Nâng cấp Forge | *"nâng cấp sát thương"* (tự chọn Forge + lệnh 1) |
 
 ---
 
@@ -226,8 +226,8 @@ Các `CommandId` sau **có trong JSON** nhưng **không** thuộc danh sách b�
 |------|---------|
 | `Assets/Resources/VoiceCommands/rts_voice_commands_uts_units_vi.json` | Bảng câu nói ↔ CommandId |
 | `VoiceCommandOneShotTranscriptMapper.cs` | STT → CommandId |
-| `VoiceCommandIdActionRules.cs` | CommandId → loại hành động |
-| `PlayerInput.Voice.cs` | Thực thi selection / gather / arm command |
+| `VoiceCommandExecutionPlan.cs` | CommandId → kế hoạch thực thi (slot UI, gather, attack…) |
+| `PlayerInput.Voice.cs` | Thực thi selection / slot / gather / attack |
 | `VoiceCommandGameplayExecutor.cs` | Nối mapper → PlayerInput |
 
 ---

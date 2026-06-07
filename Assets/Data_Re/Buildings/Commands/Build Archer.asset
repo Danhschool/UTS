@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Commands.BuildUnitCommand
   <Name>k__BackingField: Build Archer
   <Icon>k__BackingField: {fileID: 21300000, guid: 7159a010c2ea5804bb530a7870bfc210, type: 3}
-  <Slot>k__BackingField: 3
+  <Slot>k__BackingField: 1
   <RequiresClickToActivate>k__BackingField: 0
   <IsSingleUnitCommand>k__BackingField: 0
   <GhostPrefab>k__BackingField: {fileID: 0}

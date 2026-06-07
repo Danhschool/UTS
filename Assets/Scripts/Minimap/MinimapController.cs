@@ -1,4 +1,5 @@
 using GameDevTV.RTS.Player;
+using GameDevTV.RTS.Units;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,7 +27,46 @@ namespace GameDevTV.RTS.Minimap
         [SerializeField] private MinimapIconView iconPrefab;
         [SerializeField] private MinimapFogSystemReference fogSystem;
         [SerializeField] private MinimapExploredFogOverlay exploredFogOverlay;
+        [SerializeField] private bool enableExploredFogOverlay = false;
+        [SerializeField] private Owner fogFactionOwner = Owner.Player1;
         [SerializeField] private MonoBehaviour cameraNavigatorBehaviour;
+
+        public MinimapFogSystemReference FogSystemReference => fogSystem;
+        public Owner FogFactionOwner => fogFactionOwner;
+
+        /// <summary>
+        /// Mục tiêu: MP — HUD P2 minimap sample RT fog Player2 thay vì chờ LocalHumanOwnerService.
+        /// Cách hoạt động: Gán owner, refresh overlay + icon filter cùng phe.
+        /// </summary>
+        public void BindFactionOwner(Owner owner)
+        {
+            if (!HumanFogVisionUtility.EmitsFogVision(owner))
+            {
+                return;
+            }
+
+            fogFactionOwner = owner;
+            unitIcons?.BindLocalOwner(owner);
+            RefreshFogPresentation();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Sau MP bind faction fog — overlay + icon dùng đúng RT P1/P2.
+        /// Cách hoạt động: EnsureFogSystem + Configure lại MinimapExploredFogOverlay.
+        /// </summary>
+        public void RefreshFogPresentation()
+        {
+            EnsureFogSystem();
+        }
+
+        /// <summary>
+        /// Mục tiêu: MP — chỉ HUD active bật Fog Overlay; rig P1 tắt trên client P2.
+        /// </summary>
+        public void SetExploredFogOverlayEnabled(bool enabled)
+        {
+            enableExploredFogOverlay = enabled;
+            WireExploredFogOverlay();
+        }
 
         private void Awake()
         {
@@ -35,6 +75,14 @@ namespace GameDevTV.RTS.Minimap
             EnsureFogSystem();
             EnsureUnitIcons();
             EnsureSupplyIcons();
+        }
+
+        private void OnEnable()
+        {
+            if (enableExploredFogOverlay)
+            {
+                WireExploredFogOverlay();
+            }
         }
 
         private void Start()
@@ -49,6 +97,7 @@ namespace GameDevTV.RTS.Minimap
                 }
             }
 
+            EnsureFogSystem();
             RefreshMinimapDisplay();
         }
 
@@ -125,16 +174,7 @@ namespace GameDevTV.RTS.Minimap
 
             if (minimapDisplay == null)
             {
-                Transform render = mask.Find("Minimap Render");
-                if (render == null)
-                {
-                    render = mask.Find("Fog Overlay");
-                }
-
-                if (render != null)
-                {
-                    minimapDisplay = render.GetComponent<RawImage>();
-                }
+                minimapDisplay = FindMinimapRenderRawImage(mask);
             }
 
             if (inputHandler == null)
@@ -220,37 +260,134 @@ namespace GameDevTV.RTS.Minimap
 
         private void EnsureFogSystem()
         {
-            if (fogSystem != null)
+            fogSystem ??= GetComponent<MinimapFogSystemReference>();
+            fogSystem ??= GetComponentInChildren<MinimapFogSystemReference>(true);
+
+            if (fogSystem == null)
             {
-                fogSystem.EnsureReferences();
-                return;
+                fogSystem = gameObject.AddComponent<MinimapFogSystemReference>();
             }
 
-            fogSystem = FindFirstObjectByType<MinimapFogSystemReference>();
-            if (fogSystem != null)
+            fogSystem.EnsureReferences();
+            WireExploredFogOverlay();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Lớp fog minimap (đen/mờ/trong) dùng cùng RT với icon filter — scene MP thường thiếu object này.
+        /// Cách hoạt động: Tìm hoặc tạo Fog Overlay trên Minimap content; Configure(bounds, fogSystem).
+        /// </summary>
+        private void WireExploredFogOverlay()
+        {
+            if (exploredFogOverlay == null)
             {
-                fogSystem.EnsureReferences();
-                return;
+                exploredFogOverlay = GetComponentInChildren<MinimapExploredFogOverlay>(true);
             }
 
-            Camera[] cameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
-            for (int i = 0; i < cameras.Length; i++)
+            if (!enableExploredFogOverlay)
             {
-                Camera camera = cameras[i];
-                if (camera == null || camera.targetTexture == null)
+                if (exploredFogOverlay != null)
                 {
-                    continue;
+                    exploredFogOverlay.gameObject.SetActive(false);
                 }
 
-                if (!camera.gameObject.name.Contains("Explored"))
-                {
-                    continue;
-                }
-
-                fogSystem = camera.gameObject.AddComponent<MinimapFogSystemReference>();
-                fogSystem.EnsureReferences();
                 return;
             }
+
+            if (exploredFogOverlay == null)
+            {
+                exploredFogOverlay = CreateExploredFogOverlay();
+            }
+
+            if (exploredFogOverlay == null || mapBounds == null || fogSystem == null)
+            {
+                return;
+            }
+
+            exploredFogOverlay.Configure(mapBounds, fogSystem, fogFactionOwner);
+            exploredFogOverlay.gameObject.SetActive(true);
+        }
+
+        /// <summary>
+        /// Mục tiêu: RtsNet_Game không có child Fog Overlay — tạo RawImage + shader overlay trên Minimap Render.
+        /// Cách hoạt động: Stretch full rect trên content root; sibling index ngay sau Minimap Render.
+        /// </summary>
+        MinimapExploredFogOverlay CreateExploredFogOverlay()
+        {
+            Transform mask = FindMinimapMask();
+            if (mask == null)
+            {
+                return null;
+            }
+
+            Transform contentRoot = mask.Find("Minimap") ?? mask;
+            Transform existing = contentRoot.Find("Fog Overlay");
+            if (existing != null)
+            {
+                return existing.GetComponent<MinimapExploredFogOverlay>();
+            }
+
+            GameObject overlayObject = new GameObject(
+                "Fog Overlay",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(RawImage),
+                typeof(MinimapExploredFogOverlay));
+            overlayObject.layer = contentRoot.gameObject.layer;
+
+            RectTransform overlayRect = overlayObject.GetComponent<RectTransform>();
+            overlayRect.SetParent(contentRoot, false);
+            StretchRectToParent(overlayRect);
+
+            RawImage rawImage = overlayObject.GetComponent<RawImage>();
+            rawImage.raycastTarget = false;
+
+            Transform renderTransform = contentRoot.Find("Minimap Render");
+            if (renderTransform != null)
+            {
+                overlayObject.transform.SetSiblingIndex(renderTransform.GetSiblingIndex() + 1);
+            }
+
+            return overlayObject.GetComponent<MinimapExploredFogOverlay>();
+        }
+
+        static void StretchRectToParent(RectTransform rectTransform)
+        {
+            rectTransform.anchorMin = Vector2.zero;
+            rectTransform.anchorMax = Vector2.one;
+            rectTransform.offsetMin = Vector2.zero;
+            rectTransform.offsetMax = Vector2.zero;
+            rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        }
+
+        static RawImage FindMinimapRenderRawImage(Transform mask)
+        {
+            Transform render = mask.Find("Minimap Render");
+            if (render == null)
+            {
+                Transform minimap = mask.Find("Minimap");
+                if (minimap != null)
+                {
+                    render = minimap.Find("Minimap Render");
+                }
+            }
+
+            if (render == null)
+            {
+                render = mask.Find("Fog Overlay");
+            }
+
+            return render != null ? render.GetComponent<RawImage>() : null;
+        }
+
+        Transform FindMinimapMask()
+        {
+            Transform background = transform.Find("Background");
+            if (background == null)
+            {
+                return null;
+            }
+
+            return background.Find("Minimap Mask");
         }
 
         /// <summary>

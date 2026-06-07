@@ -29,6 +29,8 @@ namespace GameDevTV.RTS.Player
         public Camera VisionFogCamera => visionFogCamera;
         public RenderTexture ExploredRenderTexture => exploredTexture;
         public RenderTexture VisionRenderTexture => visionTexture;
+        public float ExploredThreshold => exploredThreshold;
+        public float VisionThreshold => visionThreshold;
 
         public void ConfigureFaction(Owner owner)
         {

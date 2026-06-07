@@ -61,7 +61,6 @@ namespace GameDevTV.RTS.Player
             {
                 AudioBootstrap.EnsureExists();
             }
-            minimapFog ??= FindFirstObjectByType<MinimapFogSystemReference>(FindObjectsInactive.Include);
         }
 
         void ApplyFromService(Owner owner) => Apply(owner);
@@ -140,6 +139,26 @@ namespace GameDevTV.RTS.Player
         }
 
         /// <summary>
+        /// Mục tiêu: Client P2 — registry fog có thể đăng ký sau Apply đầu; minimap cần rebind mỗi khi fog active.
+        /// Cách hoạt động: Gán rig minimap fog rồi gọi BindMinimapFog từ FactionFogSystemsRegistry.
+        /// </summary>
+        public void RebindMinimapFog(Owner localOwner, MinimapFogSystemReference rigMinimapFog = null)
+        {
+            if (!HumanFogVisionUtility.EmitsFogVision(localOwner))
+            {
+                return;
+            }
+
+            MinimapFogSystemReference fogRef = rigMinimapFog ?? minimapFog;
+            if (fogRef != null)
+            {
+                minimapFog = fogRef;
+            }
+
+            BindMinimapFog(localOwner);
+        }
+
+        /// <summary>
         /// Mục tiêu: Tránh MissingReferenceException — C# ?. không dùng Unity fake-null.
         /// </summary>
         PlayerAudioListener ResolvePlayerAudioListener()
@@ -159,11 +178,6 @@ namespace GameDevTV.RTS.Player
 
         void BindMinimapFog(Owner localOwner)
         {
-            if (minimapFog == null)
-            {
-                return;
-            }
-
             if (!FactionFogSystemsRegistry.TryGet(localOwner, out IFogMapQuery query)
                 || query is not FactionFogSystemReference factionRef)
             {
@@ -171,7 +185,68 @@ namespace GameDevTV.RTS.Player
             }
 
             factionRef.EnsureReferences();
-            minimapFog.BindFromFactionFog(factionRef);
+
+            if (minimapFog != null)
+            {
+                minimapFog.BindFromFactionFog(factionRef);
+                RefreshMinimapControllerForFog(minimapFog);
+            }
+
+            BindActiveMinimapControllers(localOwner, factionRef);
+        }
+
+        /// <summary>
+        /// Mục tiêu: MP — mọi MinimapController HUD đang active phải bind RT P1/P2 (không chỉ Minimap Fog Bridge scene).
+        /// Cách hoạt động: Find MinimapController active → BindFromFactionFog + RefreshFogPresentation.
+        /// </summary>
+        static void BindActiveMinimapControllers(Owner localOwner, FactionFogSystemReference factionRef)
+        {
+            MinimapController[] controllers = Object.FindObjectsByType<MinimapController>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            for (int i = 0; i < controllers.Length; i++)
+            {
+                MinimapController controller = controllers[i];
+                if (controller == null)
+                {
+                    continue;
+                }
+
+                bool isActiveHud = controller.isActiveAndEnabled && controller.gameObject.activeInHierarchy;
+                if (!isActiveHud)
+                {
+                    controller.SetExploredFogOverlayEnabled(false);
+                    continue;
+                }
+
+                controller.BindFactionOwner(localOwner);
+                controller.RefreshFogPresentation();
+                MinimapFogSystemReference fog = controller.FogSystemReference;
+                if (fog == null)
+                {
+                    continue;
+                }
+
+                fog.BindFromFactionFog(factionRef);
+                controller.RefreshFogPresentation();
+            }
+        }
+
+        static void RefreshMinimapControllerForFog(MinimapFogSystemReference fogRef)
+        {
+            if (fogRef == null)
+            {
+                return;
+            }
+
+            MinimapController controller = fogRef.GetComponent<MinimapController>();
+            if (controller == null)
+            {
+                controller = fogRef.GetComponentInParent<MinimapController>(true);
+            }
+
+            controller?.RefreshFogPresentation();
         }
     }
 }

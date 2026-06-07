@@ -75619,6 +75619,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8006001843501206284, guid: c7c57b62f5467f24f801b2267928e456, type: 3}
+      propertyPath: fogFactionOwner
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 8824597593112104600, guid: c7c57b62f5467f24f801b2267928e456, type: 3}
       propertyPath: m_AnchorMax.x
       value: 1

@@ -56,12 +56,39 @@ namespace GameDevTV.RTS.Player
             if (hudRoot != null)
             {
                 minimapUnitIcons ??= hudRoot.GetComponentInChildren<MinimapUnitIconsController>(true);
-                minimapFog ??= hudRoot.GetComponentInChildren<MinimapFogSystemReference>(true);
+                ResolveMinimapFogFromHud();
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Scene MP — minimapFog trên rig thường null; mỗi HUD cần bridge fog riêng (không dùng chung scene root).
+        /// Cách hoạt động: Lấy MinimapFogSystemReference từ MinimapController trên cùng HUD.
+        /// </summary>
+        void ResolveMinimapFogFromHud()
+        {
+            if (minimapFog != null || hudRoot == null)
+            {
+                return;
+            }
+
+            MinimapController minimapController = hudRoot.GetComponentInChildren<MinimapController>(true);
+            if (minimapController != null)
+            {
+                minimapController.RefreshFogPresentation();
+                minimapFog = minimapController.FogSystemReference;
+                return;
+            }
+
+            minimapFog = hudRoot.GetComponentInChildren<MinimapFogSystemReference>(true);
         }
 
         public MinimapUnitIconsController MinimapUnitIcons => minimapUnitIcons;
         public MinimapFogSystemReference MinimapFog => minimapFog;
+
+        /// <summary>
+        /// Mục tiêu: Director bind fog sau khi HUD active — rig scene hay để minimapFog = null.
+        /// </summary>
+        public void EnsureMinimapFogResolved() => ResolveMinimapFogFromHud();
 
         /// <summary>
         /// Mục tiêu: P2 rig scene thường thiếu reference PlayerInput — dùng Main Camera chung đã anchor.
@@ -102,6 +129,8 @@ namespace GameDevTV.RTS.Player
             if (active)
             {
                 WireRuntimeUiBusOwner();
+                EnsureMinimapFogResolved();
+                BindMinimapFactionOwner();
             }
 
             FactionVisibilityUpdater[] visibilityUpdaters =
@@ -114,6 +143,21 @@ namespace GameDevTV.RTS.Player
                     updater.enabled = active;
                 }
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Minimap overlay/icon dùng RT fog đúng phe (P1 rig → Player1, P2 rig → Player2).
+        /// </summary>
+        void BindMinimapFactionOwner()
+        {
+            if (hudRoot == null)
+            {
+                return;
+            }
+
+            MinimapController minimap = hudRoot.GetComponentInChildren<MinimapController>(true);
+            minimap?.BindFactionOwner(presentationOwner);
+            minimapUnitIcons?.BindLocalOwner(presentationOwner);
         }
 
         /// <summary>
