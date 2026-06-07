@@ -94,6 +94,7 @@ namespace ProjectRTS.SpeechRecognition.Core
                 ["select_idle_workers"] = new(VoiceGameplayActionKind.SelectIdleWorkers),
                 ["gather_wood"] = new(VoiceGameplayActionKind.GatherNearestSupply, supplyKind: AIEconomySupplyKindClassifier.Kind.Wood),
                 ["gather_stone"] = new(VoiceGameplayActionKind.GatherNearestSupply, supplyKind: AIEconomySupplyKindClassifier.Kind.Stone),
+                ["gather_food"] = new(VoiceGameplayActionKind.GatherNearestSupply, supplyKind: AIEconomySupplyKindClassifier.Kind.Food),
                 ["build_storehouse"] = new(VoiceGameplayActionKind.ActivateUiCommand, commandPredicate: MatchesBuild("storehouse", "kho")),
                 ["build_forge"] = new(VoiceGameplayActionKind.ActivateUiCommand, commandPredicate: MatchesBuild("forge", "ren")),
                 ["build_barracks"] = new(VoiceGameplayActionKind.ActivateUiCommand, commandPredicate: MatchesBuild("barrack", "linh", "doanh")),

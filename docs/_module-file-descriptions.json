@@ -1,0 +1,12 @@
+{
+  "M2|Commands/MoveCommand.cs": "Gán đích điểm/formation khi người chơi click bản đồ (sau khi chọn unit).",
+  "M2|Commands/AttackCommand.cs": "Ra lệnh tấn công mục tiêu dưới con trỏ (sau selection).",
+  "M2|Commands/StopCommand.cs": "Dừng mọi hành động hiện tại của selection.",
+  "M2|Commands/GatherCommand.cs": "Trong input: arm gather — Worker nhận lệnh trước khi BT loop (chi tiết M3).",
+  "M3|Commands/GatherCommand.cs": "Handle: gán worker tới mỏ/deposit hợp lệ; sau đó BT gather loop (M17).",
+  "M3|Player/Supplies.cs": "MonoBehaviour kho phe — cộng/trừ Food/Wood/Stone, population; bind TMP UI.",
+  "M3|Player/SupplyAffordability.cs": "Kiểm tra đủ cost trước build/train; log cảnh báo lên GameEventLog.",
+  "M3|Units/Worker.cs": "Unit kinh tế: nhận GatherCommand, gán event channel cho BT gather/return.",
+  "M4|Commands/BuildBuildingCommand.cs": "Ghost đặt nhà + spawn placeholder → BuildBuildingAction (M17).",
+  "M4|Commands/BuildUnitCommand.cs": "Đưa unit vào queue sản xuất tại building có queue."
+}

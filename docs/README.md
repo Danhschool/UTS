@@ -16,6 +16,9 @@ Thư mục `docs` này là bộ tài liệu tổng hợp để:
 - `urts-architecture-map.md`  
   Bản đồ kiến trúc chi tiết theo domain: class/interface/struct/enum, chức năng, method chính và quan hệ giao tiếp.
 
+- **`Assets-Scripts-By-Module.md`**  
+  **456 file** theo **module + subsection**; mô tả **theo vai trò trong module** (cùng file có thể khác nhau giữa M2/M3…). Cập nhật: `docs/_apply-module-context.ps1`.
+
 ## 2) Tài liệu tổng hợp & vận hành
 
 - `survey-summary.md`  

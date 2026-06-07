@@ -1,0 +1,20 @@
+{
+  "Units/Owner.cs": "Enum phe trong game (Player1, Player2, AI2–AI7, Unowned…) — dùng trên unit, Bus event, fog.",
+  "EventBus/IEvent.cs": "Marker interface — mọi payload event phải implement để dùng Bus<T>.",
+  "EventBus/Bus.cs": "Event bus static generic theo Owner — đăng ký delegate và Raise(event) tách từng phe.",
+  "EventBus/SupplySO.cs": "ScriptableObject loại tài nguyên (Food, Wood, Stone…) — icon, tên hiển thị.",
+  "Commands/ICommand.cs": "Interface lệnh — CanHandle(CommandContext) và Handle(context); triển khai bởi BaseCommand SO.",
+  "Commands/BaseCommand.cs": "Abstract ScriptableObject lệnh — slot UI, icon, ghost prefab, restrictions đặt nhà.",
+  "Commands/CommandContext.cs": "Context thực thi lệnh: Owner local, unit đích, RaycastHit, danh sách selection.",
+  "Units/AbstractCommandable.cs": "Base MonoBehaviour cho unit/nhà — health, owner, commands, fog visibility, selection decal.",
+  "Units/ISelectable.cs": "Interface chọn được — IsSelected, Transform cho box select và UI.",
+  "Units/IDamageable.cs": "Interface nhận sát thương — CurrentHealth, MaxHealth, OnHealthUpdated.",
+  "Units/IMoveable.cs": "Interface di chuyển — API MoveTo cho NavMesh/formation.",
+  "Units/IAttacker.cs": "Interface tấn công — damage, range, target acquisition.",
+  "Player/PlayerInput.cs": "Điều khiển người chơi local: camera Cinemachine, box/chọn unit, raycast lệnh, ghost đặt nhà, formation, MP bridge.",
+  "UI/Containers/ActionsUI.cs": "Thanh action bar — render nút lệnh theo selection và ActiveCommand.",
+  "Audio/AudioChannel.cs": "Enum kênh mixer: Sfx, Ui, Voice, Music.",
+  "Game/Pregame/PregamePlayMode.cs": "Enum chế độ pregame (Offline PvAI, Multiplayer host/client…) — lưu trong PregameSessionState.",
+  "UI/GameEventLog/GameEventLogCategory.cs": "Enum phân loại dòng log (economy, combat, system) cho format/màu.",
+  "Player/Placeholder.cs": "Prefab marker tạm khi đặt building — preview vị trí trước khi spawn nhà thật."
+}

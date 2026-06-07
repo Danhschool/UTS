@@ -25,6 +25,7 @@ namespace GameDevTV.RTS.Player
         GameObject cachedRockWarriorPrefab;
         SupplySO cachedStoneSupply;
         SupplySO cachedWoodSupply;
+        SupplySO cachedFoodSupply;
 
         /// <summary>
         /// Mục tiêu: Chạy hành động gameplay tương ứng CommandId voice đã khớp dataset.
@@ -297,7 +298,11 @@ namespace GameDevTV.RTS.Player
                 if (candidate == null
                     || candidate.Amount <= 0
                     || candidate.Supply == null
-                    || AIEconomySupplyKindClassifier.Classify(candidate.Supply, cachedStoneSupply, cachedWoodSupply)
+                    || AIEconomySupplyKindClassifier.Classify(
+                        candidate.Supply,
+                        cachedStoneSupply,
+                        cachedWoodSupply,
+                        cachedFoodSupply)
                         != supplyKind)
                 {
                     continue;
@@ -483,7 +488,7 @@ namespace GameDevTV.RTS.Player
 
         void VoiceEnsureSupplyReferences()
         {
-            if (cachedStoneSupply != null && cachedWoodSupply != null)
+            if (cachedStoneSupply != null && cachedWoodSupply != null && cachedFoodSupply != null)
             {
                 return;
             }
@@ -506,6 +511,9 @@ namespace GameDevTV.RTS.Player
                         break;
                     case AIEconomySupplyKindClassifier.Kind.Wood:
                         cachedWoodSupply ??= so;
+                        break;
+                    case AIEconomySupplyKindClassifier.Kind.Food:
+                        cachedFoodSupply ??= so;
                         break;
                 }
             }
