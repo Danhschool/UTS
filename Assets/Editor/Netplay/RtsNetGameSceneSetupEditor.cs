@@ -12,26 +12,31 @@ using UnityEngine.SceneManagement;
 namespace GameDevTV.RTS.Editor.Netplay
 {
     /// <summary>
-    /// Mục tiêu: Chuẩn bị sẵn RtsNet_Game — spawn UTS, fog P1/P2, presentation, bootstrap MP.
+    /// Mục tiêu: Chuẩn bị map gameplay (Game 1/2) — spawn UTS, fog P1/P2, presentation, bootstrap MP.
     /// </summary>
     public static class RtsNetGameSceneSetupEditor
     {
         const string GameScenePath = GameplayMapScenePaths.ReferenceStableScenePath;
         const string FogP2PrefabPath = GameplayMapScenePaths.FogP2PrefabPath;
 
-        [MenuItem("ProjectRTS/Netplay/★ Prepare RtsNet_Game Scene (save to scene)")]
-        public static void PrepareSceneMenu()
+        [MenuItem("ProjectRTS/Netplay/★ Prepare Game 1 Scene (save to scene)")]
+        public static void PrepareGame1SceneMenu() => PrepareAndSaveScene(GameplayMapScenePaths.Game1ScenePath);
+
+        [MenuItem("ProjectRTS/Netplay/★ Prepare Game 2 Scene (save to scene)")]
+        public static void PrepareGame2SceneMenu() => PrepareAndSaveScene(GameplayMapScenePaths.Game2ScenePath);
+
+        static void PrepareAndSaveScene(string scenePath)
         {
-            Scene scene = EditorSceneManager.OpenScene(GameScenePath, OpenSceneMode.Single);
+            Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
             PrepareOpenScene();
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
-            Debug.Log("[RtsNetGameScene] Đã lưu RtsNet_Game — spawn UTS + MP presentation.");
+            Debug.Log($"[RtsNetGameScene] Đã lưu {scene.name} — spawn UTS + MP presentation.");
         }
 
         public static void ExecuteBatch()
         {
-            PrepareSceneMenu();
+            RtsMpNetworkAutoSetupEditor.ExecuteBatch();
         }
 
         public static void PrepareOpenScene()
@@ -55,7 +60,7 @@ namespace GameDevTV.RTS.Editor.Netplay
             WireInOpenScene();
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
-            Debug.Log("[MpPresentation] Đã wire presentation trên RtsNet_Game.");
+            Debug.Log($"[MpPresentation] Đã wire presentation trên {scene.name}.");
         }
 
         public static void WireInOpenScene()

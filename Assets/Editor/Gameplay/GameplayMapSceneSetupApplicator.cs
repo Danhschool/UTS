@@ -5,6 +5,7 @@ using GameDevTV.RTS.Gameplay;
 using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.PvAI;
+using GameDevTV.RTS.TechTree;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Utilities;
 using GameDevTV.RTS.Editor.Netplay;
@@ -198,6 +199,7 @@ namespace GameDevTV.RTS.Editor.Gameplay
             utsSetup.workerOffsetFromBase = new Vector3(10f, 0f, 10f);
             utsSetup.workerSpawnSpacing = new Vector3(10f, 0f, 0f);
             utsSetup.disableAiControllersOnLoad = true;
+            WireUtsCatalogFromProject(utsSetup);
             EditorUtility.SetDirty(utsSetup);
 
             RtsGameSceneSetup legacySetup = coreRoot.GetComponent<RtsGameSceneSetup>();
@@ -313,6 +315,49 @@ namespace GameDevTV.RTS.Editor.Gameplay
 
                 controller.enabled = true;
             }
+        }
+
+        static void WireUtsCatalogFromProject(RtsUtsGameSceneSetup utsSetup)
+        {
+            if (utsSetup == null)
+            {
+                return;
+            }
+
+            string[] guids = AssetDatabase.FindAssets("t:UnlockableSO", new[] { "Assets/Data_Re" });
+            var catalog = new System.Collections.Generic.List<UnlockableSO>(guids.Length);
+            for (int i = 0; i < guids.Length; i++)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                UnlockableSO unlockable = AssetDatabase.LoadAssetAtPath<UnlockableSO>(path);
+                if (unlockable != null)
+                {
+                    catalog.Add(unlockable);
+                }
+            }
+
+            catalog.Sort((a, b) => string.Compare(a.name, b.name, System.StringComparison.OrdinalIgnoreCase));
+            utsSetup.unlockableCatalog = catalog.ToArray();
+
+            var spawnCandidates = RtsMpNetworkAutoSetupEditor.EnsureNetworkOnGameplayPrefabs();
+            GameObject civilCentral = utsSetup.civilCentralPrefab;
+            GameObject workerMp = utsSetup.startingWorkerPrefab;
+            var additional = new System.Collections.Generic.List<GameObject>();
+            for (int i = 0; i < spawnCandidates.Count; i++)
+            {
+                GameObject prefab = spawnCandidates[i];
+                if (prefab == null || prefab == civilCentral || prefab == workerMp)
+                {
+                    continue;
+                }
+
+                if (prefab.GetComponent<NetworkIdentity>() != null)
+                {
+                    additional.Add(prefab);
+                }
+            }
+
+            utsSetup.additionalNetworkSpawnPrefabs = additional.ToArray();
         }
 
         static void EnsureUtsPrefabNetworkComponents()

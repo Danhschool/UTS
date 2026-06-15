@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
+using Mirror;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -44,6 +46,7 @@ namespace GameDevTV.RTS.Player
 
         static readonly List<Supplies> EnabledHudInstances = new(4);
         static bool busHandlersRegistered;
+        static bool applyingNetworkSnapshot;
 
         /// <summary>
         /// Mục tiêu: Đồng bộ HUD dân sau khi unit Player1 spawn xong (Start / NotifySpawned).
@@ -65,6 +68,45 @@ namespace GameDevTV.RTS.Player
         /// </summary>
         public static void EnsureReady() => EnsureDictionariesInitialized();
 
+        /// <summary>
+        /// Mục tiêu: Client MP áp snapshot tài nguyên từ server (SyncVar hook).
+        /// Cách hoạt động: Ghi dictionary static và refresh mọi HUD đang bật.
+        /// </summary>
+        public static void ApplyNetworkSnapshot(
+            Owner owner,
+            int stone,
+            int wood,
+            int food,
+            int population,
+            int populationLimit)
+        {
+            EnsureDictionariesInitialized();
+            applyingNetworkSnapshot = true;
+            try
+            {
+                Stone[owner] = stone;
+                Wood[owner] = wood;
+                Food[owner] = food;
+                Population[owner] = population;
+                PopulationLimit[owner] = populationLimit;
+            }
+            finally
+            {
+                applyingNetworkSnapshot = false;
+            }
+
+            for (int i = 0; i < EnabledHudInstances.Count; i++)
+            {
+                EnabledHudInstances[i]?.RefreshSupplyHud();
+            }
+
+            Owner localOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            if (owner == localOwner && HumanFogVisionUtility.EmitsFogVision(localOwner))
+            {
+                MpHudSuppliesResolver.FindForOwner(localOwner)?.BindHudOwner(localOwner);
+            }
+        }
+
         static void EnsureDictionariesInitialized()
         {
             if (Stone != null)
@@ -80,9 +122,9 @@ namespace GameDevTV.RTS.Player
 
             foreach (Owner owner in Enum.GetValues(typeof(Owner)))
             {
-                Stone.Add(owner, 500);
-                Wood.Add(owner, 500);
-                Food.Add(owner, 500);
+                Stone.Add(owner, 1000);
+                Wood.Add(owner, 1000);
+                Food.Add(owner, 1000);
                 Population.Add(owner, 0);
                 PopulationLimit.Add(owner, 0);
             }
@@ -231,7 +273,7 @@ namespace GameDevTV.RTS.Player
             RefreshSupplyHud();
         }
 
-        void RefreshSupplyHud()
+        internal void RefreshSupplyHud()
         {
             EnsureDictionariesInitialized();
             if (Stone == null || !Stone.ContainsKey(hudOwner))
@@ -361,7 +403,12 @@ namespace GameDevTV.RTS.Player
 
         private void HandleSupplyEvent(SupplyEvent evt)
         {
-            if (evt.Supply == null)
+            if (evt.Supply == null || applyingNetworkSnapshot)
+            {
+                return;
+            }
+
+            if (RtsNetplaySession.IsPureClient)
             {
                 return;
             }

@@ -10,7 +10,7 @@ namespace ProjectRTS.Netplay
     /// </summary>
     public class RtsPlayerEconomy : NetworkBehaviour
     {
-        [SerializeField] string gameSceneName = "RtsNet_Game";
+        [SerializeField] string gameSceneName = "Game 1";
         [SerializeField] float goldPerSecond = 3f;
 
         [SyncVar]

@@ -203,6 +203,11 @@ namespace GameDevTV.RTS.UI.Components
 
         private void HandleHealthUpdated(AbstractCommandable _, int __, int ___)
         {
+            if (this == null || commandable == null || progressBar == null)
+            {
+                return;
+            }
+
             ApplyFillFromHealth();
         }
     }

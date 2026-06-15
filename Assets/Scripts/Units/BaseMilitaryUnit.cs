@@ -37,9 +37,9 @@ namespace GameDevTV.RTS.Units
         /// Mục tiêu: Bị địch đánh → phản công vùng nội bộ; AI chủ động vẫn dùng AttackCommand riêng.
         /// Cách hoạt động: Sau khi trừ máu, gọi <see cref="UnitCounterAttackUtility.TryRespondToHostileAttack"/>.
         /// </summary>
-        public override void TakeDamage(int damage, IDamageable attacker)
+        protected override void TakeDamageWithSideEffects(int damage, IDamageable attacker)
         {
-            base.TakeDamage(damage, attacker);
+            base.TakeDamageWithSideEffects(damage, attacker);
 
             if (CurrentHealth > 0)
             {

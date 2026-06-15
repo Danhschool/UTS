@@ -3483,10 +3483,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.UI.Pregame.PregameMapSelectScrollBinder
   maps:
   - displayName: Game 1
-    previewSprite: {fileID: -260309372, guid: 986561922830ed34fa5861177a21cf75, type: 3}
+    previewSprite: {fileID: 21300000, guid: 1b08c6dd890252d4cba735cdd1e3713b, type: 3}
     gameplaySceneName: Game 1
   - displayName: Game 2
-    previewSprite: {fileID: -100186165, guid: 986561922830ed34fa5861177a21cf75, type: 3}
+    previewSprite: {fileID: 21300000, guid: 04042818234541745bbbae185ed2ca58, type: 3}
     gameplaySceneName: Game 2
   mapListContent: {fileID: 1380737252}
   mapButtonTemplate: {fileID: 7612434446823431077, guid: 790656aef8b8d8d40883646278034b91, type: 3}

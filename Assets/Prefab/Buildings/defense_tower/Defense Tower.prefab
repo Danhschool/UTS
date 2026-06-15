@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 7680032853392589550}
   - component: {fileID: 5294428866164582669}
   - component: {fileID: -8420792057065909913}
+  - component: {fileID: -1425614898386773665}
+  - component: {fileID: -9139856149082162451}
   m_Layer: 7
   m_Name: Defense Tower
   m_TagString: Untagged
@@ -852,4 +854,36 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0777d029ed3dffa4692f417d4aba19ca, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
+--- !u!114 &-1425614898386773665
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1101349339577557291}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 0
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &-9139856149082162451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1101349339577557291}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33b57de20edc31046a3f95c630f5e6dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsNetworkEntity
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0

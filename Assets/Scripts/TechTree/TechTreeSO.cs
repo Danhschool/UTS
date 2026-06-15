@@ -31,6 +31,67 @@ namespace GameDevTV.RTS.TechTree
             return Array.Empty<UnlockableSO>();
         }
 
+        /// <summary>
+        /// Mục tiêu: Client MP áp dependency nhà hoàn thành mà không cần BaseBuilding thật.
+        /// </summary>
+        public void ApplyNetworkDependencyUnlocked(Owner owner, UnlockableSO dependency)
+        {
+            if (dependency == null)
+            {
+                return;
+            }
+
+            EnsureTechTreesBuilt();
+            foreach (KeyValuePair<UnlockableSO, Dependency> keyValuePair in techTrees[owner])
+            {
+                keyValuePair.Value.UnlockDependency(dependency);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP mất dependency khi nhà bị phá trên server.
+        /// Cách hoạt động: Gọi LoseDependency trên mọi entry tech tree của owner.
+        /// </summary>
+        public void ApplyNetworkDependencyLost(Owner owner, UnlockableSO dependency)
+        {
+            if (dependency == null)
+            {
+                return;
+            }
+
+            EnsureTechTreesBuilt();
+            foreach (KeyValuePair<UnlockableSO, Dependency> keyValuePair in techTrees[owner])
+            {
+                keyValuePair.Value.LoseDependency(dependency);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP áp upgrade đã research trên server.
+        /// </summary>
+        public void ApplyNetworkResearchCompleted(Owner owner, UpgradeSO upgrade)
+        {
+            if (upgrade == null)
+            {
+                return;
+            }
+
+            EnsureTechTreesBuilt();
+            unlockedDependencies[owner].Add(upgrade);
+            foreach (KeyValuePair<UnlockableSO, Dependency> keyValuePair in techTrees[owner])
+            {
+                keyValuePair.Value.UnlockDependency(upgrade);
+            }
+        }
+
+        void EnsureTechTreesBuilt()
+        {
+            if (techTrees == null)
+            {
+                BuildTechTrees();
+            }
+        }
+
         private void OnEnable()
         {
             if (techTrees == null)

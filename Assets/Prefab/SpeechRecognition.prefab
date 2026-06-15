@@ -145,7 +145,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProjectRTS.SpeechRecognition.VoiceCommandPushToTalkInput
   _capture: {fileID: 7932982010821750756}
-  _captureKey: 118
+  captureKey: 118
 --- !u!114 &6808391140065760110
 MonoBehaviour:
   m_ObjectHideFlags: 0

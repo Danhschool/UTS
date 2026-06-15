@@ -5,6 +5,7 @@ using GameDevTV.RTS.Game.FactionSummary;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Utilities;
+using Mirror;
 using UnityEngine;
 
 namespace GameDevTV.RTS.UI.InGame
@@ -51,8 +52,23 @@ namespace GameDevTV.RTS.UI.InGame
 
         void HandleBuildingDeath(BuildingDeathEvent evt)
         {
-            if (matchEnded || evt.Building == null || !CivilCentralUtility.IsCivilCentral(evt.Building))
+            if (matchEnded || GameMatchOverlayStateSync.HasMatchEndBeenBroadcast)
             {
+                return;
+            }
+
+            if (evt.Building == null || !CivilCentralUtility.IsCivilCentral(evt.Building))
+            {
+                return;
+            }
+
+            if (GameMatchOverlayStateSync.IsNetworkMatchActive)
+            {
+                if (NetworkServer.active)
+                {
+                    GameMatchOverlayStateSync.RequestMatchEndFromCivilCentralDestroyed(evt.Owner);
+                }
+
                 return;
             }
 
@@ -60,6 +76,25 @@ namespace GameDevTV.RTS.UI.InGame
             MatchOutcomeResult result = MatchOutcomeResolver.ResolveFromCivilCentralDestroyed(evt.Owner, localOwner);
             Owner opponentOwner = ResolveOpponentForOutcome(evt.Owner, localOwner);
             ShowOutcome(result, localOwner, opponentOwner);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP nhận kết quả khi server phát hiện CC bị phá.
+        /// Cách hoạt động: Suy thắng/thua theo localOwner rồi load scene End.
+        /// </summary>
+        public static void ApplyNetworkCivilCentralDestroyed(Owner destroyedOwner)
+        {
+            if (matchEnded)
+            {
+                return;
+            }
+
+            matchEnded = true;
+
+            Owner localOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            MatchOutcomeResult result = MatchOutcomeResolver.ResolveFromCivilCentralDestroyed(destroyedOwner, localOwner);
+            Owner opponentOwner = ResolveOpponentForOutcomeStatic(destroyedOwner, localOwner);
+            ShowOutcomeStatic(result, localOwner, opponentOwner, null);
         }
 
         /// <summary>
@@ -101,6 +136,9 @@ namespace GameDevTV.RTS.UI.InGame
             var host = new GameObject(nameof(MatchOutcomeDetector));
             return host.AddComponent<MatchOutcomeDetector>();
         }
+
+        /// <summary>Mục tiêu: Vào trận MP/PvE mới — cho phép kết thúc trận lại.</summary>
+        public static void ResetForNewMatch() => matchEnded = false;
 
         static void ShowOutcomeStatic(
             MatchOutcomeResult result,
@@ -150,7 +188,10 @@ namespace GameDevTV.RTS.UI.InGame
             MatchOutcomeFlow.LoadEndScene(targetEndScene);
         }
 
-        static Owner ResolveOpponentForOutcome(Owner destroyedOwner, Owner localOwner)
+        static Owner ResolveOpponentForOutcome(Owner destroyedOwner, Owner localOwner) =>
+            ResolveOpponentForOutcomeStatic(destroyedOwner, localOwner);
+
+        static Owner ResolveOpponentForOutcomeStatic(Owner destroyedOwner, Owner localOwner)
         {
             FactionSummaryTracker tracker = FactionSummaryTracker.EnsureExists();
             if (destroyedOwner != localOwner)

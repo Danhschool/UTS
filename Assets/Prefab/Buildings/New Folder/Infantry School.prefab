@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 740059083589345232}
   - component: {fileID: 7021723059664325165}
   - component: {fileID: 1985468737831924516}
+  - component: {fileID: -3307479961962279230}
+  - component: {fileID: -7278658916123793714}
   m_Layer: 7
   m_Name: Infantry School
   m_TagString: Untagged
@@ -74,6 +76,7 @@ MonoBehaviour:
   <CurrentHealth>k__BackingField: 0
   <MaxHealth>k__BackingField: 0
   <Owner>k__BackingField: 0
+  <IsVisible>k__BackingField: 1
   <AvailableCommands>k__BackingField:
   - {fileID: 11400000, guid: 38bf002dbb78db14d9e557702ff5f0b6, type: 2}
   - {fileID: 11400000, guid: f4a32045a16c4dc4681ff73d5a107103, type: 2}
@@ -87,11 +90,11 @@ MonoBehaviour:
   <MainRenderer>k__BackingField: {fileID: 4127541658612976420}
   <Progress>k__BackingField:
     <StartTime>k__BackingField: 0
-    <Progress>k__BackingField: 0
+    <Completion>k__BackingField: 0
     <State>k__BackingField: 3
   <BuildingSO>k__BackingField: {fileID: 0}
-  primaryMaterial: {fileID: 2100000, guid: b35c532178876e94f917ff0196f65258, type: 2}
   navMeshObstacle: {fileID: 1985468737831924516}
+  unitSpawnPoint: {fileID: 0}
 --- !u!208 &1985468737831924516
 NavMeshObstacle:
   m_ObjectHideFlags: 0
@@ -108,6 +111,38 @@ NavMeshObstacle:
   m_CarveOnlyStationary: 1
   m_Center: {x: 0, y: 0, z: 0}
   m_TimeToStationary: 0.5
+--- !u!114 &-3307479961962279230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5175054564074698786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 4227221459
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &-7278658916123793714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5175054564074698786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33b57de20edc31046a3f95c630f5e6dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsNetworkEntity
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
 --- !u!1 &6899559021475100392
 GameObject:
   m_ObjectHideFlags: 0
@@ -159,11 +194,15 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_DecalLayerMask: 2
+  m_RenderingLayerMask:
+    serializedVersion: 0
+    m_Bits: 2
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 4}
   m_Size: {x: 2, y: 2, z: 8}
   m_FadeFactor: 1
+  version: 1
+  m_DecalLayerMask: 2
 --- !u!1001 &2466097191642350735
 PrefabInstance:
   m_ObjectHideFlags: 0

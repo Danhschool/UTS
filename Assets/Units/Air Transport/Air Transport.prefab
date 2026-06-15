@@ -15,6 +15,9 @@ GameObject:
   - component: {fileID: 4998999097916986450}
   - component: {fileID: 2115234063178354583}
   - component: {fileID: 1182439771315072052}
+  - component: {fileID: 2450986134657873476}
+  - component: {fileID: -580641661624662460}
+  - component: {fileID: 1627540657246148079}
   m_Layer: 6
   m_Name: Air Transport
   m_TagString: Untagged
@@ -91,10 +94,10 @@ Rigidbody:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1076983579694789324}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -149,6 +152,9 @@ MonoBehaviour:
   m_Graph: {fileID: 6437226619643804953, guid: 15ddc8edc72af0b498107d7a4622b25b, type: 2}
   m_BlackboardVariableOverridesList:
   - rid: 1136246709164704603
+  m_OriginalGraph: {fileID: 0}
+  m_IsInitialised: 0
+  m_IsStarted: 0
   references:
     version: 2
     RefIds:
@@ -176,6 +182,7 @@ MonoBehaviour:
   <CurrentHealth>k__BackingField: 0
   <MaxHealth>k__BackingField: 0
   <Owner>k__BackingField: 0
+  <IsVisible>k__BackingField: 1
   <AvailableCommands>k__BackingField:
   - {fileID: 11400000, guid: 5b88f1c2df63cea41a0b8cd466334886, type: 2}
   - {fileID: 11400000, guid: 84c8d4cd8863b1244994c4ca7b8d09a6, type: 2}
@@ -186,7 +193,57 @@ MonoBehaviour:
   VisionTransform: {fileID: 4999257484100946669}
   <AttackingParticleSystem>k__BackingField: {fileID: 0}
   DamageableSensor: {fileID: 0}
+  movementDestinationCursorPrefab: {fileID: 0}
+  movementDestinationCursorColor: {r: 0, g: 0.85, b: 1, a: 1}
+  movementDestinationCursorMinVisibleSeconds: 0.2
+  movementDestinationArrivalSlack: 0.25
+  deathConfigOverride: {fileID: 0}
   <UsedCapacity>k__BackingField: 0
+--- !u!114 &2450986134657873476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1076983579694789324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba5863352f422e54b81b330ae05e737a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Units.UnitDeathController
+  deathSinkTransform: {fileID: 0}
+--- !u!114 &-580641661624662460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1076983579694789324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 1652901592
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &1627540657246148079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1076983579694789324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33b57de20edc31046a3f95c630f5e6dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsNetworkEntity
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
 --- !u!1 &8767989424686635610
 GameObject:
   m_ObjectHideFlags: 0
@@ -238,11 +295,15 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_DecalLayerMask: 2
+  m_RenderingLayerMask:
+    serializedVersion: 0
+    m_Bits: 2
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 4}
   m_Size: {x: 1.5, y: 1.5, z: 8}
   m_FadeFactor: 1
+  version: 1
+  m_DecalLayerMask: 2
 --- !u!1001 &406761210951193130
 PrefabInstance:
   m_ObjectHideFlags: 0

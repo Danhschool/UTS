@@ -7,6 +7,7 @@ using GameDevTV.RTS.TechTree;
 using GameDevTV.RTS.Units.Visualization;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Utilities;
+using GameDevTV.RTS.Netplay;
 using Unity.Behavior;
 using UnityEngine;
 using UnityEngine.AI;
@@ -98,7 +99,10 @@ namespace GameDevTV.RTS.Units
             MaxHealth = UnitSO.Health;
             CurrentHealth = MaxHealth;
 
-            NotifySpawned();
+            if (!ShouldDeferSpawnPresentationUntilNetworkOwner())
+            {
+                NotifySpawned();
+            }
 
             if (DamageableSensor != null)
             {
@@ -118,6 +122,13 @@ namespace GameDevTV.RTS.Units
 
             Supplies.RegisterPlayerUnit(this);
         }
+
+        /// <summary>
+        /// Mục tiêu: Pure client MP — Owner sync qua SyncVar sau Start; tránh raise Bus sai phe.
+        /// Cách hoạt động: Có NetworkIdentity + pure client → chờ <see cref="RtsUtsNetworkEntity"/> gọi NotifySpawned.
+        /// </summary>
+        bool ShouldDeferSpawnPresentationUntilNetworkOwner() =>
+            RtsNetplaySession.IsPureClient && TryGetComponent<Mirror.NetworkIdentity>(out _);
 
         /// <summary>
         /// Mục tiêu: Báo spawn unit một lần (minimap, fog…) sau khi Owner đã gán đúng.
@@ -279,6 +290,74 @@ namespace GameDevTV.RTS.Units
             DisposeMovementDestinationCursor();
             graphAgent.SetVariableValue("TargetGameObject", damageable.Transform.gameObject);
             graphAgent.SetVariableValue("Command", UnitCommands.Attack);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP hiển thị attack sau server xử lý (BT tắt trên pure client).
+        /// Cách hoạt động: Bật graph tạm, gán TargetGameObject + Command Attack — không chạy damage local.
+        /// </summary>
+        public void MirrorAttackPresentation(IDamageable damageable)
+        {
+            if (damageable == null || graphAgent == null)
+            {
+                return;
+            }
+
+            Transform targetTransform = damageable.Transform;
+            if (targetTransform == null)
+            {
+                return;
+            }
+
+            if (!graphAgent.enabled)
+            {
+                graphAgent.enabled = true;
+            }
+
+            DisposeMovementDestinationCursor();
+            graphAgent.SetVariableValue("TargetGameObject", targetTransform.gameObject);
+            graphAgent.SetVariableValue("Command", UnitCommands.Attack);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP hiển thị di chuyển sau server xử lý Move command.
+        /// Cách hoạt động: Bật graph tạm, gán TargetLocation + Command Move.
+        /// </summary>
+        public void MirrorMovePresentation(Vector3 destination)
+        {
+            if (graphAgent == null)
+            {
+                return;
+            }
+
+            if (!graphAgent.enabled)
+            {
+                graphAgent.enabled = true;
+            }
+
+            DisposeMovementDestinationCursor();
+            graphAgent.SetVariableValue("TargetLocation", destination);
+            graphAgent.SetVariableValue<GameObject>("TargetGameObject", null);
+            graphAgent.SetVariableValue("Command", UnitCommands.Move);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP hiển thị Stop sau server xử lý.
+        /// Cách hoạt động: Bật graph tạm và gán Command Stop.
+        /// </summary>
+        public void MirrorStopPresentation()
+        {
+            if (graphAgent == null)
+            {
+                return;
+            }
+
+            if (!graphAgent.enabled)
+            {
+                graphAgent.enabled = true;
+            }
+
+            graphAgent.SetVariableValue("Command", UnitCommands.Stop);
         }
 
         public virtual void Attack(Vector3 location)
@@ -616,11 +695,42 @@ namespace GameDevTV.RTS.Units
         }
 
         /// <summary>
-        /// Mục tiêu: bắt đầu chết qua Behavior Graph (Command = Die).
-        /// Cách hoạt động: raise event, gán Command; graph chạy chuỗi node Death hoặc fallback coroutine.
+        /// Mục tiêu: Client MP chạy animation/graph chết khi server đã đánh dấu dead.
         /// </summary>
+        public void ExecuteNetworkDeathPresentation()
+        {
+            if (IsInDeathSequence)
+            {
+                return;
+            }
+
+            if (graphAgent != null && !graphAgent.enabled)
+            {
+                graphAgent.enabled = true;
+            }
+
+            MarkDeathSequenceStarted();
+            DisposeMovementDestinationCursor();
+
+            if (IsSelected)
+            {
+                Deselect();
+            }
+
+            unitDeathEventRaised = true;
+            Bus<UnitDeathEvent>.Raise(Owner, new UnitDeathEvent(this));
+            graphAgent.SetVariableValue("Command", UnitCommands.Die);
+            StartCoroutine(EnsureDeathHandledByBehaviorGraph());
+        }
+
         public override void Die()
         {
+            if (TryGetComponent(out GameDevTV.RTS.Netplay.RtsUtsNetworkCombatSync combatSync))
+            {
+                combatSync.HandleAuthoritativeDeath();
+                return;
+            }
+
             if (IsInDeathSequence)
             {
                 return;

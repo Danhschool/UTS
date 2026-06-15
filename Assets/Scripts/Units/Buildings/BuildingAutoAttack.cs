@@ -1,5 +1,7 @@
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Utilities;
+using Mirror;
 using UnityEngine;
 
 namespace GameDevTV.RTS.Buildings
@@ -51,6 +53,11 @@ namespace GameDevTV.RTS.Buildings
 
         private void Update()
         {
+            if (RtsNetplaySession.IsNetworkMatch && !NetworkServer.active)
+            {
+                return;
+            }
+
             if (config == null || config.AttackConfig == null)
             {
                 return;
@@ -102,6 +109,11 @@ namespace GameDevTV.RTS.Buildings
         /// </summary>
         private void HandleProjectileTargetReached(GameObject target)
         {
+            if (!RtsNetplaySession.ShouldApplyCombatDamage)
+            {
+                return;
+            }
+
             if (target == null || config?.AttackConfig == null)
             {
                 return;

@@ -12,6 +12,11 @@ namespace ProjectRTS.Netplay
 
         public static Action<RtsServerSpawnRequest> OnSpawnTeamGameplay;
 
+        /// <summary>Slot 0/1 — game assembly xử lý forfeit + reset spawn.</summary>
+        public static Action<int> OnPlayerDisconnectedForfeit;
+
+        public static Action OnClientDisconnectedCleanup;
+
         public static bool MatchSpawnCompleted { get; set; }
 
         public static void ResetMatchSpawnState() => MatchSpawnCompleted = false;
@@ -20,6 +25,12 @@ namespace ProjectRTS.Netplay
 
         public static void NotifySpawnTeam(in RtsServerSpawnRequest request) =>
             OnSpawnTeamGameplay?.Invoke(request);
+
+        public static void NotifyPlayerDisconnectedForfeit(int teamSlot) =>
+            OnPlayerDisconnectedForfeit?.Invoke(teamSlot);
+
+        public static void NotifyClientDisconnectedCleanup() =>
+            OnClientDisconnectedCleanup?.Invoke();
     }
 
     public readonly struct RtsServerSpawnRequest

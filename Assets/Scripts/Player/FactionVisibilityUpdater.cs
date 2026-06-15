@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
 using UnityEngine;
 
@@ -160,7 +161,7 @@ namespace GameDevTV.RTS.Player
                     continue;
                 }
 
-                if (ShouldTrackAsHideable(commandable.Owner))
+                if (ShouldTrackAsHideable(LocalCommandableOwnership.ResolveOwner(commandable)))
                 {
                     TrackHideable(commandable);
                 }
@@ -407,7 +408,7 @@ namespace GameDevTV.RTS.Player
             for (int i = 0; i < commandables.Length; i++)
             {
                 AbstractCommandable commandable = commandables[i];
-                if (commandable == null || commandable.Owner != localOwner)
+                if (commandable == null || LocalCommandableOwnership.ResolveOwner(commandable) != localOwner)
                 {
                     continue;
                 }

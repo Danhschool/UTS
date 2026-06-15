@@ -3,6 +3,7 @@ using System.Linq;
 using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.TechTree;
 using GameDevTV.RTS.UI.Components;
@@ -221,31 +222,98 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         public virtual void TakeDamage(int damage, IDamageable attacker)
         {
+            if (TryGetComponent(out RtsUtsNetworkCombatSync combatSync))
+            {
+                combatSync.HandleTakeDamage(damage, attacker);
+                return;
+            }
+
+            ApplyLocalTakeDamage(damage, attacker);
+        }
+
+        public virtual void Die()
+        {
+            if (TryGetComponent(out RtsUtsNetworkCombatSync combatSync))
+            {
+                combatSync.HandleAuthoritativeDeath();
+                return;
+            }
+
+            Destroy(gameObject);
+        }
+
+        public void Heal(int amount)
+        {
+            if (amount <= 0)
+            {
+                return;
+            }
+
+            int lastHealth = CurrentHealth;
+            CurrentHealth = Mathf.Clamp(CurrentHealth + amount, 0, MaxHealth);
+            InvokeHealthUpdated(lastHealth, CurrentHealth);
+
+            if (TryGetComponent(out RtsUtsNetworkCombatSync combatSync)
+                && RtsNetplayNetworkBehaviourUtility.CanPushServerState(combatSync))
+            {
+                combatSync.PushHealFromCommandable();
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Combat sync áp snapshot máu từ server xuống client.
+        /// </summary>
+        internal void ApplyNetworkHealthSnapshot(int currentHealth, int maxHealth)
+        {
+            MaxHealth = Mathf.Max(1, maxHealth);
+            CurrentHealth = Mathf.Clamp(currentHealth, 0, MaxHealth);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Server combat sync trừ máu kèm side-effect lớp con.
+        /// </summary>
+        internal void ApplyAuthoritativeDamageCore(int damage, IDamageable attacker)
+        {
+            if (deathSequenceStarted)
+            {
+                return;
+            }
+
+            TakeDamageWithSideEffects(damage, attacker);
+        }
+
+        internal void InvokeHealthUpdated(int lastHealth, int newHealth)
+        {
+            if (OnHealthUpdated == null)
+            {
+                return;
+            }
+
+            OnHealthUpdated.Invoke(this, lastHealth, newHealth);
+        }
+
+        void ApplyLocalTakeDamage(int damage, IDamageable attacker)
+        {
             if (deathSequenceStarted)
             {
                 return;
             }
 
             int lastHealth = CurrentHealth;
-            CurrentHealth = Mathf.Clamp(CurrentHealth - damage, 0, CurrentHealth);
-
-            OnHealthUpdated?.Invoke(this, lastHealth, CurrentHealth);
+            TakeDamageWithSideEffects(damage, attacker);
+            InvokeHealthUpdated(lastHealth, CurrentHealth);
             if (CurrentHealth == 0)
             {
                 Die();
             }
         }
 
-        public virtual void Die()
+        /// <summary>
+        /// Mục tiêu: Cho phép lớp con (military/animal) phản ứng khi bị đánh.
+        /// </summary>
+        protected virtual void TakeDamageWithSideEffects(int damage, IDamageable attacker)
         {
-            Destroy(gameObject);
-        }
-
-        public void Heal(int amount)
-        {
-            int lastHealth = CurrentHealth;
-            CurrentHealth = Mathf.Clamp(CurrentHealth + amount, 0, MaxHealth);
-            OnHealthUpdated?.Invoke(this, lastHealth, CurrentHealth);
+            CurrentHealth = Mathf.Clamp(CurrentHealth - damage, 0, CurrentHealth);
         }
 
         public void SetVisible(bool isVisible)

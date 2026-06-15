@@ -51,11 +51,15 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_DecalLayerMask: 2
+  m_RenderingLayerMask:
+    serializedVersion: 0
+    m_Bits: 2
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 4}
   m_Size: {x: 3, y: 3, z: 8}
   m_FadeFactor: 1
+  version: 1
+  m_DecalLayerMask: 2
 --- !u!1 &6964012305514025925
 GameObject:
   m_ObjectHideFlags: 0
@@ -68,6 +72,8 @@ GameObject:
   - component: {fileID: 2422821575361291847}
   - component: {fileID: 7460994627033053413}
   - component: {fileID: 4254886847077615162}
+  - component: {fileID: 5090442789209594105}
+  - component: {fileID: 364741904291226112}
   m_Layer: 7
   m_Name: Supply Hut
   m_TagString: Untagged
@@ -146,6 +152,7 @@ MonoBehaviour:
   <CurrentHealth>k__BackingField: 0
   <MaxHealth>k__BackingField: 0
   <Owner>k__BackingField: 0
+  <IsVisible>k__BackingField: 1
   <AvailableCommands>k__BackingField: []
   <UnitSO>k__BackingField: {fileID: 11400000, guid: 8dd662d3b241c224ab9deac17c33674b, type: 2}
   decalProjector: {fileID: 2179335234424530655}
@@ -155,11 +162,43 @@ MonoBehaviour:
   <MainRenderer>k__BackingField: {fileID: 3002833620398643107}
   <Progress>k__BackingField:
     <StartTime>k__BackingField: 0
-    <Progress>k__BackingField: 0
+    <Completion>k__BackingField: 0
     <State>k__BackingField: 3
   <BuildingSO>k__BackingField: {fileID: 0}
-  primaryMaterial: {fileID: 2100000, guid: b35c532178876e94f917ff0196f65258, type: 2}
   navMeshObstacle: {fileID: 7460994627033053413}
+  unitSpawnPoint: {fileID: 0}
+--- !u!114 &5090442789209594105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6964012305514025925}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 576126308
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &364741904291226112
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6964012305514025925}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33b57de20edc31046a3f95c630f5e6dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsNetworkEntity
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
 --- !u!1001 &4498428509526723367
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -130,8 +130,8 @@ namespace GameDevTV.RTS.Player
         {
             UnsubscribeBus(localOwner);
             localOwner = owner;
-            aliveUnits.RemoveWhere(unit => unit == null || unit.Owner != localOwner);
-            aliveBuildings.RemoveWhere(building => building == null || building.Owner != localOwner);
+            aliveUnits.RemoveWhere(unit => unit == null || !LocalCommandableOwnership.IsOwnedByLocalHuman(unit));
+            aliveBuildings.RemoveWhere(building => building == null || !LocalCommandableOwnership.IsOwnedByLocalHuman(building));
             selectedUnits.Clear();
             SubscribeBus(localOwner);
             RegisterExistingLocalCommandables();
@@ -205,7 +205,7 @@ namespace GameDevTV.RTS.Player
         private void HandleUnitDeselected(UnitDeselectedEvent evt) => selectedUnits.Remove(evt.Unit);
         private void HandleUnitSpawn(UnitSpawnEvent evt)
         {
-            if (evt.Unit != null && evt.Unit.Owner == ResolveLocalOwner())
+            if (evt.Unit != null && LocalCommandableOwnership.IsOwnedByLocalHuman(evt.Unit))
             {
                 aliveUnits.Add(evt.Unit);
             }
@@ -1065,9 +1065,47 @@ namespace GameDevTV.RTS.Player
             return commandables;
         }
 
+        bool TryRelayActivateCommand(
+            BaseCommand command,
+            List<AbstractCommandable> commandables,
+            RaycastHit hit)
+        {
+            if (!PlayerInputNetworkBridge.ShouldRelayCommands
+                || PlayerInputNetworkBridge.TryRelayActivateCommand == null)
+            {
+                return false;
+            }
+
+            return PlayerInputNetworkBridge.TryRelayActivateCommand(command, commandables, hit);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Move nhóm — MP client relay formation; offline/host dùng utility local.
+        /// Cách hoạt động: Ưu tiên <see cref="PlayerInputNetworkBridge.TryRelayFormationMove"/> khi ShouldRelayCommands.
+        /// </summary>
+        private bool TryApplyFormationMove(
+            IReadOnlyList<AbstractUnit> units,
+            RaycastHit hit,
+            MoveCommand moveCommand)
+        {
+            if (units == null || units.Count <= 1 || moveCommand == null)
+            {
+                return false;
+            }
+
+            if (PlayerInputNetworkBridge.ShouldRelayCommands
+                && PlayerInputNetworkBridge.TryRelayFormationMove != null
+                && PlayerInputNetworkBridge.TryRelayFormationMove(units, hit, moveCommand))
+            {
+                return true;
+            }
+
+            return GroupFormationMoveUtility.TryApplyMove(units, hit, moveCommand);
+        }
+
         /// <summary>
         /// Mục tiêu: Right-click / ActivateAction — Move nhóm dùng formation vuông.
-        /// Cách hoạt động: Move + &gt;1 unit → <see cref="GroupFormationMoveUtility"/>; còn lại giữ loop lệnh cũ.
+        /// Cách hoạt động: Move + &gt;1 unit → relay MP hoặc <see cref="GroupFormationMoveUtility"/>; còn lại giữ loop lệnh cũ.
         /// </summary>
         private bool TryDispatchCommandsToUnits(
             List<AbstractUnit> abstractUnits,
@@ -1082,7 +1120,7 @@ namespace GameDevTV.RTS.Player
 
             if (commandBeingActivated is MoveCommand moveCommand && abstractUnits.Count > 1)
             {
-                if (GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, moveCommand))
+                if (TryApplyFormationMove(abstractUnits, hit, moveCommand))
                 {
                     return true;
                 }
@@ -1110,7 +1148,7 @@ namespace GameDevTV.RTS.Player
 
                     if (command is MoveCommand move && abstractUnits.Count > 1)
                     {
-                        if (GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, move))
+                        if (TryApplyFormationMove(abstractUnits, hit, move))
                         {
                             return true;
                         }
@@ -1142,7 +1180,7 @@ namespace GameDevTV.RTS.Player
 
                 if (command is MoveCommand moveForGroup && abstractUnits.Count > 1)
                 {
-                    if (GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, moveForGroup))
+                    if (TryApplyFormationMove(abstractUnits, hit, moveForGroup))
                     {
                         return true;
                     }
@@ -1374,8 +1412,13 @@ namespace GameDevTV.RTS.Player
 
         /// <summary>
         /// Mục tiêu: Index unit/nhà phe local đã spawn trước khi PlayerInput subscribe Bus.
-        /// Cách hoạt động: FindObjectsByType, chỉ thêm entity có Owner == ResolveLocalOwner().
+        /// Cách hoạt động: FindObjectsByType, chỉ thêm entity commandable bởi local human (MP: UtsOwner).
         /// </summary>
+        public void RefreshLocalAliveRegistry()
+        {
+            RegisterExistingLocalCommandables();
+        }
+
         void RegisterExistingLocalCommandables()
         {
             Owner local = ResolveLocalOwner();
@@ -1386,7 +1429,7 @@ namespace GameDevTV.RTS.Player
             for (int i = 0; i < units.Length; i++)
             {
                 AbstractUnit unit = units[i];
-                if (unit != null && unit.Owner == local)
+                if (unit != null && LocalCommandableOwnership.IsOwnedByLocalHuman(unit))
                 {
                     aliveUnits.Add(unit);
                 }
@@ -1398,7 +1441,7 @@ namespace GameDevTV.RTS.Player
             for (int i = 0; i < buildings.Length; i++)
             {
                 BaseBuilding building = buildings[i];
-                if (building != null && building.Owner == local)
+                if (building != null && LocalCommandableOwnership.IsOwnedByLocalHuman(building))
                 {
                     aliveBuildings.Add(building);
                 }
@@ -1424,7 +1467,7 @@ namespace GameDevTV.RTS.Player
         /// Cách hoạt động: So sánh <see cref="AbstractCommandable.Owner"/> với ResolveLocalOwner().
         /// </summary>
         private bool IsOwnedByLocalPlayer(AbstractCommandable commandable) =>
-            commandable != null && commandable.Owner == ResolveLocalOwner();
+            LocalCommandableOwnership.IsOwnedByLocalHuman(commandable);
 
         private void ActivateAction(RaycastHit hit)
         {
@@ -1443,7 +1486,11 @@ namespace GameDevTV.RTS.Player
 
             if (commandBeingActivated is MoveCommand moveCommand
                 && abstractUnits.Count > 1
-                && GroupFormationMoveUtility.TryApplyMove(abstractUnits, hit, moveCommand))
+                && TryApplyFormationMove(abstractUnits, hit, moveCommand))
+            {
+                buildDispatched = true;
+            }
+            else if (TryRelayActivateCommand(commandBeingActivated, abstractCommandables, hit))
             {
                 buildDispatched = true;
             }

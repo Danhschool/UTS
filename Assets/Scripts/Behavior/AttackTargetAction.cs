@@ -3,7 +3,9 @@ using Unity.Behavior;
 using UnityEngine;
 using Action = Unity.Behavior.Action;
 using Unity.Properties;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
+using Mirror;
 using UnityEngine.AI;
 using GameDevTV.RTS.Utilities;
 using System.Collections.Generic;
@@ -125,6 +127,11 @@ namespace GameDevTV.RTS.Behavior
 
         private void ApplyDamage()
         {
+            if (RtsNetplaySession.IsNetworkMatch && !NetworkServer.active)
+            {
+                return;
+            }
+
             lastAttackTime = Time.time;
             if (unit.AttackingParticleSystem != null)
             {

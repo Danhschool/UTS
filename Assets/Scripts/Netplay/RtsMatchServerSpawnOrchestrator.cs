@@ -75,7 +75,7 @@ namespace GameDevTV.RTS.Netplay
             }
             else
             {
-                RtsUtsServerSpawnHandler.EnsureSpawnPrefabsRegistered(utsSetup);
+                RtsUtsServerEntityFactory.EnsureAllGameplayPrefabsRegistered(utsSetup);
                 if (utsSetup.disableAiControllersOnLoad)
                 {
                     RtsUtsServerSpawnHandler.DisableAiControllersInScene();
@@ -171,6 +171,7 @@ namespace GameDevTV.RTS.Netplay
 
             _spawnSessionSceneName = sceneName;
             SpawnedConnectionIds.Clear();
+            RtsUtsServerEntityFactory.ResetMatchRegistration();
         }
 
         /// <summary>

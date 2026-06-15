@@ -1,7 +1,9 @@
 using GameDevTV.RTS.AI;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
+using Mirror;
 using System;
 using Unity.Behavior;
 using UnityEngine;
@@ -33,9 +35,43 @@ namespace GameDevTV.RTS.Behavior
 
             if (BuildingUnderConstruction.Value == null)
             {
-                GameObject building = GameObject.Instantiate(BuildingSO.Value.Prefab, TargetLocation.Value, Quaternion.identity);
-                if (!building.TryGetComponent(out completedBuilding)
-                    || completedBuilding.MainRenderer == null) return Status.Failure;
+                Worker worker = Self.Value != null ? Self.Value.GetComponent<Worker>() : null;
+                Owner owner = worker != null ? worker.Owner : Owner.Invalid;
+                NetworkConnectionToClient connection = null;
+                if (worker != null
+                    && worker.TryGetComponent(out RtsUtsNetworkEntity workerEntity))
+                {
+                    connection = workerEntity.ResolveOwnerConnection();
+                }
+
+                if (RtsNetplaySession.IsNetworkMatch)
+                {
+                    if (!RtsNetplaySession.ShouldRunAuthoritativeGameplay)
+                    {
+                        return Status.Failure;
+                    }
+
+                    if (!RtsUtsServerEntityFactory.TrySpawnBuilding(
+                            BuildingSO.Value,
+                            TargetLocation.Value,
+                            Quaternion.identity,
+                            owner,
+                            connection,
+                            out completedBuilding)
+                        || completedBuilding.MainRenderer == null)
+                    {
+                        return Status.Failure;
+                    }
+                }
+                else
+                {
+                    GameObject building = GameObject.Instantiate(BuildingSO.Value.Prefab, TargetLocation.Value, Quaternion.identity);
+                    if (!building.TryGetComponent(out completedBuilding)
+                        || completedBuilding.MainRenderer == null)
+                    {
+                        return Status.Failure;
+                    }
+                }
 
                 if (BuildingSO.Value != null)
                 {

@@ -95,108 +95,13 @@ namespace GameDevTV.RTS.Netplay
             NetworkConnectionToClient connection,
             Owner owner)
         {
-            if (prefab == null)
-            {
-                return false;
-            }
-
-            GameObject instance = Object.Instantiate(prefab, position, Quaternion.identity);
-            if (!instance.TryGetComponent(out NetworkIdentity identity))
-            {
-                Debug.LogError($"[RtsUtsServerSpawnHandler] Prefab {prefab.name} thiếu NetworkIdentity.");
-                Object.Destroy(instance);
-                return false;
-            }
-
-            if (!IsPrefabRegistered(prefab))
-            {
-                Debug.LogError(
-                    $"[RtsUtsServerSpawnHandler] Prefab {prefab.name} chưa có trong NetworkManager → Spawn Prefabs (Lobby).");
-                Object.Destroy(instance);
-                return false;
-            }
-
-            if (!instance.TryGetComponent(out RtsUtsNetworkEntity networkEntity))
-            {
-                networkEntity = instance.AddComponent<RtsUtsNetworkEntity>();
-            }
-
-            networkEntity.ServerConfigure(connection != null ? connection.connectionId : -1, owner);
-
-            if (connection != null)
-            {
-                NetworkServer.Spawn(instance, connection);
-            }
-            else
-            {
-                NetworkServer.Spawn(instance);
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Mục tiêu: Tránh Mirror từ chối spawn vì thiếu prefab trong danh sách Lobby.
-        /// Cách hoạt động: Thêm civil central + worker vào spawnPrefabs của NetworkManager nếu chưa có.
-        /// </summary>
-        public static void EnsureSpawnPrefabsRegistered(RtsUtsGameSceneSetup setup)
-        {
-            NetworkManager manager = NetworkManager.singleton;
-            if (manager == null || setup == null)
-            {
-                return;
-            }
-
-            RegisterPrefab(manager, setup.civilCentralPrefab);
-            RegisterPrefab(manager, setup.startingWorkerPrefab);
-        }
-
-        static void RegisterPrefab(NetworkManager manager, GameObject prefab)
-        {
-            if (prefab == null || manager.spawnPrefabs.Contains(prefab))
-            {
-                return;
-            }
-
-            manager.spawnPrefabs.Add(prefab);
-            Debug.Log($"[RtsUtsServerSpawnHandler] Đã thêm {prefab.name} vào NetworkManager.spawnPrefabs.");
-        }
-
-        static bool IsPrefabRegistered(GameObject prefab)
-        {
-            NetworkManager manager = NetworkManager.singleton;
-            if (manager == null)
-            {
-                return false;
-            }
-
-            if (manager.spawnPrefabs.Contains(prefab))
-            {
-                return true;
-            }
-
-            NetworkIdentity identity = prefab.GetComponent<NetworkIdentity>();
-            if (identity == null)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < manager.spawnPrefabs.Count; i++)
-            {
-                GameObject candidate = manager.spawnPrefabs[i];
-                if (candidate == null)
-                {
-                    continue;
-                }
-
-                NetworkIdentity candidateId = candidate.GetComponent<NetworkIdentity>();
-                if (candidateId != null && candidateId.assetId == identity.assetId)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return RtsUtsServerEntityFactory.TrySpawnGameplayEntity(
+                prefab,
+                position,
+                Quaternion.identity,
+                owner,
+                connection,
+                out _);
         }
 
         /// <summary>

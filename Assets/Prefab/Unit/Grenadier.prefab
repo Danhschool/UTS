@@ -526,6 +526,9 @@ GameObject:
   - component: {fileID: 3848726292112328247}
   - component: {fileID: 5998050175462537992}
   - component: {fileID: 1038136032758847798}
+  - component: {fileID: 3796561534104005215}
+  - component: {fileID: 4120291214029498532}
+  - component: {fileID: -5927857045440674847}
   m_Layer: 6
   m_Name: Grenadier
   m_TagString: Untagged
@@ -613,6 +616,9 @@ MonoBehaviour:
   m_Graph: {fileID: 1784358714962989877, guid: fd5bf95263fd44e48a98dab8c526a166, type: 2}
   m_BlackboardVariableOverridesList:
   - rid: 1136247005849584164
+  m_OriginalGraph: {fileID: 0}
+  m_IsInitialised: 0
+  m_IsStarted: 0
   references:
     version: 2
     RefIds:
@@ -654,10 +660,10 @@ Rigidbody:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1813055781741166138}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -690,6 +696,7 @@ MonoBehaviour:
   <CurrentHealth>k__BackingField: 0
   <MaxHealth>k__BackingField: 0
   <Owner>k__BackingField: 0
+  <IsVisible>k__BackingField: 1
   <AvailableCommands>k__BackingField:
   - {fileID: 11400000, guid: ed12d7bbbd8a32d46a3315cea9f38791, type: 2}
   - {fileID: 11400000, guid: 9d6e954ce0a9a934492a858213ad680e, type: 2}
@@ -700,8 +707,58 @@ MonoBehaviour:
   VisionTransform: {fileID: 4344316636463827362}
   <AttackingParticleSystem>k__BackingField: {fileID: 0}
   DamageableSensor: {fileID: 4480043146221706622}
+  movementDestinationCursorPrefab: {fileID: 0}
+  movementDestinationCursorColor: {r: 0, g: 0.85, b: 1, a: 1}
+  movementDestinationCursorMinVisibleSeconds: 0.2
+  movementDestinationArrivalSlack: 0.25
+  deathConfigOverride: {fileID: 0}
   grenade: {fileID: 1261287624979116851}
   explosionParticles: {fileID: 162524390503710701}
+--- !u!114 &3796561534104005215
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1813055781741166138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba5863352f422e54b81b330ae05e737a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Units.UnitDeathController
+  deathSinkTransform: {fileID: 0}
+--- !u!114 &4120291214029498532
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1813055781741166138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 24962372
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &-5927857045440674847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1813055781741166138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33b57de20edc31046a3f95c630f5e6dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsNetworkEntity
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
 --- !u!1 &1929278855779803906
 GameObject:
   m_ObjectHideFlags: 0
@@ -1168,6 +1225,8 @@ SkinnedMeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1189,9 +1248,11 @@ SkinnedMeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   serializedVersion: 2
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
@@ -2345,11 +2406,15 @@ MonoBehaviour:
   m_EndAngleFade: 180
   m_UVScale: {x: 1, y: 1}
   m_UVBias: {x: 0, y: 0}
-  m_DecalLayerMask: 2
+  m_RenderingLayerMask:
+    serializedVersion: 0
+    m_Bits: 2
   m_ScaleMode: 0
   m_Offset: {x: 0, y: 0, z: 4}
   m_Size: {x: 1.5, y: 1.5, z: 8}
   m_FadeFactor: 1
+  version: 1
+  m_DecalLayerMask: 2
 --- !u!1 &9147490098787006195
 GameObject:
   m_ObjectHideFlags: 0

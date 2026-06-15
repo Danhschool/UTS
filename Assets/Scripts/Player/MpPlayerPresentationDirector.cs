@@ -1,7 +1,9 @@
 using GameDevTV.RTS.Netplay;
+using GameDevTV.RTS.UI;
 using GameDevTV.RTS.Units;
 using Mirror;
 using UnityEngine;
+
 namespace GameDevTV.RTS.Player
 {
     /// <summary>
@@ -24,6 +26,44 @@ namespace GameDevTV.RTS.Player
         bool _inactiveFogPresentationsSuppressed;
 
         public bool HasConfiguredRigs => player1Rig != null || player2Rig != null;
+
+        /// <summary>
+        /// Mục tiêu: Play scene MP không cần wire Inspector thủ công.
+        /// Cách hoạt động: Tìm MpPlayerPresentationRig theo Owner, HUD binder, camera từ scene.
+        /// </summary>
+        public void TryAutoWireMissingReferences()
+        {
+            MpPlayerPresentationRig[] rigs = FindObjectsByType<MpPlayerPresentationRig>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+            for (int i = 0; i < rigs.Length; i++)
+            {
+                MpPlayerPresentationRig rig = rigs[i];
+                if (rig == null)
+                {
+                    continue;
+                }
+
+                if (rig.PresentationOwner == Owner.Player1)
+                {
+                    player1Rig ??= rig;
+                }
+                else if (rig.PresentationOwner == Owner.Player2)
+                {
+                    player2Rig ??= rig;
+                }
+            }
+
+            visibilityUpdater ??= FindFirstObjectByType<FactionVisibilityUpdater>(FindObjectsInactive.Include);
+            hudBinder ??= FindFirstObjectByType<FactionHudBinder>(FindObjectsInactive.Include);
+
+            ResolveSharedPlayerInput();
+            if (sharedGameplayCamera == null && _sharedPlayerInput != null)
+            {
+                sharedGameplayCamera = _sharedPlayerInput.GameplayCamera;
+            }
+        }
 
         /// <summary>Mục tiêu: Camera/input chung đã anchor — P2 client dùng cùng instance (không rig P2 stub).</summary>
         public PlayerInput SharedPlayerInput
@@ -98,7 +138,7 @@ namespace GameDevTV.RTS.Player
             if (player2Rig == null && localOwner == Owner.Player2)
             {
                 Debug.LogError(
-                    "[MpPlayerPresentationDirector] player2Rig chưa gán — chạy ProjectRTS/Netplay/★ Prepare RtsNet_Game Scene.");
+                    "[MpPlayerPresentationDirector] player2Rig chưa gán — chạy ProjectRTS/Netplay/★ Auto-Wire MP Prefabs & Scene.");
             }
 
             if (ownerChanged || !_inactiveFogPresentationsSuppressed)
@@ -302,7 +342,7 @@ namespace GameDevTV.RTS.Player
 
             if (player2Rig == null)
             {
-                Debug.LogError("[P2 Fog] player2Rig NULL — chạy Prepare RtsNet_Game Scene.");
+                Debug.LogError("[P2 Fog] player2Rig NULL — chạy ProjectRTS/Netplay/★ Auto-Wire MP Prefabs & Scene.");
             }
             else if (activeRig != player2Rig)
             {
@@ -465,6 +505,7 @@ namespace GameDevTV.RTS.Player
             }
 
             activeInput.enabled = true;
+            activeInput.RefreshLocalAliveRegistry();
         }
 
         void EnsureSharedCameraEnabled()

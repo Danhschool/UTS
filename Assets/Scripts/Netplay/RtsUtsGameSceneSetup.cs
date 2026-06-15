@@ -1,3 +1,4 @@
+using GameDevTV.RTS.TechTree;
 using UnityEngine;
 
 namespace GameDevTV.RTS.Netplay
@@ -22,6 +23,13 @@ namespace GameDevTV.RTS.Netplay
 
         public Vector3 workerOffsetFromBase = new(2f, 0f, 2f);
         public Vector3 workerSpawnSpacing = new(2f, 0f, 0f);
+
+        [Header("MP catalog")]
+        [Tooltip("UnlockableSO dùng trong trận MP — server resolve tên asset khi train/build/research.")]
+        public UnlockableSO[] unlockableCatalog;
+
+        [Tooltip("Prefab bổ sung cần NetworkServer.Spawn (nhà, unit…) — thêm NetworkIdentity trên prefab.")]
+        public GameObject[] additionalNetworkSpawnPrefabs;
 
         [Header("Scene")]
         [Tooltip("Tắt AIController khi test MP PvP phase 1.")]

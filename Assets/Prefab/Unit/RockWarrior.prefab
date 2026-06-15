@@ -1841,6 +1841,8 @@ GameObject:
   - component: {fileID: 3150439852954079087}
   - component: {fileID: 366037682905988111}
   - component: {fileID: 3105096950690907350}
+  - component: {fileID: -543719592285894621}
+  - component: {fileID: -7092294515965035221}
   m_Layer: 6
   m_Name: RockWarrior
   m_TagString: Untagged
@@ -2035,6 +2037,38 @@ MonoBehaviour:
   movementDestinationCursorMinVisibleSeconds: 0.2
   movementDestinationArrivalSlack: 0.25
   deathConfigOverride: {fileID: 0}
+--- !u!114 &-543719592285894621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000013931707134}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 590982206
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &-7092294515965035221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000013931707134}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33b57de20edc31046a3f95c630f5e6dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsNetworkEntity
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
 --- !u!1 &1000014054166772
 GameObject:
   m_ObjectHideFlags: 0

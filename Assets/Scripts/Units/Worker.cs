@@ -5,8 +5,10 @@ using GameDevTV.RTS.Environment;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Audio;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Utilities;
+using Mirror;
 using Unity.Behavior;
 using UnityEngine;
 namespace GameDevTV.RTS.Units
@@ -377,6 +379,11 @@ namespace GameDevTV.RTS.Units
 
         public GameObject Build(BuildingSO building, Vector3 targetLocation)
         {
+            if (RtsNetplaySession.IsNetworkMatch && !NetworkServer.active)
+            {
+                return null;
+            }
+
             DisposeMovementDestinationCursor();
             if (building.Prefab != null && !building.Prefab.TryGetComponent(out BaseBuilding _))
             {

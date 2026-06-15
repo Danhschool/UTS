@@ -72,6 +72,8 @@ GameObject:
   - component: {fileID: 8954186936418030536}
   - component: {fileID: 1422532545010619854}
   - component: {fileID: 4408794320720015172}
+  - component: {fileID: -6025460850851554126}
+  - component: {fileID: -8797801653019510518}
   m_Layer: 7
   m_Name: Command Post
   m_TagString: Home
@@ -145,11 +147,11 @@ MonoBehaviour:
   <MainRenderer>k__BackingField: {fileID: 4728886198864161701}
   <Progress>k__BackingField:
     <StartTime>k__BackingField: 0
-    <Progress>k__BackingField: 0
+    <Completion>k__BackingField: 0
     <State>k__BackingField: 3
   <BuildingSO>k__BackingField: {fileID: 0}
-  primaryMaterial: {fileID: 2100000, guid: b35c532178876e94f917ff0196f65258, type: 2}
   navMeshObstacle: {fileID: 4408794320720015172}
+  unitSpawnPoint: {fileID: 0}
 --- !u!208 &4408794320720015172
 NavMeshObstacle:
   m_ObjectHideFlags: 0
@@ -166,6 +168,38 @@ NavMeshObstacle:
   m_CarveOnlyStationary: 1
   m_Center: {x: 0, y: 0, z: 0}
   m_TimeToStationary: 0.5
+--- !u!114 &-6025460850851554126
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1589499662120937400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 73400528
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &-8797801653019510518
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1589499662120937400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33b57de20edc31046a3f95c630f5e6dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsNetworkEntity
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
 --- !u!1001 &4830853549830045949
 PrefabInstance:
   m_ObjectHideFlags: 0

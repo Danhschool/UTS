@@ -1459,6 +1459,14 @@ MonoBehaviour:
   - {fileID: 5630659975226918516, guid: a8afb7e0df2cdbb4e99b38cb119eef79, type: 3}
   - {fileID: 2665764001411241133, guid: 853598e720ec0d648b6ff7ad9e6603ec, type: 3}
   - {fileID: 6510919576379171628, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
+  - {fileID: 1789053669275132042, guid: 11147ad8983b6f44780f2369c5180822, type: 3}
+  - {fileID: 4587507429451976044, guid: fe1a144e82883874c99874085f717b13, type: 3}
+  - {fileID: 122455736906959572, guid: c7d08169c1952864cafddb72cc47383e, type: 3}
+  - {fileID: 1101349339577557291, guid: 3336afde973f8e54f9d08daa8384792a, type: 3}
+  - {fileID: 7208533299743434618, guid: 809b18f36e667d34b8b033d8c5144ce2, type: 3}
+  - {fileID: 2977037207688881033, guid: b77683e095dae404aa87a1b4e5fbc574, type: 3}
+  - {fileID: 3127381923673660962, guid: f66f116ca87be0142970f69d81af2967, type: 3}
+  - {fileID: 1000013931707134, guid: 3bc6b0cf0b103a048b598a956a4e71b7, type: 3}
   exceptionsDisconnect: 1
   snapshotSettings:
     bufferTimeMultiplier: 2
@@ -1476,7 +1484,7 @@ MonoBehaviour:
   timeInterpolationGui: 0
   lobbyScene: Assets/3rdParty/RTS_Multiplayer/Scenes/RtsNet_Lobby.unity
   loadingScene: Assets/Scenes/Loading.unity
-  gameScene: Assets/3rdParty/RTS_Multiplayer/Scenes/RtsNet_Game.unity
+  gameScene: Assets/Scenes/Game 1.unity
   unitPrefab: {fileID: 5630659975226918516, guid: a8afb7e0df2cdbb4e99b38cb119eef79, type: 3}
 --- !u!114 &800230923
 MonoBehaviour:
@@ -1635,16 +1643,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69f4a3c11dec81b45ad65ec82c22edcd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ProjectRTS.Netplay::ProjectRTS.Netplay.RtsLobbyUI
-  networkAddressInput: {fileID: 1857878209}
-  usernameInput: {fileID: 28327873}
-  hostButton: {fileID: 165549969}
-  clientButton: {fileID: 1936688254}
+  roomListContent: {fileID: 0}
+  roomEntryPrefab: {fileID: 0}
   readyButton: {fileID: 1960708491}
   startGameButton: {fileID: 716062770}
-  statusText: {fileID: 1186094688}
+  readyHoverPanel: {fileID: 0}
+  readyButtonImage: {fileID: 0}
+  readyActiveColor: {r: 1, g: 1, b: 1, a: 1}
+  readyInactiveColor: {r: 0, g: 0, b: 0, a: 1}
+  startGameButtonImage: {fileID: 0}
+  startEnabledColor: {r: 1, g: 1, b: 1, a: 1}
+  startDisabledColor: {r: 0, g: 0, b: 0, a: 1}
   authenticator: {fileID: 800230921}
-  loginPanel: {fileID: 1852931856}
-  lobbyPanel: {fileID: 1919509260}
+  roomBroadcast: {fileID: 0}
+  defaultRoomName: "Ph\xF2ng 1"
 --- !u!114 &879742259
 MonoBehaviour:
   m_ObjectHideFlags: 0

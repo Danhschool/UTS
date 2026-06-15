@@ -1,8 +1,10 @@
 using System;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
+using Mirror;
 using UnityEngine;
 
 namespace GameDevTV.RTS.Environment
@@ -46,16 +48,49 @@ namespace GameDevTV.RTS.Environment
 
         public int EndGather(int bonusPerGather = 0)
         {
+            if (RtsNetplaySession.IsNetworkMatch && !NetworkServer.active)
+            {
+                return 0;
+            }
+
             int perTrip = Mathf.Max(0, Supply.AmountPerGather + bonusPerGather);
             int amountGathered = Mathf.Min(perTrip, Amount);
             Amount -= amountGathered;
 
-            if (Amount <= 0)
+            bool depleted = Amount <= 0;
+            PushNetworkSupplyStateIfServer(depleted);
+
+            if (depleted)
             {
                 Destroy(gameObject);
             }
 
             return amountGathered;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP hiển thị lượng mỏ đúng sau server gather.
+        /// Cách hoạt động: Gán Amount từ snapshot; không gọi EndGather trên client.
+        /// </summary>
+        public void ApplyNetworkAmountSnapshot(int amount)
+        {
+            Amount = Mathf.Max(0, amount);
+        }
+
+        void PushNetworkSupplyStateIfServer(bool depleted)
+        {
+            if (!NetworkServer.active)
+            {
+                return;
+            }
+
+            RtsGatherableSupplyNetworkSync hub = RtsGatherableSupplyNetworkSync.Instance;
+            if (hub == null)
+            {
+                return;
+            }
+
+            hub.ServerReportSupplyChanged(transform.position, Amount, depleted);
         }
 
         public void AbortGather()

@@ -1,5 +1,6 @@
 using GameDevTV.RTS.Gameplay;
 using GameDevTV.RTS.UI.InGame;
+using GameDevTV.RTS.Units;
 using Mirror;
 using UnityEngine;
 
@@ -31,6 +32,16 @@ namespace GameDevTV.RTS.Game
         bool sharedSurrenderDialog;
 
         public static bool IsNetworkMatchActive => NetworkClient.active || NetworkServer.active;
+
+        static bool s_serverMatchEndSent;
+
+        public static bool HasMatchEndBeenBroadcast => s_serverMatchEndSent;
+
+        /// <summary>Mục tiêu: Trận MP mới — cho phép broadcast kết thúc lại.</summary>
+        public static void ResetMatchEndBroadcast()
+        {
+            s_serverMatchEndSent = false;
+        }
 
         void Awake()
         {
@@ -133,6 +144,55 @@ namespace GameDevTV.RTS.Game
             }
         }
 
+        /// <summary>
+        /// Mục tiêu: Server báo cả hai client kết thúc trận khi Civil Central bị phá.
+        /// </summary>
+        public static void RequestMatchEndFromCivilCentralDestroyed(Owner destroyedOwner)
+        {
+            if (!IsNetworkMatchActive || Instance == null)
+            {
+                return;
+            }
+
+            if (NetworkServer.active)
+            {
+                Instance.ServerBroadcastMatchEnd(destroyedOwner, fromDisconnect: false);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Kết thúc trận khi một người disconnect — phe còn lại thắng.
+        /// Cách hoạt động: Server gọi Rpc trực tiếp (không qua Command — hook chạy trên server).
+        /// </summary>
+        public static void RequestMatchEndFromPlayerDisconnect(Owner disconnectedOwner)
+        {
+            if (!IsNetworkMatchActive || Instance == null)
+            {
+                return;
+            }
+
+            if (NetworkServer.active)
+            {
+                Instance.ServerBroadcastMatchEnd(disconnectedOwner, fromDisconnect: true);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Phát Rpc kết thúc trận từ server — tránh Command khi client đã ngắt.
+        /// Cách hoạt động: Chống trùng s_serverMatchEndSent rồi Rpc tới mọi client còn kết nối.
+        /// </summary>
+        [Server]
+        void ServerBroadcastMatchEnd(Owner destroyedOwner, bool fromDisconnect)
+        {
+            if (s_serverMatchEndSent)
+            {
+                return;
+            }
+
+            s_serverMatchEndSent = true;
+            RpcMatchEndFromCivilCentralDestroyed(destroyedOwner);
+        }
+
         [Command(requiresAuthority = false)]
         void CmdSetSharedPanel(byte panel, bool paused, bool surrenderDialog)
         {
@@ -163,6 +223,33 @@ namespace GameDevTV.RTS.Game
         void RpcEndMatchFromSurrender()
         {
             InGameOverlayMenuController.ApplyRemoteMatchEndFromSurrender();
+        }
+
+        [Command(requiresAuthority = false)]
+        void CmdMatchEndFromCivilCentralDestroyed(Owner destroyedOwner)
+        {
+            ServerBroadcastMatchEnd(destroyedOwner, fromDisconnect: false);
+        }
+
+        [Command(requiresAuthority = false)]
+        void CmdMatchEndFromPlayerDisconnect(Owner disconnectedOwner)
+        {
+            ServerBroadcastMatchEnd(disconnectedOwner, fromDisconnect: true);
+        }
+
+        [ClientRpc]
+        void RpcMatchEndFromCivilCentralDestroyed(Owner destroyedOwner)
+        {
+            MatchOutcomeDetector.ApplyNetworkCivilCentralDestroyed(destroyedOwner);
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            if (!isServer)
+            {
+                ApplyStateToAllControllers();
+            }
         }
 
         void HookSharedPanel(byte oldValue, byte newValue) => ApplyStateToAllControllers();

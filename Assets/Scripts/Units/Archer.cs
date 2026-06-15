@@ -1,6 +1,7 @@
+using GameDevTV.RTS.Audio;
+using GameDevTV.RTS.Netplay;
 using Unity.Behavior;
 using UnityEngine;
-using GameDevTV.RTS.Audio;
 
 namespace GameDevTV.RTS.Units
 {
@@ -87,6 +88,11 @@ namespace GameDevTV.RTS.Units
 
         private void ApplyDamageFromTarget(GameObject target)
         {
+            if (!RtsNetplaySession.ShouldApplyCombatDamage)
+            {
+                return;
+            }
+
             if (target == null || unitSO?.AttackConfig == null)
             {
                 return;

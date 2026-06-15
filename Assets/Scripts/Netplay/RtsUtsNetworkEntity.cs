@@ -46,15 +46,21 @@ namespace GameDevTV.RTS.Netplay
 
 
 
-        public bool IsCommandableByLocalHuman =>
+        public bool IsCommandableByLocalHuman
+        {
+            get
+            {
+                if (!isClient || _commandable == null)
+                {
+                    return false;
+                }
 
-            isClient
+                return LocalCommandableOwnership.IsOwnedByLocalHuman(_commandable);
+            }
+        }
 
-            && LocalHumanOwnerService.Instance != null
-
-            && LocalHumanOwnerService.Instance.IsInitialized
-
-            && LocalHumanOwnerService.Instance.IsLocalOwner(utsOwner);
+        /// <summary>Server debug: connection sở hữu entity (SyncVar).</summary>
+        public int ServerOwnerConnectionId => serverOwnerConnectionId;
 
 
 
@@ -99,6 +105,8 @@ namespace GameDevTV.RTS.Netplay
             base.OnStartClient();
 
             ApplyOwnerToCommandable();
+
+            RtsNetplaySimulationGate.ApplyToSpawnedEntity(gameObject);
 
             StartCoroutine(ApplyFogVisionLayersWhenReady());
 
@@ -150,6 +158,35 @@ namespace GameDevTV.RTS.Netplay
 
             _commandable.SyncOwnerAndFogVision(utsOwner);
 
+            RaiseClientSpawnPresentationIfNeeded();
+
+            if (isClient && !isServer && LocalCommandableOwnership.IsOwnedByLocalHuman(_commandable))
+            {
+                MpFogVisionSpawnRefresh.SchedulePresentationRetries();
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP đăng ký unit/nhà spawn với minimap, fog, PlayerInput.
+        /// Cách hoạt động: Gọi NotifySpawned / NotifyNetworkSpawnPresentation sau khi Owner sync.
+        /// </summary>
+        void RaiseClientSpawnPresentationIfNeeded()
+        {
+            if (isServer || _commandable == null)
+            {
+                return;
+            }
+
+            if (_commandable is AbstractUnit unit)
+            {
+                unit.NotifySpawned();
+                return;
+            }
+
+            if (_commandable is BaseBuilding building)
+            {
+                building.NotifyNetworkSpawnPresentation();
+            }
         }
 
 
@@ -159,9 +196,47 @@ namespace GameDevTV.RTS.Netplay
             connectionId == serverOwnerConnectionId;
 
         /// <summary>
+        /// Mục tiêu: Lấy connection sở hữu entity khi server spawn unit/building theo phe.
+        /// Cách hoạt động: Tra serverOwnerConnectionId trong NetworkServer.connections.
+        /// </summary>
+        public NetworkConnectionToClient ResolveOwnerConnection()
+        {
+            if (serverOwnerConnectionId < 0)
+            {
+                return null;
+            }
+
+            return NetworkServer.connections.TryGetValue(serverOwnerConnectionId, out NetworkConnectionToClient connection)
+                ? connection
+                : null;
+        }
+
+        /// <summary>
         /// Mục tiêu: Client (P2) thấy worker gather sau server đã xử lý Command.
         /// Cách hoạt động: Tìm mỏ gần điểm hit, gọi <see cref="Worker.MirrorGatherPresentation"/>.
         /// </summary>
+        [ClientRpc]
+        public void RpcMirrorMoveGoal(Vector3 destination)
+        {
+            if (isServer || !TryGetComponent(out AbstractUnit unit))
+            {
+                return;
+            }
+
+            unit.MirrorMovePresentation(destination);
+        }
+
+        [ClientRpc]
+        public void RpcMirrorStop()
+        {
+            if (isServer || !TryGetComponent(out AbstractUnit unit))
+            {
+                return;
+            }
+
+            unit.MirrorStopPresentation();
+        }
+
         [ClientRpc]
         public void RpcMirrorGatherPresentation(Vector3 supplyWorldPosition)
         {
@@ -182,7 +257,7 @@ namespace GameDevTV.RTS.Netplay
         [ClientRpc]
         public void RpcMirrorAttackTarget(uint targetNetId)
         {
-            if (isServer || !TryGetComponent(out IAttacker attacker))
+            if (isServer || targetNetId == 0)
             {
                 return;
             }
@@ -193,7 +268,18 @@ namespace GameDevTV.RTS.Netplay
             }
 
             IDamageable damageable = targetIdentity.GetComponentInParent<IDamageable>();
-            if (damageable != null)
+            if (damageable == null)
+            {
+                return;
+            }
+
+            if (TryGetComponent(out AbstractUnit unit))
+            {
+                unit.MirrorAttackPresentation(damageable);
+                return;
+            }
+
+            if (TryGetComponent(out IAttacker attacker))
             {
                 attacker.Attack(damageable);
             }

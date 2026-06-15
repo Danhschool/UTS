@@ -7,6 +7,9 @@ Thư mục `docs` này là bộ tài liệu tổng hợp để:
 
 ## 1) Tài liệu chính
 
+- **`MP-Technical-Debug-Guide.md`**  
+  **MP Mirror 2 người** — luồng scene, relay lệnh, sync combat, P1/P2, ma trận triệu chứng → file, checklist test LAN (fix bug khi chơi MP).
+
 - **`TAI_LIEU_KY_THUAT_DAY_DU.md`**  
   **Tài liệu kỹ thuật đầy đủ** — từng chức năng (kể cả nhỏ): event bus, lệnh, UI, behavior nodes, minimap, log, cảnh báo tài nguyên, v.v. (198 script + data/scene).
 
@@ -33,9 +36,10 @@ Thư mục `docs` này là bộ tài liệu tổng hợp để:
 ## 3) Cách sử dụng nhanh
 
 1. Đọc `survey-summary.md` để có bức tranh lớn trong 5-10 phút.  
-2. Mở **`TAI_LIEU_KY_THUAT_DAY_DU.md`** khi cần hiểu **toàn bộ chức năng** trong game.  
-3. Mở `RTS_TECHNICAL_REFERENCE.md` hoặc `urts-architecture-map.md` khi cần tra file/class cụ thể.  
-4. Khi đổi repo, làm theo `repo-migration-checklist.md` + `new-repo-quickstart.md`.
+2. Mở **`MP-Technical-Debug-Guide.md`** khi debug **multiplayer LAN** (P2, spawn, combat, fog).  
+3. Mở **`TAI_LIEU_KY_THUAT_DAY_DU.md`** khi cần hiểu **toàn bộ chức năng** trong game.  
+4. Mở `RTS_TECHNICAL_REFERENCE.md` hoặc `urts-architecture-map.md` khi cần tra file/class cụ thể.  
+5. Khi đổi repo, làm theo `repo-migration-checklist.md` + `new-repo-quickstart.md`.
 
 ## 4) Phạm vi và giới hạn
 

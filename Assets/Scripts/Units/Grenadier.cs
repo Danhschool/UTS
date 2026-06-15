@@ -1,4 +1,5 @@
 using System.Collections;
+using GameDevTV.RTS.Netplay;
 using Unity.Behavior;
 using UnityEngine;
 
@@ -78,6 +79,11 @@ namespace GameDevTV.RTS.Units
 
         private void ApplyDamage(Vector3 endPosition, IDamageable damageable)
         {
+            if (!RtsNetplaySession.ShouldApplyCombatDamage)
+            {
+                return;
+            }
+
             if (damageable != null && damageable.Transform != null)
             {
                 damageable?.TakeDamage(unitSO.AttackConfig.Damage, this);

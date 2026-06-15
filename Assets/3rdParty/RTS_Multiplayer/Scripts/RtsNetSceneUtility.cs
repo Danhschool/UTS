@@ -9,7 +9,7 @@ namespace ProjectRTS.Netplay
     public static class RtsNetSceneUtility
     {
         /// <summary>
-        /// Mục tiêu: OnServerSceneChanged nhận diện RtsNet_Game dù gameScene là asset path.
+        /// Mục tiêu: So khớp scene Mirror (Game 1/2, path .unity, hoặc tên ngắn).
         /// Cách hoạt động: Khớp scene.name, scene.path, hoặc tên file *.unity.
         /// </summary>
         public static bool MatchesActiveScene(string sceneField)
@@ -52,6 +52,31 @@ namespace ProjectRTS.Netplay
             }
 
             return sceneField;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Nhận diện map gameplay (Game 1/2, RtsNet_Game) mà không phụ thuộc Assembly-CSharp.
+        /// Cách hoạt động: Loại lobby/menu/loading; chấp nhận tên Game* hoặc RtsNet_Game.
+        /// </summary>
+        public static bool IsActiveGameplayMapScene()
+        {
+            Scene active = SceneManager.GetActiveScene();
+            if (!active.IsValid() || !active.isLoaded)
+            {
+                return false;
+            }
+
+            string name = active.name;
+            if (name == "RtsNet_Lobby"
+                || name == "MainMenu"
+                || name == "SSScene"
+                || name == "Loading"
+                || name == "End")
+            {
+                return false;
+            }
+
+            return name == "RtsNet_Game" || name.StartsWith("Game");
         }
     }
 }

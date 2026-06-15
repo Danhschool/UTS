@@ -14,7 +14,7 @@ namespace ProjectRTS.Netplay
         [Header("RTS scenes (must be in Build Settings)")]
         [Scene] public string lobbyScene = "RtsNet_Lobby";
         [Scene] public string loadingScene = "Loading";
-        [Scene] public string gameScene = "RtsNet_Game";
+        [Scene] public string gameScene = "Game 1";
 
         [Header("Prefabs")]
         public GameObject unitPrefab;
@@ -56,6 +56,14 @@ namespace ProjectRTS.Netplay
                 RtsUniqueNameAuthenticator.PlayerNames.Remove(name);
 
             RtsLobbyChat.ClearConnectionName(conn);
+
+            if (conn != null
+                && RtsPlayerSlotRegistry.TryGetSlot(conn.connectionId, out int slot)
+                && RtsNetSceneUtility.IsActiveGameplayMapScene())
+            {
+                RtsServerGameplayNotifier.NotifyPlayerDisconnectedForfeit(slot);
+            }
+
             RtsPlayerSlotRegistry.Release(conn.connectionId);
             base.OnServerDisconnect(conn);
         }
@@ -64,6 +72,7 @@ namespace ProjectRTS.Netplay
         {
             base.OnClientDisconnect();
             RtsLocalHumanOwnerNotifier.ClearCachedTeamIndex();
+            RtsServerGameplayNotifier.NotifyClientDisconnectedCleanup();
             RtsLobbyUI.Instance?.ShowLoginAgain();
         }
 
@@ -108,7 +117,7 @@ namespace ProjectRTS.Netplay
         {
             base.OnServerSceneChanged(sceneName);
 
-            if (!RtsNetSceneUtility.MatchesActiveScene(gameScene))
+            if (!RtsNetSceneUtility.IsActiveGameplayMapScene())
             {
                 RtsServerGameplayNotifier.ResetMatchSpawnState();
                 return;
@@ -131,7 +140,7 @@ namespace ProjectRTS.Netplay
 
         void OnEnteredGameplayScene()
         {
-            if (!RtsNetSceneUtility.MatchesActiveScene(gameScene))
+            if (!RtsNetSceneUtility.IsActiveGameplayMapScene())
             {
                 return;
             }

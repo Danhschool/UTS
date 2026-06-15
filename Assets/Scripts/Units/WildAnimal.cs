@@ -46,9 +46,9 @@ namespace GameDevTV.RTS.Units
             StartCoroutine(BootstrapAnimalAINextFrame());
         }
 
-        public override void TakeDamage(int damage, IDamageable attacker)
+        protected override void TakeDamageWithSideEffects(int damage, IDamageable attacker)
         {
-            base.TakeDamage(damage, attacker);
+            base.TakeDamageWithSideEffects(damage, attacker);
 
             if (IsInDeathSequence || CurrentHealth <= 0)
             {

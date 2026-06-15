@@ -21,6 +21,9 @@ namespace ProjectRTS.Netplay
             SlotByConnectionId.Remove(connectionId);
         }
 
+        public static bool TryGetSlot(int connectionId, out int slot) =>
+            SlotByConnectionId.TryGetValue(connectionId, out slot);
+
         /// <summary>
         /// Mục tiêu: Host luôn 0, client thứ hai luôn 1 — kể cả khi add player lại sau ServerChangeScene.
         /// Cách hoạt động: connectionId đã có trong map → trả slot cũ; chưa có → slot = số entry hiện có (0 rồi 1).

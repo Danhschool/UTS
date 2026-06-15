@@ -2,8 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.TechTree;
+using Mirror;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -79,7 +81,10 @@ namespace GameDevTV.RTS.Units
             Progress = new BuildingProgress(BuildingProgress.BuildingState.Completed, Progress.StartTime, 1);
             unitBuildingThis = null;
             Bus<UnitDeathEvent>.OnEvent[Owner] -= HandleUnitDeath;
-            RaiseBuildingSpawnEventIfNeeded();
+            if (!(RtsNetplaySession.IsPureClient && TryGetComponent<NetworkIdentity>(out _)))
+            {
+                RaiseBuildingSpawnEventIfNeeded();
+            }
 
             foreach (UpgradeSO upgrade in BuildingSO.Upgrades)
             {
@@ -144,6 +149,11 @@ namespace GameDevTV.RTS.Units
 
         public void BuildUnlockable(UnlockableSO unlockable)
         {
+            if (RtsNetplaySession.IsNetworkMatch && !NetworkServer.active)
+            {
+                return;
+            }
+
             if (buildingQueue.Count == MAX_QUEUE_SIZE)
             {
                 Debug.LogError("BuildUnit called when the queue was already full! This is not supported!");
@@ -160,16 +170,28 @@ namespace GameDevTV.RTS.Units
             Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, -unlockable.Cost.Food, unlockable.Cost.FoodSO));
 
             buildingQueue.Add(unlockable);
-            if (buildingQueue.Count == 1)
+            if (buildingQueue.Count == 1 && RtsNetplaySession.ShouldRunAuthoritativeGameplay)
             {
                 StartCoroutine(DoBuildUnits());
             }
 
             OnQueueUpdated?.Invoke(buildingQueue.ToArray());
+            NotifyNetworkBuildingStateIfServer();
         }
 
         public void CancelBuildingUnit(int index)
         {
+            if (RtsNetplaySession.IsPureClient && TryGetComponent(out RtsUtsNetworkBuildingSync buildingSync))
+            {
+                buildingSync.RequestCancelQueueIndex(index);
+                return;
+            }
+
+            if (RtsNetplaySession.IsNetworkMatch && !NetworkServer.active)
+            {
+                return;
+            }
+
             if (index < 0 || index >= buildingQueue.Count)
             {
                 Debug.LogError("Attempting to cancel building a unit outside the bounds of the queue!");
@@ -198,6 +220,57 @@ namespace GameDevTV.RTS.Units
             {
                 OnQueueUpdated?.Invoke(buildingQueue.ToArray());
             }
+
+            NotifyNetworkBuildingStateIfServer();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP hiển thị queue/progress khớp server.
+        /// </summary>
+        internal void ApplyNetworkPresentationState(
+            IReadOnlyList<UnlockableSO> queueSnapshot,
+            UnlockableSO soBeingBuilt,
+            float queueStartTime,
+            BuildingProgress progress)
+        {
+            buildingQueue.Clear();
+            if (queueSnapshot != null)
+            {
+                for (int i = 0; i < queueSnapshot.Count; i++)
+                {
+                    if (queueSnapshot[i] != null)
+                    {
+                        buildingQueue.Add(queueSnapshot[i]);
+                    }
+                }
+            }
+
+            SOBeingBuilt = soBeingBuilt;
+            CurrentQueueStartTime = queueStartTime;
+
+            BuildingProgress previous = Progress;
+            Progress = progress;
+
+            if (previous.State != BuildingProgress.BuildingState.Completed
+                && progress.State == BuildingProgress.BuildingState.Completed)
+            {
+                SyncPassiveEffects(true);
+            }
+
+            OnQueueUpdated?.Invoke(buildingQueue.ToArray());
+        }
+
+        void NotifyNetworkBuildingStateIfServer()
+        {
+            if (!NetworkServer.active)
+            {
+                return;
+            }
+
+            if (TryGetComponent(out RtsUtsNetworkBuildingSync buildingSync))
+            {
+                buildingSync.ServerPushFullState();
+            }
         }
 
         public void StartBuilding(IBuildingBuilder buildingBuilder)
@@ -223,6 +296,7 @@ namespace GameDevTV.RTS.Units
 
             Bus<UnitDeathEvent>.OnEvent[Owner] -= HandleUnitDeath;
             Bus<UnitDeathEvent>.OnEvent[Owner] += HandleUnitDeath;
+            NotifyNetworkBuildingStateIfServer();
         }
 
         /// <summary>
@@ -279,6 +353,7 @@ namespace GameDevTV.RTS.Units
             }
 
             RaiseBuildingSpawnEventIfNeeded();
+            NotifyNetworkBuildingStateIfServer();
         }
 
         /// <summary>
@@ -294,6 +369,52 @@ namespace GameDevTV.RTS.Units
 
             buildingSpawnEventRaised = true;
             Bus<BuildingSpawnEvent>.Raise(Owner, new BuildingSpawnEvent(Owner, this));
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP đăng ký nhà spawn qua network (minimap, UI, fog).
+        /// Cách hoạt động: Gọi RaiseBuildingSpawnEventIfNeeded sau khi Owner sync.
+        /// </summary>
+        public void NotifyNetworkSpawnPresentation()
+        {
+            RaiseBuildingSpawnEventIfNeeded();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP ẩn nhà chết trước khi Mirror unspawn.
+        /// Cách hoạt động: Tắt collider/renderer; không raise BuildingDeathEvent (server đã xử lý tech).
+        /// </summary>
+        public void ExecuteNetworkDeathPresentation()
+        {
+            if (IsInDeathSequence)
+            {
+                return;
+            }
+
+            MarkDeathSequenceStarted();
+
+            if (IsSelected)
+            {
+                Deselect();
+            }
+
+            Collider[] colliders = GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                if (colliders[i] != null)
+                {
+                    colliders[i].enabled = false;
+                }
+            }
+
+            Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] != null)
+                {
+                    renderers[i].enabled = false;
+                }
+            }
         }
 
         private void HandleUnitDeath(UnitDeathEvent evt)
@@ -323,11 +444,36 @@ namespace GameDevTV.RTS.Units
                 if (SOBeingBuilt is AbstractUnitSO unitSO)
                 {
                     Vector3 spawn = GetUnitSpawnWorldPosition();
-                    GameObject instance = Instantiate(unitSO.Prefab, spawn, Quaternion.identity);
-                    if (instance.TryGetComponent(out AbstractUnit unit))
+                    Quaternion rotation = UnitSpawnWorldRotation;
+
+                    if (RtsNetplaySession.IsNetworkMatch)
                     {
-                        unit.Owner = Owner;
-                        unit.NotifySpawned();
+                        NetworkConnectionToClient connection = null;
+                        if (TryGetComponent(out RtsUtsNetworkEntity networkEntity))
+                        {
+                            connection = networkEntity.ResolveOwnerConnection();
+                        }
+
+                        if (!RtsUtsServerEntityFactory.TrySpawnUnit(
+                                unitSO,
+                                spawn,
+                                rotation,
+                                Owner,
+                                connection,
+                                out _))
+                        {
+                            Debug.LogError(
+                                $"[BaseBuilding] MP spawn unit thất bại: {unitSO.name} tại {spawn}. Kiểm tra NetworkIdentity + spawnPrefabs.");
+                        }
+                    }
+                    else
+                    {
+                        GameObject instance = Instantiate(unitSO.Prefab, spawn, rotation);
+                        if (instance.TryGetComponent(out AbstractUnit unit))
+                        {
+                            unit.Owner = Owner;
+                            unit.NotifySpawned();
+                        }
                     }
                 }
                 else if (SOBeingBuilt is UpgradeSO upgrade)
@@ -336,9 +482,11 @@ namespace GameDevTV.RTS.Units
                 }
 
                 buildingQueue.RemoveAt(0);
+                NotifyNetworkBuildingStateIfServer();
             }
 
             OnQueueUpdated?.Invoke(buildingQueue.ToArray());
+            NotifyNetworkBuildingStateIfServer();
         }
 
         /// <summary>Vị trí spawn unit trên rìa CC/nhà (world space).</summary>

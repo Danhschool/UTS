@@ -31,6 +31,7 @@ namespace GameDevTV.RTS.Netplay
             if (moveCommand.CanHandle(context))
             {
                 moveCommand.Handle(context);
+                networkEntity?.RpcMirrorMoveGoal(destination);
             }
 
             Destroy(moveCommand);
@@ -39,12 +40,25 @@ namespace GameDevTV.RTS.Netplay
         [Command]
         void CmdUtsStop(uint netId)
         {
-            if (!TryResolveCommandable(netId, out _, out AbstractUnit unit))
+            if (!TryResolveCommandable(netId, out RtsUtsNetworkEntity networkEntity, out AbstractUnit unit))
             {
                 return;
             }
 
             unit.Stop();
+            networkEntity?.RpcMirrorStop();
+        }
+
+        [Command]
+        void CmdUtsCancelWorkerBuild(uint workerNetId)
+        {
+            if (!TryResolveCommandable(workerNetId, out _, out AbstractUnit unit)
+                || unit is not Worker worker)
+            {
+                return;
+            }
+
+            worker.CancelBuilding();
         }
 
         [Command]
@@ -64,19 +78,36 @@ namespace GameDevTV.RTS.Netplay
         }
 
         [Command]
-        void CmdUtsAttack(uint netId, Vector3 hitPoint, int formationIndex)
+        void CmdUtsAttack(uint netId, Vector3 hitPoint, uint targetNetId, int formationIndex)
         {
             if (!TryResolveCommandable(netId, out RtsUtsNetworkEntity networkEntity, out AbstractUnit unit))
             {
                 return;
             }
 
-            if (!TryBuildCombatHit(hitPoint, networkEntity.UtsOwner, out RaycastHit hit))
+            Owner attackerOwner = networkEntity.UtsOwner;
+
+            if (targetNetId != 0
+                && TryResolveCombatTargetByNetId(
+                    targetNetId,
+                    attackerOwner,
+                    out IDamageable resolvedTarget,
+                    out Collider resolvedCollider))
             {
+                TryExecuteAttackOnDamageable(networkEntity, unit, resolvedTarget, resolvedCollider);
                 return;
             }
 
-            TryExecuteAttackCommand(networkEntity, unit, hit, formationIndex);
+            if (TryBuildCombatHit(hitPoint, attackerOwner, out RaycastHit hit))
+            {
+                TryExecuteAttackCommand(networkEntity, unit, hit, formationIndex);
+                return;
+            }
+
+            if (unit is IAttacker attacker)
+            {
+                attacker.Attack(hitPoint);
+            }
         }
 
         /// <summary>
@@ -128,8 +159,12 @@ namespace GameDevTV.RTS.Netplay
         {
             Owner owner = networkEntity != null ? networkEntity.UtsOwner : unit.Owner;
 
-            if (unit is IAttacker attacker
-                && hit.collider != null)
+            if (unit is not IAttacker attacker)
+            {
+                return;
+            }
+
+            if (hit.collider != null)
             {
                 IDamageable damageable = hit.collider.GetComponentInParent<IDamageable>();
                 if (damageable != null
@@ -137,25 +172,81 @@ namespace GameDevTV.RTS.Netplay
                     && damageable.Owner != Owner.Invalid)
                 {
                     attacker.Attack(damageable);
-                    NetworkIdentity targetIdentity = hit.collider.GetComponentInParent<NetworkIdentity>();
-                    if (targetIdentity != null)
-                    {
-                        networkEntity?.RpcMirrorAttackTarget(targetIdentity.netId);
-                    }
-
+                    TryMirrorAttackTarget(networkEntity, hit.collider);
                     return;
                 }
             }
 
-            CommandContext context = new CommandContext(owner, unit, hit, formationIndex, MouseButton.Right);
-            foreach (BaseCommand candidate in AvailableCommandsResolver.GetFlattened(unit))
+            Vector3 attackPoint = hit.point;
+            if (attackPoint == default && hit.collider != null)
             {
-                if (candidate is AttackCommand attackCommand && attackCommand.CanHandle(context))
-                {
-                    attackCommand.Handle(context);
-                    return;
-                }
+                attackPoint = hit.collider.bounds.center;
             }
+
+            attacker.Attack(attackPoint);
+        }
+
+        static void TryMirrorAttackTarget(RtsUtsNetworkEntity networkEntity, Collider collider)
+        {
+            if (networkEntity == null || collider == null)
+            {
+                return;
+            }
+
+            NetworkIdentity targetIdentity = collider.GetComponentInParent<NetworkIdentity>();
+            if (targetIdentity != null && targetIdentity.netId != 0)
+            {
+                networkEntity.RpcMirrorAttackTarget(targetIdentity.netId);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Server attack địch đã resolve theo netId — không cần RaycastHit giả.
+        /// Cách hoạt động: Gọi IAttacker.Attack(IDamageable) và mirror presentation qua collider.
+        /// </summary>
+        static void TryExecuteAttackOnDamageable(
+            RtsUtsNetworkEntity networkEntity,
+            AbstractUnit unit,
+            IDamageable damageable,
+            Collider collider)
+        {
+            if (unit is not IAttacker attacker || damageable == null)
+            {
+                return;
+            }
+
+            attacker.Attack(damageable);
+            TryMirrorAttackTarget(networkEntity, collider);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Server resolve địch theo netId client gửi — không cần raycast physics trùng khớp host.
+        /// Cách hoạt động: Tra NetworkServer.spawned, kiểm tra Owner địch, lấy IDamageable + Collider.
+        /// </summary>
+        static bool TryResolveCombatTargetByNetId(
+            uint targetNetId,
+            Owner attackerOwner,
+            out IDamageable damageable,
+            out Collider collider)
+        {
+            damageable = null;
+            collider = null;
+
+            if (!NetworkServer.spawned.TryGetValue(targetNetId, out NetworkIdentity identity))
+            {
+                return false;
+            }
+
+            damageable = identity.GetComponentInParent<IDamageable>();
+            if (damageable == null
+                || damageable.Owner == attackerOwner
+                || damageable.Owner == Owner.Invalid)
+            {
+                return false;
+            }
+
+            collider = identity.GetComponentInChildren<Collider>();
+            return true;
         }
 
         bool TryResolveCommandable(
@@ -301,6 +392,16 @@ namespace GameDevTV.RTS.Netplay
             CmdUtsStop(netId);
         }
 
+        public void RequestUtsCancelWorkerBuild(uint workerNetId)
+        {
+            if (!isLocalPlayer)
+            {
+                return;
+            }
+
+            CmdUtsCancelWorkerBuild(workerNetId);
+        }
+
         public void RequestUtsMove(uint netId, Vector3 worldPoint, int formationIndex)
         {
             if (!isLocalPlayer)
@@ -321,14 +422,54 @@ namespace GameDevTV.RTS.Netplay
             CmdUtsGather(netId, hitPoint, formationIndex);
         }
 
-        public void RequestUtsAttack(uint netId, Vector3 hitPoint, int formationIndex)
+        public void RequestUtsAttack(uint netId, Vector3 hitPoint, uint targetNetId, int formationIndex)
         {
             if (!isLocalPlayer)
             {
                 return;
             }
 
-            CmdUtsAttack(netId, hitPoint, formationIndex);
+            CmdUtsAttack(netId, hitPoint, targetNetId, formationIndex);
+        }
+
+        public void RequestUtsBuild(uint workerNetId, string buildingAssetName, Vector3 worldPoint, uint resumeBuildingNetId)
+        {
+            if (!isLocalPlayer)
+            {
+                return;
+            }
+
+            CmdUtsBuildBuilding(workerNetId, buildingAssetName, worldPoint, resumeBuildingNetId);
+        }
+
+        public void RequestUtsEnqueueUnlockable(uint buildingNetId, string unlockableAssetName)
+        {
+            if (!isLocalPlayer)
+            {
+                return;
+            }
+
+            CmdUtsEnqueueUnlockable(buildingNetId, unlockableAssetName);
+        }
+
+        [Command]
+        void CmdUtsBuildBuilding(uint workerNetId, string buildingAssetName, Vector3 worldPoint, uint resumeBuildingNetId)
+        {
+            RtsUtsGameplayCommandServer.TryExecuteBuild(
+                workerNetId,
+                buildingAssetName,
+                worldPoint,
+                resumeBuildingNetId,
+                connectionToClient);
+        }
+
+        [Command]
+        void CmdUtsEnqueueUnlockable(uint buildingNetId, string unlockableAssetName)
+        {
+            RtsUtsGameplayCommandServer.TryExecuteEnqueueUnlockable(
+                buildingNetId,
+                unlockableAssetName,
+                connectionToClient);
         }
     }
 }
