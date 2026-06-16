@@ -13046,6 +13046,7 @@ MonoBehaviour:
   placementNavMeshObstacleProbeLayers:
     serializedVersion: 2
     m_Bits: 960
+  voiceCommandGameplayPrefabs: {fileID: 0}
 --- !u!114 &330585550
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -77783,6 +77784,7 @@ GameObject:
   - component: {fileID: 2124640908}
   - component: {fileID: 2124640907}
   - component: {fileID: 2124640906}
+  - component: {fileID: 2124640913}
   - component: {fileID: 2124640912}
   - component: {fileID: 2124640911}
   m_Layer: 0
@@ -77825,7 +77827,7 @@ MonoBehaviour:
   aiOwner: 4
   spawnStartingUnits: 1
   startingUnits:
-  - unitPrefab: {fileID: 6510919576379171628, guid: fea78981f84486d4eabf298d982a13eb, type: 3}
+  - unitPrefab: {fileID: 6510919576379171628, guid: cbfef9878c3a270428e2e703ef655a50, type: 3}
     count: 3
   unitSpawnFirstOffsetLocal: {x: 0, y: 0, z: 0}
   unitSpawnSphereRadius: 3
@@ -77927,6 +77929,57 @@ MonoBehaviour:
   startingWorkerCount: 3
   workerOffsetFromBase: {x: 10, y: 0, z: 10}
   workerSpawnSpacing: {x: 10, y: 0, z: 0}
+  unlockableCatalog:
+  - {fileID: 11400000, guid: ae6bdc56b74afcc4d99249637ebd0f61, type: 2}
+  - {fileID: 11400000, guid: 5b0b6af605c07ac48b70bdb931e0ff17, type: 2}
+  - {fileID: 11400000, guid: 4113d3b50f3b34c4f93298a287f69e11, type: 2}
+  - {fileID: 11400000, guid: 4ec413adae59aa74987852e58d68060f, type: 2}
+  - {fileID: 11400000, guid: 975e8b13c2fd2bf49b8dc6d9ea59028b, type: 2}
+  - {fileID: 11400000, guid: 9f3c4b79c65116f40bd662bd1e19ca05, type: 2}
+  - {fileID: 11400000, guid: 2b6d7a8b04944ea4eaebc73001c8442d, type: 2}
+  - {fileID: 11400000, guid: 4c56a299fe5e7fb4ba9a7f3dafe8f689, type: 2}
+  - {fileID: 11400000, guid: 8f022912492d9fa4c948e01d2d7c20f5, type: 2}
+  - {fileID: 11400000, guid: f8852cd73fbbfe24a869cdb3abe2740f, type: 2}
+  - {fileID: 11400000, guid: e1bd4f29149e6224981aa919752b5a2e, type: 2}
+  - {fileID: 11400000, guid: cc6b1ac6bca6bed46a5d323fc4f79ada, type: 2}
+  - {fileID: 11400000, guid: db600b37f92b2674c9747b612f7048ae, type: 2}
+  - {fileID: 11400000, guid: 32db170b4b416ef4fae1729b6d3b5c41, type: 2}
+  - {fileID: 11400000, guid: 2e829905cf9882748a8e06aa66c7106b, type: 2}
+  - {fileID: 11400000, guid: 1d3b9ecd81aa02041b237fc857eb7844, type: 2}
+  - {fileID: 11400000, guid: 47539d8cef73e16458e8d64acbed5506, type: 2}
+  - {fileID: 11400000, guid: 20eb4953f49142d47aaf2257bcae0889, type: 2}
+  - {fileID: 11400000, guid: e9ea56feb4529c748839874f96083a6c, type: 2}
+  - {fileID: 11400000, guid: e0a95ddcd8453e94e9524d30ad8e4099, type: 2}
+  - {fileID: 11400000, guid: 9ce7170543556ec48bebfdf9eaf91910, type: 2}
+  - {fileID: 11400000, guid: 86f373237f273604ba8d6889b10c4c76, type: 2}
+  - {fileID: 11400000, guid: 35a264f03396c544ba2137324727a50d, type: 2}
+  - {fileID: 11400000, guid: 1cdc59f0d4e72d04d9908dd605aa19fa, type: 2}
+  - {fileID: 11400000, guid: 2a94b3ffe6f83c74aa72f8dedc9ba774, type: 2}
+  - {fileID: 11400000, guid: 986a399e9117cff4294eb998021eff5c, type: 2}
+  - {fileID: 11400000, guid: b0966e064033fc64abe1272eae9d0b44, type: 2}
+  - {fileID: 11400000, guid: e8cb3adce017a704cbd6d3f90fca9844, type: 2}
+  - {fileID: 11400000, guid: 5795e5fff15537343876403dff3e12bc, type: 2}
+  - {fileID: 11400000, guid: 81f02ac8079bf964f803aba15ac34f66, type: 2}
+  - {fileID: 11400000, guid: 978ce58a96096fe4385cc86401dadedd, type: 2}
+  - {fileID: 11400000, guid: d5b6236c3a458ef419296778d61c4916, type: 2}
+  - {fileID: 11400000, guid: b3a52b4c84453094d9ce598d151af20e, type: 2}
+  additionalNetworkSpawnPrefabs:
+  - {fileID: 1076983579694789324, guid: 4d0c2e8c3bd76b64097b86828a286bc6, type: 3}
+  - {fileID: 2977037207688881033, guid: b77683e095dae404aa87a1b4e5fbc574, type: 3}
+  - {fileID: 1789053669275132042, guid: 11147ad8983b6f44780f2369c5180822, type: 3}
+  - {fileID: 5827066523746683823, guid: 99644b1f78511a74ebf01fb8a9b7b14a, type: 3}
+  - {fileID: 1589499662120937400, guid: 303a082a5a5d8fd4f82aca535f7844e8, type: 3}
+  - {fileID: 4587507429451976044, guid: fe1a144e82883874c99874085f717b13, type: 3}
+  - {fileID: 1101349339577557291, guid: 3336afde973f8e54f9d08daa8384792a, type: 3}
+  - {fileID: 122455736906959572, guid: c7d08169c1952864cafddb72cc47383e, type: 3}
+  - {fileID: 1813055781741166138, guid: a3c5c27142d7d0647b103b949975e6e6, type: 3}
+  - {fileID: 5175054564074698786, guid: 0d67de4832dbe384893b2764c9903271, type: 3}
+  - {fileID: 1931094961596098796, guid: 2ae407508e4e37a488120c2bfb05f9da, type: 3}
+  - {fileID: 1000013931707134, guid: 3bc6b0cf0b103a048b598a956a4e71b7, type: 3}
+  - {fileID: 7208533299743434618, guid: 809b18f36e667d34b8b033d8c5144ce2, type: 3}
+  - {fileID: 6964012305514025925, guid: 470a6d584ace95348a509afe788af20e, type: 3}
+  - {fileID: 6510919576379171628, guid: cbfef9878c3a270428e2e703ef655a50, type: 3}
+  - {fileID: 3127381923673660962, guid: f66f116ca87be0142970f69d81af2967, type: 3}
   disableAiControllersOnLoad: 1
 --- !u!114 &2124640910
 MonoBehaviour:
@@ -77952,6 +78005,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4e2ed7850510d34aa2101c79543b4c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Game.GameMatchOverlayStateSync
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+--- !u!114 &2124640913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2124640901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb7cde311bf81284a840b7287d028c44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsSupplyStateSync
   syncDirection: 0
   syncMode: 0
   syncInterval: 0

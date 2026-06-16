@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.UI.Containers;
 using GameDevTV.RTS.Units;
@@ -26,6 +27,8 @@ namespace GameDevTV.RTS.UI
         readonly HashSet<AbstractCommandable> selectedUnits = new(12);
         bool busSubscribed;
 
+        static readonly List<AbstractCommandable> ResyncSelectionBuffer = new(12);
+
         void Awake()
         {
             if (eventBusOwner == Owner.Invalid)
@@ -34,14 +37,117 @@ namespace GameDevTV.RTS.UI
             }
         }
 
+        void OnEnable()
+        {
+            LocalHumanOwnerService.LocalOwnerChanged += OnLocalOwnerChanged;
+            TryConfigureForLocalHuman();
+        }
+
         void Start()
         {
-            ConfigureBusOwner(eventBusOwner);
+            TryConfigureForLocalHuman();
+        }
+
+        void OnDisable()
+        {
+            LocalHumanOwnerService.LocalOwnerChanged -= OnLocalOwnerChanged;
+            UnsubscribeBus();
         }
 
         void OnDestroy()
         {
+            LocalHumanOwnerService.LocalOwnerChanged -= OnLocalOwnerChanged;
             UnsubscribeBus();
+        }
+
+        void OnLocalOwnerChanged(Owner owner) => TryConfigureForLocalHuman();
+
+        /// <summary>
+        /// Mục tiêu: MP — chỉ rig HUD đang active + đúng human local mới subscribe Bus.
+        /// Cách hoạt động: So khớp LocalOwner với MpPlayerPresentationRig.PresentationOwner (nếu có).
+        /// </summary>
+        void TryConfigureForLocalHuman()
+        {
+            Owner local = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            if (!HumanFogVisionUtility.IsHumanPlayer(local))
+            {
+                return;
+            }
+
+            Owner branchOwner = MpHudBranchResolver.ResolveFor(transform);
+            if (branchOwner != local)
+            {
+                return;
+            }
+
+            if (IsConfiguredForOwner(local))
+            {
+                return;
+            }
+
+            ConfigureBusOwner(local);
+        }
+
+        /// <summary>Mục tiêu: Rig inactive — gỡ subscription Bus (tránh P1/P2 cùng nghe).</summary>
+        public void ReleaseBusSubscription()
+        {
+            UnsubscribeBus();
+            selectedUnits.Clear();
+        }
+
+        /// <summary>Mục tiêu: Coordinator refresh action bar sau supply snapshot MP.</summary>
+        public bool IsConfiguredForOwner(Owner owner) =>
+            busSubscribed && eventBusOwner == owner && isActiveAndEnabled;
+
+        /// <summary>Mục tiêu: Refresh panel lệnh khi tài nguyên đổi qua SyncVar (không có SupplyEvent client).</summary>
+        public void RefreshSelectionPresentation()
+        {
+            TryResyncSelectionFromPlayerInput();
+            RefreshUI();
+        }
+
+        /// <summary>
+        /// Mục tiêu: MP client — PlayerInput vẫn giữ selection nhưng RuntimeUI HashSet rỗng sau ConfigureBusOwner/refresh.
+        /// Cách hoạt động: Sao chép commandable đang chọn từ PlayerInput trước khi RefreshUI.
+        /// </summary>
+        void TryResyncSelectionFromPlayerInput()
+        {
+            if (!RtsNetplaySession.IsNetworkMatch)
+            {
+                return;
+            }
+
+            PlayerInput input = Object.FindFirstObjectByType<PlayerInput>(FindObjectsInactive.Include);
+            if (input == null)
+            {
+                return;
+            }
+
+            ResyncSelectionBuffer.Clear();
+            input.CollectSelectedCommandablesForUi(ResyncSelectionBuffer);
+            if (ResyncSelectionBuffer.Count == 0)
+            {
+                return;
+            }
+
+            selectedUnits.Clear();
+            for (int i = 0; i < ResyncSelectionBuffer.Count; i++)
+            {
+                selectedUnits.Add(ResyncSelectionBuffer[i]);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP — progress bar / queue nhà đang chọn cập nhật sau network sync.
+        /// </summary>
+        public void RefreshBuildingIfSelected(BaseBuilding building)
+        {
+            if (building == null || buildingSelectedUI == null || !selectedUnits.Contains(building))
+            {
+                return;
+            }
+
+            buildingSelectedUI.EnableFor(building);
         }
 
         /// <summary>
@@ -61,11 +167,11 @@ namespace GameDevTV.RTS.UI
                 eventBusOwner = owner;
                 SubscribeBus(owner);
                 selectedUnits.Clear();
-            }
 
-            if (isActiveAndEnabled)
-            {
-                DisableAllContainers();
+                if (isActiveAndEnabled)
+                {
+                    DisableAllContainers();
+                }
             }
         }
 
@@ -184,6 +290,11 @@ namespace GameDevTV.RTS.UI
 
         void RefreshUI()
         {
+            if (selectedUnits.Count == 0 && RtsNetplaySession.IsNetworkMatch)
+            {
+                TryResyncSelectionFromPlayerInput();
+            }
+
             if (selectedUnits.Count > 0)
             {
                 actionsUI.EnableFor(selectedUnits);

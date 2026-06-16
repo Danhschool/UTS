@@ -1,4 +1,6 @@
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Gameplay;
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.UI.InGame;
 using GameDevTV.RTS.Units;
 using Mirror;
@@ -175,6 +177,92 @@ namespace GameDevTV.RTS.Game
             {
                 Instance.ServerBroadcastMatchEnd(disconnectedOwner, fromDisconnect: true);
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP nhận S/W/F khi RtsUtsSupplyStateSync chưa replicate (scene chưa Prepare).
+        /// Cách hoạt động: Server gọi ClientRpc trên object scene GameplayMapCore — client luôn có.
+        /// </summary>
+        public static void BroadcastSupplySnapshot(
+            Owner owner,
+            int stone,
+            int wood,
+            int food,
+            int population,
+            int populationLimit)
+        {
+            if (!NetworkServer.active || Instance == null)
+            {
+                return;
+            }
+
+            Instance.ServerBroadcastSupplySnapshot(owner, stone, wood, food, population, populationLimit);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP thấy popup "+N" khi worker gather (server SupplyEvent).
+        /// Cách hoạt động: ClientRpc tới HUD local — không dùng SupplyEvent trên pure client.
+        /// </summary>
+        public static void BroadcastSupplyGain(Owner owner, SupplyGainKind kind, int amount)
+        {
+            if (!NetworkServer.active || Instance == null || amount <= 0 || kind == SupplyGainKind.Unknown)
+            {
+                return;
+            }
+
+            Instance.ServerBroadcastSupplyGain(owner, kind, amount);
+        }
+
+        [Server]
+        void ServerBroadcastSupplyGain(Owner owner, SupplyGainKind kind, int amount)
+        {
+            RpcNotifySupplyGain((byte)owner, (byte)kind, amount);
+        }
+
+        [ClientRpc]
+        void RpcNotifySupplyGain(byte ownerByte, byte kindByte, int amount)
+        {
+            if (isServer || RtsNetplaySession.IsPureClient)
+            {
+                // Host: popup qua Supplies.HandleSupplyEvent. Pure client: qua snapshot delta trong ApplyNetworkSnapshot.
+                return;
+            }
+
+            SupplyGainHudPresenter.NotifyGainFromNetwork(
+                (Owner)ownerByte,
+                (SupplyGainKind)kindByte,
+                amount);
+        }
+
+        [Server]
+        void ServerBroadcastSupplySnapshot(
+            Owner owner,
+            int stone,
+            int wood,
+            int food,
+            int population,
+            int populationLimit)
+        {
+            RpcApplySupplySnapshot((byte)owner, stone, wood, food, population, populationLimit);
+        }
+
+        [ClientRpc]
+        void RpcApplySupplySnapshot(
+            byte ownerByte,
+            int stone,
+            int wood,
+            int food,
+            int population,
+            int populationLimit)
+        {
+            if (isServer)
+            {
+                return;
+            }
+
+            Owner owner = (Owner)ownerByte;
+            Supplies.EnsureReady();
+            Supplies.ApplyNetworkSnapshot(owner, stone, wood, food, population, populationLimit);
         }
 
         /// <summary>

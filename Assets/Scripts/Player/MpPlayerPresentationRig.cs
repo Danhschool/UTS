@@ -6,7 +6,7 @@ using UnityEngine;
 namespace GameDevTV.RTS.Player
 {
     /// <summary>
-    /// SRP: Một bộ presentation MP — fog + HUD + PlayerInput cho P1 hoặc P2 (gắn trên scene RtsNet_Game).
+    /// SRP: Một bộ presentation MP — fog + HUD + PlayerInput cho P1 hoặc P2 (Game 1 / Game 2).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class MpPlayerPresentationRig : MonoBehaviour
@@ -26,6 +26,69 @@ namespace GameDevTV.RTS.Player
         public GameObject HudRoot => hudRoot;
         public Supplies SuppliesHud => suppliesHud;
 
+        /// <summary>
+        /// Mục tiêu: HUD scene thường không parent dưới Fog — rig giữ reference hudRoot/suppliesHud.
+        /// </summary>
+        public bool OwnsHudTransform(Transform hudTransform)
+        {
+            if (hudTransform == null)
+            {
+                return false;
+            }
+
+            if (hudRoot != null
+                && (hudTransform == hudRoot.transform || hudTransform.IsChildOf(hudRoot.transform)))
+            {
+                return true;
+            }
+
+            if (suppliesHud != null
+                && (hudTransform == suppliesHud.transform || hudTransform.IsChildOf(suppliesHud.transform)))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Game 1/2 — rig P2 hay thiếu hudRoot/suppliesHud sau merge scene (HUD không parent dưới Fog).
+        /// Cách hoạt động: Tìm Supplies theo presentationOwner rồi gán hudRoot = root của HUD đó.
+        /// </summary>
+        public void TryResolveHudReferencesFromScene()
+        {
+            suppliesHud ??= MpHudSuppliesResolver.FindForOwner(presentationOwner);
+
+            if (hudRoot == null && suppliesHud != null)
+            {
+                hudRoot = suppliesHud.transform.root.gameObject;
+            }
+
+            if (hudRoot != null)
+            {
+                suppliesHud ??= hudRoot.GetComponentInChildren<Supplies>(true);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Director bind — resolve Supplies khi SerializeField trống sau merge scene.
+        /// </summary>
+        public Supplies ResolveSuppliesHud()
+        {
+            if (suppliesHud != null)
+            {
+                return suppliesHud;
+            }
+
+            if (hudRoot != null)
+            {
+                suppliesHud = hudRoot.GetComponentInChildren<Supplies>(true);
+            }
+
+            suppliesHud ??= GetComponentInChildren<Supplies>(true);
+            return suppliesHud;
+        }
+
         void Awake()
         {
             if (rigRoot == null)
@@ -33,6 +96,7 @@ namespace GameDevTV.RTS.Player
                 rigRoot = gameObject;
             }
 
+            TryResolveHudReferencesFromScene();
             fogPresentation ??= GetComponentInChildren<FactionFogPresentation>(true);
             playerInput ??= GetComponent<PlayerInput>();
             if (playerInput == null)
@@ -116,21 +180,26 @@ namespace GameDevTV.RTS.Player
                 hudRoot.SetActive(active);
             }
 
-            if (active && suppliesHud != null)
-            {
-                if (!suppliesHud.gameObject.activeInHierarchy)
-                {
-                    suppliesHud.gameObject.SetActive(true);
-                }
-
-                suppliesHud.BindHudOwner(presentationOwner);
-            }
-
             if (active)
             {
+                Supplies hud = ResolveSuppliesHud();
+                if (hud != null)
+                {
+                    if (!hud.gameObject.activeInHierarchy)
+                    {
+                        hud.gameObject.SetActive(true);
+                    }
+
+                    hud.BindHudOwner(presentationOwner);
+                }
+
                 WireRuntimeUiBusOwner();
                 EnsureMinimapFogResolved();
                 BindMinimapFactionOwner();
+            }
+            else
+            {
+                UnwireRuntimeUiBus();
             }
 
             FactionVisibilityUpdater[] visibilityUpdaters =
@@ -173,8 +242,41 @@ namespace GameDevTV.RTS.Player
             RuntimeUI[] runtimeUis = hudRoot.GetComponentsInChildren<RuntimeUI>(true);
             for (int i = 0; i < runtimeUis.Length; i++)
             {
-                runtimeUis[i].ConfigureBusOwner(presentationOwner);
+                RuntimeUI ui = runtimeUis[i];
+                if (ui == null || ui.IsConfiguredForOwner(presentationOwner))
+                {
+                    continue;
+                }
+
+                ui.ConfigureBusOwner(presentationOwner);
             }
+        }
+
+        /// <summary>Mục tiêu: Rig inactive — gỡ Bus selection UI khỏi phe này.</summary>
+        void UnwireRuntimeUiBus()
+        {
+            if (hudRoot == null)
+            {
+                return;
+            }
+
+            RuntimeUI[] runtimeUis = hudRoot.GetComponentsInChildren<RuntimeUI>(true);
+            for (int i = 0; i < runtimeUis.Length; i++)
+            {
+                runtimeUis[i].ReleaseBusSubscription();
+            }
+        }
+
+        /// <summary>Mục tiêu: Director Apply — đồng bộ RuntimeUI sau bind rig.</summary>
+        public void RefreshRuntimeUiForOwner(Owner localOwner)
+        {
+            if (!HumanFogVisionUtility.IsHumanPlayer(localOwner) || presentationOwner != localOwner)
+            {
+                return;
+            }
+
+            WireRuntimeUiBusOwner();
+            MpRuntimeUiCoordinator.RefreshFullPresentationForOwner(localOwner);
         }
 
         public void SetPlayerInputEnabled(bool enabled)

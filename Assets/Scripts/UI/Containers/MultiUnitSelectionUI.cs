@@ -47,9 +47,17 @@ namespace GameDevTV.RTS.UI.Containers
         public void Disable()
         {
             gameObject.SetActive(false);
+            if (typeSlots == null)
+            {
+                return;
+            }
+
             foreach (MultiUnitTypeSlotUI slot in typeSlots)
             {
-                slot.Hide();
+                if (slot != null)
+                {
+                    slot.Hide();
+                }
             }
         }
 

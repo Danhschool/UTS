@@ -1054,15 +1054,29 @@ namespace GameDevTV.RTS.Player
         private List<AbstractCommandable> CollectSelectedCommandables()
         {
             List<AbstractCommandable> commandables = new(selectedUnits.Count);
+            CollectSelectedCommandablesForUi(commandables);
+            return commandables;
+        }
+
+        /// <summary>
+        /// Mục tiêu: RuntimeUI MP đồng bộ selection khi refresh HUD sau SyncVar làm mất HashSet UI.
+        /// Cách hoạt động: Ghi commandable phe local đang chọn vào buffer do caller cấp.
+        /// </summary>
+        public void CollectSelectedCommandablesForUi(List<AbstractCommandable> buffer)
+        {
+            if (buffer == null)
+            {
+                return;
+            }
+
+            buffer.Clear();
             foreach (ISelectable selectable in selectedUnits)
             {
                 if (selectable is AbstractCommandable commandable && IsOwnedByLocalPlayer(commandable))
                 {
-                    commandables.Add(commandable);
+                    buffer.Add(commandable);
                 }
             }
-
-            return commandables;
         }
 
         bool TryRelayActivateCommand(

@@ -436,7 +436,9 @@ namespace GameDevTV.RTS.Units
             while (buildingQueue.Count > 0)
             {
                 SOBeingBuilt = buildingQueue[0];
-                CurrentQueueStartTime = Time.time;
+                CurrentQueueStartTime = RtsNetplaySession.IsNetworkMatch
+                    ? (float)NetworkTime.time
+                    : Time.time;
                 OnQueueUpdated?.Invoke(buildingQueue.ToArray());
 
                 yield return new WaitForSeconds(SOBeingBuilt.BuildTime);

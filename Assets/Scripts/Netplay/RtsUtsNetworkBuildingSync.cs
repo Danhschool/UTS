@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GameDevTV.RTS.TechTree;
 using GameDevTV.RTS.Units;
+using GameDevTV.RTS.Player;
 using Mirror;
 using UnityEngine;
 
@@ -197,6 +198,7 @@ namespace GameDevTV.RTS.Netplay
                 syncProgressCompletion);
 
             _building.ApplyNetworkPresentationState(queue, soBeingBuilt, syncQueueStartTime, progress);
+            MpRuntimeUiCoordinator.RefreshBuildingPresentation(_building);
         }
     }
 }

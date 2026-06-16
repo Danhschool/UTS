@@ -44,6 +44,8 @@ namespace GameDevTV.RTS.Player
 
         private Owner hudOwner = Owner.Player1;
 
+        SupplyGainHudPresenter gainPresenter;
+
         static readonly List<Supplies> EnabledHudInstances = new(4);
         static bool busHandlersRegistered;
         static bool applyingNetworkSnapshot;
@@ -81,6 +83,10 @@ namespace GameDevTV.RTS.Player
             int populationLimit)
         {
             EnsureDictionariesInitialized();
+            int oldStone = Stone[owner];
+            int oldWood = Wood[owner];
+            int oldFood = Food[owner];
+
             applyingNetworkSnapshot = true;
             try
             {
@@ -95,6 +101,8 @@ namespace GameDevTV.RTS.Player
                 applyingNetworkSnapshot = false;
             }
 
+            TryPresentSnapshotGains(owner, oldStone, stone, oldWood, wood, oldFood, food);
+
             for (int i = 0; i < EnabledHudInstances.Count; i++)
             {
                 EnabledHudInstances[i]?.RefreshSupplyHud();
@@ -103,7 +111,58 @@ namespace GameDevTV.RTS.Player
             Owner localOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
             if (owner == localOwner && HumanFogVisionUtility.EmitsFogVision(localOwner))
             {
-                MpHudSuppliesResolver.FindForOwner(localOwner)?.BindHudOwner(localOwner);
+                // Đảm bảo HUD đúng nhánh refresh dù chưa trong EnabledHudInstances (HUD vừa bật).
+                MpRuntimeUiCoordinator.RefreshSuppliesHudForOwner(localOwner);
+                MpRuntimeUiCoordinator.RefreshSelectionUiForOwner(localOwner);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Pure client MP — popup "+N" khi snapshot supplies tăng (gather), không cần SupplyEvent local.
+        /// Cách hoạt động: So delta S/W/F trước/sau ApplyNetworkSnapshot; gọi PresentSupplyGain trên HUD local.
+        /// </summary>
+        static void TryPresentSnapshotGains(
+            Owner owner,
+            int oldStone,
+            int newStone,
+            int oldWood,
+            int newWood,
+            int oldFood,
+            int newFood)
+        {
+            if (!RtsNetplaySession.IsPureClient)
+            {
+                return;
+            }
+
+            Owner localOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            if (owner != localOwner || !HumanFogVisionUtility.EmitsFogVision(localOwner))
+            {
+                return;
+            }
+
+            Supplies hud = MpHudSuppliesResolver.FindForOwner(localOwner);
+            if (hud == null)
+            {
+                return;
+            }
+
+            int stoneDelta = newStone - oldStone;
+            if (stoneDelta > 0)
+            {
+                hud.PresentSupplyGain(SupplyGainKind.Stone, stoneDelta);
+            }
+
+            int woodDelta = newWood - oldWood;
+            if (woodDelta > 0)
+            {
+                hud.PresentSupplyGain(SupplyGainKind.Wood, woodDelta);
+            }
+
+            int foodDelta = newFood - oldFood;
+            if (foodDelta > 0)
+            {
+                hud.PresentSupplyGain(SupplyGainKind.Food, foodDelta);
             }
         }
 
@@ -133,10 +192,17 @@ namespace GameDevTV.RTS.Player
         private void Awake()
         {
             EnsureDictionariesInitialized();
-            if (hudOwner == Owner.Player1)
+            Owner branchOwner = MpHudBranchResolver.ResolveFor(transform);
+            if (branchOwner != Owner.Invalid)
+            {
+                hudOwner = branchOwner;
+            }
+            else if (hudOwner == Owner.Player1)
             {
                 hudOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
             }
+
+            EnsureGainPresenter();
         }
 
         void OnEnable()
@@ -260,7 +326,15 @@ namespace GameDevTV.RTS.Player
             }
 
             EnsureDictionariesInitialized();
+            if (hudOwner == owner && isActiveAndEnabled)
+            {
+                RefreshSupplyHud();
+                return;
+            }
+
             hudOwner = owner;
+
+            EnsureGainPresenter();
 
             if (!isActiveAndEnabled)
             {
@@ -297,6 +371,101 @@ namespace GameDevTV.RTS.Player
             }
 
             RefreshPopulationHud();
+            EnsureGainPresenter();
+        }
+
+        void EnsureGainPresenter()
+        {
+            gainPresenter ??= GetComponent<SupplyGainHudPresenter>();
+            if (gainPresenter == null)
+            {
+                gainPresenter = gameObject.AddComponent<SupplyGainHudPresenter>();
+            }
+
+            gainPresenter.BindSuppliesTexts(hudOwner, stoneText, woodText, foodText);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Server MP — cập nhật dictionary trước PushServerSnapshot (tránh race với HUD HandleSupplyEvent).
+        /// Cách hoạt động: Map SupplySO → S/W/F, cộng delta theo Owner.
+        /// </summary>
+        internal static void ApplySupplyDeltaToDictionary(SupplyEvent evt)
+        {
+            if (evt.Supply == null)
+            {
+                return;
+            }
+
+            EnsureDictionariesInitialized();
+            SupplyGainKind kind = SupplyGainKindResolver.Resolve(evt.Supply);
+            switch (kind)
+            {
+                case SupplyGainKind.Stone:
+                    Stone[evt.Owner] += evt.Amount;
+                    break;
+                case SupplyGainKind.Wood:
+                    Wood[evt.Owner] += evt.Amount;
+                    break;
+                case SupplyGainKind.Food:
+                    Food[evt.Owner] += evt.Amount;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Server/host MP xử lý SupplyEvent một lần — dict + HUD + popup gather local.
+        /// Cách hoạt động: Gọi từ RtsUtsSupplyStateSync trước PushServerSnapshot; HUD HandleSupplyEvent bỏ qua khi network match.
+        /// </summary>
+        internal static void ServerAuthoritativeSupplyEvent(SupplyEvent evt)
+        {
+            if (evt.Supply == null)
+            {
+                return;
+            }
+
+            ApplySupplyDeltaToDictionary(evt);
+
+            for (int i = 0; i < EnabledHudInstances.Count; i++)
+            {
+                Supplies hud = EnabledHudInstances[i];
+                if (hud == null || hud.hudOwner != evt.Owner)
+                {
+                    continue;
+                }
+
+                hud.RefreshSupplyHud();
+
+                if (evt.Amount > 0)
+                {
+                    SupplyGainKind kind = SupplyGainKindResolver.Resolve(evt.Supply);
+                    hud.PresentSupplyGain(kind, evt.Amount);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Popup "+N" trên HUD local (host SupplyEvent hoặc client Rpc).
+        /// Cách hoạt động: Đảm bảo presenter + anchor text rồi gọi NotifyGain.
+        /// </summary>
+        public void PresentSupplyGain(SupplyGainKind kind, int amount)
+        {
+            if (amount <= 0 || kind == SupplyGainKind.Unknown)
+            {
+                return;
+            }
+
+            EnsureGainPresenter();
+            gainPresenter?.NotifyGain(hudOwner, kind, amount);
+        }
+
+        /// <summary>Mục tiêu: Health check — phát hiện HUD P2 thiếu wire TMP stone/wood/food.</summary>
+        public bool TryGetSupplyTextWireStatus(out bool stoneWired, out bool woodWired, out bool foodWired, out bool populationWired)
+        {
+            stoneWired = stoneText != null;
+            woodWired = woodText != null;
+            foodWired = foodText != null;
+            populationWired = populationText != null;
+            return stoneWired && woodWired && foodWired && populationWired;
         }
 
         void RegisterExistingHudOwnerUnits()
@@ -413,30 +582,23 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
+            if (RtsNetplaySession.IsNetworkMatch && NetworkServer.active)
+            {
+                return;
+            }
+
             EnsureDictionariesInitialized();
 
-            if (evt.Supply.Equals(stoneSO))
+            ApplySupplyDeltaToDictionary(evt);
+
+            if (hudOwner == evt.Owner)
             {
-                Stone[evt.Owner] += evt.Amount;
-                if (hudOwner == evt.Owner && stoneText != null)
+                RefreshSupplyHud();
+
+                if (evt.Amount > 0)
                 {
-                    stoneText.SetText(Stone[evt.Owner].ToString());
-                }
-            }
-            else if (evt.Supply.Equals(woodSO))
-            {
-                Wood[evt.Owner] += evt.Amount;
-                if (hudOwner == evt.Owner && woodText != null)
-                {
-                    woodText.SetText(Wood[evt.Owner].ToString());
-                }
-            }
-            else if (evt.Supply.Equals(foodSO))
-            {
-                Food[evt.Owner] += evt.Amount;
-                if (hudOwner == evt.Owner && foodText != null)
-                {
-                    foodText.SetText(Food[evt.Owner].ToString());
+                    SupplyGainKind kind = SupplyGainKindResolver.Resolve(evt.Supply);
+                    PresentSupplyGain(kind, evt.Amount);
                 }
             }
         }

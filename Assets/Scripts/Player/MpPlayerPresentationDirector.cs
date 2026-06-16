@@ -45,6 +45,8 @@ namespace GameDevTV.RTS.Player
                     continue;
                 }
 
+                rig.TryResolveHudReferencesFromScene();
+
                 if (rig.PresentationOwner == Owner.Player1)
                 {
                     player1Rig ??= rig;
@@ -128,6 +130,8 @@ namespace GameDevTV.RTS.Player
                 TryRefreshFogAfterLocalUnitsIncreased(localOwner, throttledUnits, throttledFog);
                 ApplyLocalFogPresentationLayers(throttledFog, localOwner);
                 ApplyGameplayFogOverlayForOwner(localOwner);
+                MpPresentationHudGuard.ApplyLocalHudBranch(localOwner);
+                MpRuntimeUiCoordinator.RefreshSuppliesHudForOwner(localOwner);
                 return;
             }
 
@@ -148,6 +152,8 @@ namespace GameDevTV.RTS.Player
             }
 
             AnchorSharedGameplayCamera();
+
+            MpPresentationHudGuard.ApplyLocalHudBranch(localOwner);
 
             player1Rig?.SetRigActive(usePlayer1);
             player2Rig?.SetRigActive(!usePlayer1);
@@ -186,18 +192,14 @@ namespace GameDevTV.RTS.Player
 
             hudBinder ??= FindFirstObjectByType<FactionHudBinder>(FindObjectsInactive.Include);
             activeRig?.EnsureMinimapFogResolved();
-            if (ownerChanged)
-            {
-                hudBinder?.Apply(
-                    localOwner,
-                    activeRig?.SuppliesHud,
-                    activeRig?.MinimapUnitIcons,
-                    activeRig?.MinimapFog);
-            }
-            else
-            {
-                hudBinder?.RebindMinimapFog(localOwner, activeRig?.MinimapFog);
-            }
+            Supplies rigSupplies = activeRig?.ResolveSuppliesHud();
+            hudBinder?.Apply(
+                localOwner,
+                rigSupplies,
+                activeRig?.MinimapUnitIcons,
+                activeRig?.MinimapFog);
+            activeRig?.RefreshRuntimeUiForOwner(localOwner);
+            MpRuntimeUiCoordinator.RefreshFullPresentationForOwner(localOwner);
         }
 
         /// <summary>

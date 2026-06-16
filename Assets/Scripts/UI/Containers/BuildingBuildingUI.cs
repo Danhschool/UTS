@@ -2,6 +2,8 @@ using System.Collections;
 using GameDevTV.RTS.TechTree;
 using GameDevTV.RTS.UI.Components;
 using GameDevTV.RTS.Units;
+using GameDevTV.RTS.Netplay;
+using Mirror;
 using UnityEngine;
 
 namespace GameDevTV.RTS.UI.Containers
@@ -16,11 +18,18 @@ namespace GameDevTV.RTS.UI.Containers
 
         public void EnableFor(BaseBuilding item)
         {
+            if (buildCoroutine != null)
+            {
+                StopCoroutine(buildCoroutine);
+                buildCoroutine = null;
+            }
+
             if (building != null)
             {
                 building.OnQueueUpdated -= HandleQueueUpdated;
             }
-            progressBar.SetProgress(0);
+
+            progressBar?.SetProgress(0);
             gameObject.SetActive(true);
             building = item;
             building.OnQueueUpdated += HandleQueueUpdated;
@@ -45,13 +54,19 @@ namespace GameDevTV.RTS.UI.Containers
 
         public void Disable()
         {
+            if (buildCoroutine != null)
+            {
+                StopCoroutine(buildCoroutine);
+                buildCoroutine = null;
+            }
+
             if (building != null)
             {
                 building.OnQueueUpdated -= HandleQueueUpdated;
             }
+
             gameObject.SetActive(false);
             building = null;
-            buildCoroutine = null;
         }
 
         private void HandleQueueUpdated(UnlockableSO[] unitsInQueue)
@@ -69,14 +84,17 @@ namespace GameDevTV.RTS.UI.Containers
 
         private IEnumerator UpdateUnitProgress()
         {
-            while(building != null && building.QueueSize > 0)
+            while (building != null && building.QueueSize > 0)
             {
                 float startTime = building.CurrentQueueStartTime;
-                float endTime = startTime + building.SOBeingBuilt.BuildTime;
+                float buildTime = building.SOBeingBuilt != null ? building.SOBeingBuilt.BuildTime : 0f;
+                float now = RtsNetplaySession.IsNetworkMatch ? (float)NetworkTime.time : Time.time;
 
-                float progress = Mathf.Clamp01((Time.time - startTime) / (endTime - startTime));
+                float progress = buildTime > 0.01f
+                    ? Mathf.Clamp01((now - startTime) / buildTime)
+                    : 0f;
 
-                progressBar.SetProgress(progress);
+                progressBar?.SetProgress(progress);
                 yield return null;
             }
 

@@ -77,6 +77,11 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
+            if (MpPresentationDirectorGate.ShouldDeferHudAndFogToDirector())
+            {
+                return;
+            }
+
             Apply(localHumanOwnerService.LocalOwner);
         }
 

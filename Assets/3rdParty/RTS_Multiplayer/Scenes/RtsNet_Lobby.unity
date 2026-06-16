@@ -1484,7 +1484,7 @@ MonoBehaviour:
   timeInterpolationGui: 0
   lobbyScene: Assets/3rdParty/RTS_Multiplayer/Scenes/RtsNet_Lobby.unity
   loadingScene: Assets/Scenes/Loading.unity
-  gameScene: Assets/Scenes/Game 1.unity
+  gameScene: Game 1
   unitPrefab: {fileID: 5630659975226918516, guid: a8afb7e0df2cdbb4e99b38cb119eef79, type: 3}
 --- !u!114 &800230923
 MonoBehaviour:

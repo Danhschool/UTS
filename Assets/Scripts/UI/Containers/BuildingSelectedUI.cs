@@ -13,27 +13,25 @@ namespace GameDevTV.RTS.UI.Containers
         [SerializeField] private BuildingBuildingUI buildingBuildingUI;
         [SerializeField] private BuildingUnderConstructionUI buildingUnderConstructionUI;
 
-        private BaseBuilding selectedBuilding;
-        private Owner subscribedBusOwner = Owner.Invalid;
+        BaseBuilding selectedBuilding;
+        Owner subscribedBusOwner = Owner.Invalid;
 
         public void EnableFor(BaseBuilding building)
         {
-            selectedBuilding = building;
-            selectedBuilding.OnQueueUpdated -= OnBuildingQueueUpdated;
-            selectedBuilding.OnQueueUpdated += OnBuildingQueueUpdated;
+            if (building == null)
+            {
+                Disable();
+                return;
+            }
 
-            if (building.Progress.State == BuildingProgress.BuildingState.Completed)
+            if (selectedBuilding != null)
             {
-                buildingUnderConstructionUI.Disable();
-                OnBuildingQueueUpdated();
+                selectedBuilding.OnQueueUpdated -= OnBuildingQueueUpdated;
             }
-            else
-            {
-                buildingUnderConstructionUI.EnableFor(building);
-                buildingBuildingUI.Disable();
-                singleUnitSelectedUI.Disable();
-                SubscribeBuildingSpawnBus();
-            }
+
+            selectedBuilding = building;
+            selectedBuilding.OnQueueUpdated += OnBuildingQueueUpdated;
+            ApplyPresentationState();
         }
 
         public void Disable()
@@ -42,6 +40,7 @@ namespace GameDevTV.RTS.UI.Containers
             singleUnitSelectedUI.Disable();
             buildingUnderConstructionUI.Disable();
             UnsubscribeBuildingSpawnBus();
+
             if (selectedBuilding != null)
             {
                 selectedBuilding.OnQueueUpdated -= OnBuildingQueueUpdated;
@@ -49,8 +48,31 @@ namespace GameDevTV.RTS.UI.Containers
             }
         }
 
-        private void OnBuildingQueueUpdated(UnlockableSO[] _ = null)
+        void OnBuildingQueueUpdated(UnlockableSO[] _ = null) => ApplyPresentationState();
+
+        /// <summary>
+        /// Mục tiêu: Panel nhà giống host — construction progress, train queue, hoặc single-unit info.
+        /// Cách hoạt động: Ưu tiên Progress chưa Completed; sau đó queue hoặc stats panel.
+        /// </summary>
+        void ApplyPresentationState()
         {
+            if (selectedBuilding == null)
+            {
+                return;
+            }
+
+            if (selectedBuilding.Progress.State != BuildingProgress.BuildingState.Completed)
+            {
+                buildingUnderConstructionUI.EnableFor(selectedBuilding);
+                buildingBuildingUI.Disable();
+                singleUnitSelectedUI.Disable();
+                SubscribeBuildingSpawnBus();
+                return;
+            }
+
+            buildingUnderConstructionUI.Disable();
+            UnsubscribeBuildingSpawnBus();
+
             if (selectedBuilding.QueueSize == 0)
             {
                 singleUnitSelectedUI.EnableFor(selectedBuilding);
@@ -81,13 +103,12 @@ namespace GameDevTV.RTS.UI.Containers
             subscribedBusOwner = Owner.Invalid;
         }
 
-        private void HandleBuildingSpawn(BuildingSpawnEvent evt)
+        void HandleBuildingSpawn(BuildingSpawnEvent evt)
         {
             if (evt.Building == selectedBuilding)
             {
                 UnsubscribeBuildingSpawnBus();
-                OnBuildingQueueUpdated();
-                buildingUnderConstructionUI.Disable();
+                ApplyPresentationState();
             }
         }
     }

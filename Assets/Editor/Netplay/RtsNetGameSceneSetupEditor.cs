@@ -56,7 +56,12 @@ namespace GameDevTV.RTS.Editor.Netplay
         [MenuItem("ProjectRTS/Netplay/Setup MP Presentation (fog + UI + input per player)")]
         public static void SetupMenu()
         {
-            Scene scene = EditorSceneManager.OpenScene(GameScenePath, OpenSceneMode.Single);
+            Scene scene = SceneManager.GetActiveScene();
+            if (!scene.path.Replace('\\', '/').Contains("/Scenes/Game"))
+            {
+                scene = EditorSceneManager.OpenScene(GameplayMapScenePaths.Game1ScenePath, OpenSceneMode.Single);
+            }
+
             WireInOpenScene();
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

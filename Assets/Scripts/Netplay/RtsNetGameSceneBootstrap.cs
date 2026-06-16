@@ -3,7 +3,9 @@ using GameDevTV.RTS.Game;
 using GameDevTV.RTS.Game.FactionSummary;
 using GameDevTV.RTS.Game.Startup;
 using GameDevTV.RTS.UI.InGame;
+using GameDevTV.RTS.UI;
 using GameDevTV.RTS.Player;
+using GameDevTV.RTS.Units;
 using Mirror;
 using ProjectRTS.Netplay;
 using UnityEngine;
@@ -89,6 +91,7 @@ namespace GameDevTV.RTS.Netplay
 
             MpLocalOwnerSceneSync.RefreshAfterGameSceneLoad();
             MpFogVisionSpawnRefresh.SchedulePresentationRetries();
+            StartCoroutine(RetryPureClientPresentation());
 
             if (disableCapsuleGameInput && NetworkClient.localPlayer != null)
             {
@@ -98,6 +101,65 @@ namespace GameDevTV.RTS.Netplay
                     capsuleInput.enabled = false;
                 }
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Pure client P2 — HUD đôi khi chưa bind sau frame đầu (LocalOwner / rig / SyncVar).
+        /// Cách hoạt động: Retry presentation vài lần sau load Game 1/2.
+        /// </summary>
+        IEnumerator RetryPureClientPresentation()
+        {
+            if (!RtsNetplaySession.IsPureClient)
+            {
+                yield break;
+            }
+
+            const int attempts = 3;
+            for (int i = 0; i < attempts; i++)
+            {
+                yield return new WaitForSeconds(0.5f);
+
+                if (!GameplayStartupScenes.IsActiveGameplayScene())
+                {
+                    yield break;
+                }
+
+                if (!MpLocalOwnerSceneSync.EnsureLocalOwnerInitialized(out Owner localOwner)
+                    || localOwner != Owner.Player2)
+                {
+                    continue;
+                }
+
+                MpPresentationHudGuard.ApplyLocalHudBranch(localOwner);
+                LocalHumanPresentationRefresh.RefreshFromLocalOwner();
+                RtsUtsSupplyStateSync.ClientRefreshLocalSuppliesIfReady();
+                MpRuntimeUiCoordinator.RefreshFullPresentationForOwner(localOwner);
+
+                MpPlayerPresentationDirector director =
+                    MpFogRefreshThrottle.ResolvePresentationDirector();
+                if (director != null && CountConfiguredRuntimeUi(localOwner) > 0)
+                {
+                    yield break;
+                }
+            }
+        }
+
+        static int CountConfiguredRuntimeUi(Owner owner)
+        {
+            RuntimeUI[] runtimeUis = Object.FindObjectsByType<RuntimeUI>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            int count = 0;
+            for (int i = 0; i < runtimeUis.Length; i++)
+            {
+                RuntimeUI ui = runtimeUis[i];
+                if (ui != null && ui.IsConfiguredForOwner(owner))
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
     }
 }

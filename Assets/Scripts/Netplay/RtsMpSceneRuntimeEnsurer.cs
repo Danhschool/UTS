@@ -21,7 +21,39 @@ namespace GameDevTV.RTS.Netplay
 
             DisableDuplicateBootstraps();
             DisableOfflineSystemsDuringNetplay();
+            DisableConflictingPresentationBinders();
             EnsurePresentationDirectorWired();
+        }
+
+        /// <summary>
+        /// Mục tiêu: PlayerViewBinder (offline) ghi đè fog/HUD khi MP Director đã có rig — dù scene "đủ" component.
+        /// Cách hoạt động: Tắt binder lúc Play nếu network match + director có rig.
+        /// </summary>
+        static void DisableConflictingPresentationBinders()
+        {
+            if (!RtsNetplaySession.IsNetworkMatch)
+            {
+                return;
+            }
+
+            MpPlayerPresentationDirector director = Object.FindFirstObjectByType<MpPlayerPresentationDirector>(
+                FindObjectsInactive.Include);
+            if (director == null || !director.HasConfiguredRigs)
+            {
+                return;
+            }
+
+            PlayerViewBinder[] binders = Object.FindObjectsByType<PlayerViewBinder>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < binders.Length; i++)
+            {
+                PlayerViewBinder binder = binders[i];
+                if (binder != null && binder.enabled)
+                {
+                    binder.enabled = false;
+                }
+            }
         }
 
         static void DisableDuplicateBootstraps()
@@ -95,7 +127,7 @@ namespace GameDevTV.RTS.Netplay
         }
 
         /// <summary>
-        /// Mục tiêu: MpPlayerPresentationDirector luôn có rig P1/P2 + HUD khi vào RtsNet_Game.
+        /// Mục tiêu: MpPlayerPresentationDirector luôn có rig P1/P2 + HUD khi vào Game 1 / Game 2 MP.
         /// Cách hoạt động: Tìm director hoặc tạo mới; auto-resolve reference từ scene.
         /// </summary>
         static void EnsurePresentationDirectorWired()
@@ -110,6 +142,14 @@ namespace GameDevTV.RTS.Netplay
             }
 
             director.TryAutoWireMissingReferences();
+
+            MpPlayerPresentationRig[] rigs = Object.FindObjectsByType<MpPlayerPresentationRig>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < rigs.Length; i++)
+            {
+                rigs[i]?.TryResolveHudReferencesFromScene();
+            }
         }
     }
 }

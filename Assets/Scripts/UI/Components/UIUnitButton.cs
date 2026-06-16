@@ -14,22 +14,43 @@ namespace GameDevTV.RTS.UI.Components
 
         private void Awake()
         {
-            button = GetComponent<Button>();
+            EnsureButton();
             Disable();
         }
-        
+
+        Button EnsureButton()
+        {
+            if (button == null)
+            {
+                button = GetComponent<Button>();
+            }
+
+            return button;
+        }
+
         public void EnableFor(ITransportable item, UnityAction callback)
         {
-            button.onClick.RemoveAllListeners();
+            Button btn = EnsureButton();
+            if (btn == null)
+            {
+                return;
+            }
+
+            btn.onClick.RemoveAllListeners();
             gameObject.SetActive(true);
 
-            icon.sprite = item.Icon;
-            button.onClick.AddListener(callback);
+            if (icon != null)
+            {
+                icon.sprite = item.Icon;
+            }
+
+            btn.onClick.AddListener(callback);
         }
 
         public void Disable()
         {
-            button.onClick.RemoveAllListeners();
+            Button btn = EnsureButton();
+            btn?.onClick.RemoveAllListeners();
             gameObject.SetActive(false);
         }
     }

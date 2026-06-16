@@ -47,9 +47,14 @@ namespace GameDevTV.RTS.UI.Containers
         public void Disable()
         {
             gameObject.SetActive(false);
-            foreach(UIUnitButton button in loadedUnitButtons)
+            if (loadedUnitButtons == null)
             {
-                button.Disable();
+                return;
+            }
+
+            foreach (UIUnitButton button in loadedUnitButtons)
+            {
+                button?.Disable();
             }
         }
     }

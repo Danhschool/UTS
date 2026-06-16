@@ -8,7 +8,7 @@ using UnityEngine;
 namespace GameDevTV.RTS.Netplay
 {
     /// <summary>
-    /// SRP: Sau load RtsNet_Game — gán LocalOwner từ RtsLobbyPlayer và bật presentation rig.
+    /// SRP: Sau load map Game 1/2 — gán LocalOwner từ RtsLobbyPlayer và bật presentation rig.
     /// </summary>
     public static class MpLocalOwnerSceneSync
     {

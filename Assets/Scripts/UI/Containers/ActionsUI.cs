@@ -40,13 +40,17 @@ namespace GameDevTV.RTS.UI.Containers
 
         void OnEnable()
         {
+            LocalHumanOwnerService.LocalOwnerChanged += OnLocalOwnerChanged;
             SubscribeCommandPendingBus();
         }
 
         void OnDisable()
         {
+            LocalHumanOwnerService.LocalOwnerChanged -= OnLocalOwnerChanged;
             UnsubscribeCommandPendingBus();
         }
+
+        void OnLocalOwnerChanged(Owner owner) => SubscribeCommandPendingBus();
 
         void SubscribeCommandPendingBus()
         {

@@ -122,6 +122,11 @@ namespace GameDevTV.RTS.Player
                 return;
             }
 
+            if (MpPresentationDirectorGate.ShouldDeferHudAndFogToDirector())
+            {
+                return;
+            }
+
             bool usePlayer1 = localOwner == Owner.Player1;
             presentationPlayer1?.SetPresentationActive(usePlayer1);
             presentationPlayer2?.SetPresentationActive(!usePlayer1);

@@ -11,34 +11,86 @@ namespace GameDevTV.RTS.UI.Containers
         [SerializeField] private TextMeshProUGUI unitName;
         [SerializeField] private ProgressBar progressBar;
 
+        Coroutine progressRoutine;
+
         public void EnableFor(BaseBuilding building)
         {
+            if (building == null)
+            {
+                Disable();
+                return;
+            }
+
             gameObject.SetActive(true);
-            unitName.SetText(building.UnitSO.Name);
-            StartCoroutine(AnimateBuildingProgress(building));
+
+            if (unitName != null)
+            {
+                unitName.SetText(building.UnitSO != null ? building.UnitSO.Name : building.name);
+            }
+
+            if (progressRoutine != null)
+            {
+                StopCoroutine(progressRoutine);
+            }
+
+            progressRoutine = StartCoroutine(AnimateBuildingProgress(building));
         }
 
         public void Disable()
         {
+            if (progressRoutine != null)
+            {
+                StopCoroutine(progressRoutine);
+                progressRoutine = null;
+            }
+
             gameObject.SetActive(false);
         }
 
-        private IEnumerator AnimateBuildingProgress(BaseBuilding building)
+        /// <summary>
+        /// Mục tiêu: Progress bar xây nhà trên client MP — dùng Completion từ SyncVar khi có.
+        /// Cách hoạt động: Ưu tiên Progress.Completion; fallback tính theo StartTime + BuildTime.
+        /// </summary>
+        IEnumerator AnimateBuildingProgress(BaseBuilding building)
         {
-            while(enabled && building.Progress.Completion < 1)
+            while (enabled && building != null)
             {
-                if (building.Progress.State != BuildingProgress.BuildingState.Building)
+                BuildingProgress progress = building.Progress;
+
+                if (progress.State == BuildingProgress.BuildingState.Completed)
                 {
-                    yield return null;
-                    continue;
+                    progressBar?.SetProgress(1f);
+                    yield break;
                 }
 
-                float startTime = building.Progress.StartTime;
-                float endTime = startTime + building.BuildingSO.BuildTime;
+                if (progress.State == BuildingProgress.BuildingState.Building
+                    && progressBar != null)
+                {
+                    float value = progress.Completion > 0f
+                        ? Mathf.Clamp01(progress.Completion)
+                        : ComputeTimeBasedProgress(building, progress);
+                    progressBar.SetProgress(value);
+                }
 
-                progressBar.SetProgress(Mathf.Clamp01((Time.time - startTime) / (endTime - startTime)));
                 yield return null;
             }
+        }
+
+        static float ComputeTimeBasedProgress(BaseBuilding building, BuildingProgress progress)
+        {
+            if (building.BuildingSO == null)
+            {
+                return 0f;
+            }
+
+            float startTime = progress.StartTime;
+            float duration = building.BuildingSO.BuildTime;
+            if (duration <= 0.01f)
+            {
+                return 0f;
+            }
+
+            return Mathf.Clamp01((Time.time - startTime) / duration);
         }
     }
 }

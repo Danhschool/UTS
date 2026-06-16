@@ -1,5 +1,6 @@
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Game;
 using GameDevTV.RTS.Gameplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
@@ -77,6 +78,7 @@ namespace GameDevTV.RTS.Netplay
 
         /// <summary>
         /// Mục tiêu: Gắn sync supplies lên GameplayMapCore khi server vào scene trận.
+        /// Cách hoạt động: Tìm component scene; nếu thiếu thì thêm lên core (không spawn GameObject lẻ — Mirror từ chối).
         /// </summary>
         public static void EnsureServerInstance()
         {
@@ -115,6 +117,30 @@ namespace GameDevTV.RTS.Netplay
             {
                 NetworkServer.Spawn(host);
             }
+            else if (core == null)
+            {
+                NetworkServer.Spawn(host);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Pure client — áp snapshot supplies khi sync object đã replicate (retry bootstrap).
+        /// Cách hoạt động: Gọi ApplyOwnerSnapshot cho LocalOwner nếu Instance tồn tại.
+        /// </summary>
+        public static void ClientRefreshLocalSuppliesIfReady()
+        {
+            if (!NetworkClient.active || NetworkServer.active || Instance == null)
+            {
+                return;
+            }
+
+            Owner local = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            if (!HumanFogVisionUtility.EmitsFogVision(local))
+            {
+                return;
+            }
+
+            Instance.ApplyOwnerSnapshot(local);
         }
 
         void RegisterBusIfNeeded()
@@ -150,7 +176,17 @@ namespace GameDevTV.RTS.Netplay
                 return;
             }
 
+            Supplies.ServerAuthoritativeSupplyEvent(evt);
             PushServerSnapshotToSyncVars();
+
+            if (evt.Amount > 0 && evt.Supply != null)
+            {
+                SupplyGainKind kind = SupplyGainKindResolver.Resolve(evt.Supply);
+                if (kind != SupplyGainKind.Unknown)
+                {
+                    GameMatchOverlayStateSync.BroadcastSupplyGain(evt.Owner, kind, evt.Amount);
+                }
+            }
         }
 
         void HandleUnitSpawn(UnitSpawnEvent evt)
@@ -178,6 +214,21 @@ namespace GameDevTV.RTS.Netplay
             Supplies.EnsureReady();
             ReadOwner(Owner.Player1, out syncP1Stone, out syncP1Wood, out syncP1Food, out syncP1Population, out syncP1PopulationLimit);
             ReadOwner(Owner.Player2, out syncP2Stone, out syncP2Wood, out syncP2Food, out syncP2Population, out syncP2PopulationLimit);
+
+            GameMatchOverlayStateSync.BroadcastSupplySnapshot(
+                Owner.Player1,
+                syncP1Stone,
+                syncP1Wood,
+                syncP1Food,
+                syncP1Population,
+                syncP1PopulationLimit);
+            GameMatchOverlayStateSync.BroadcastSupplySnapshot(
+                Owner.Player2,
+                syncP2Stone,
+                syncP2Wood,
+                syncP2Food,
+                syncP2Population,
+                syncP2PopulationLimit);
         }
 
         static void ReadOwner(

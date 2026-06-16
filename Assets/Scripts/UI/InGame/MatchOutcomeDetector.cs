@@ -193,13 +193,18 @@ namespace GameDevTV.RTS.UI.InGame
 
         static Owner ResolveOpponentForOutcomeStatic(Owner destroyedOwner, Owner localOwner)
         {
-            FactionSummaryTracker tracker = FactionSummaryTracker.EnsureExists();
             if (destroyedOwner != localOwner)
             {
                 return destroyedOwner;
             }
 
-            return tracker.FindOpponentOwner(localOwner);
+            FactionSummaryTracker tracker = FactionSummaryTracker.EnsureExists();
+            if (tracker != null)
+            {
+                return tracker.FindOpponentOwner(localOwner);
+            }
+
+            return localOwner == Owner.Player1 ? Owner.Player2 : Owner.Player1;
         }
     }
 }

@@ -33,7 +33,7 @@ namespace GameDevTV.RTS.Player
                     return candidate;
                 }
 
-                bool isDuplicateName = candidate.gameObject.name.Contains("(1)");
+                bool isDuplicateName = IsPlayerTwoHudRoot(candidate.transform);
                 if (owner == Owner.Player2)
                 {
                     if (isDuplicateName)
@@ -50,6 +50,16 @@ namespace GameDevTV.RTS.Player
             }
 
             return fallback;
+        }
+
+        static bool IsPlayerTwoHudRoot(Transform suppliesTransform)
+        {
+            if (suppliesTransform == null)
+            {
+                return false;
+            }
+
+            return suppliesTransform.root.name.Contains("(1)");
         }
     }
 }

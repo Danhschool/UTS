@@ -271,6 +271,11 @@ namespace GameDevTV.RTS.Editor.Gameplay
             {
                 coreRoot.AddComponent<GameMatchOverlayStateSync>();
             }
+
+            if (coreRoot.GetComponent<RtsUtsSupplyStateSync>() == null)
+            {
+                coreRoot.AddComponent<RtsUtsSupplyStateSync>();
+            }
         }
 
         static void EnsurePrefabFolderExists()
