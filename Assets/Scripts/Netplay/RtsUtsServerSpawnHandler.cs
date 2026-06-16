@@ -119,14 +119,38 @@ namespace GameDevTV.RTS.Netplay
                     Quaternion.identity,
                     owner,
                     connection,
-                    out GameObject instance))
+                    out GameObject instance,
+                    configureBeforeSpawn: go =>
+                    {
+                        if (go.TryGetComponent(out BaseBuilding building))
+                        {
+                            building.EnsureCivilCentralMatchStartReady();
+                        }
+                    }))
             {
                 return false;
             }
 
-            if (instance.TryGetComponent(out BaseBuilding building))
+            if (instance.TryGetComponent(out RtsUtsNetworkCombatSync combatSync))
             {
-                building.EnsureCivilCentralMatchStartReady();
+                combatSync.PushFromCommandable();
+
+                // #region agent log
+                if (instance.TryGetComponent(out BaseBuilding building)
+                    && CivilCentralUtility.IsCivilCentral(building))
+                {
+                    MpDebugSessionLog.Write(
+                        "H2",
+                        "RtsUtsServerSpawnHandler.TrySpawnCivilCentral",
+                        "cc_combat_push_post_spawn",
+                        $"{{\"name\":\"{building.name}\",\"owner\":\"{building.Owner}\",\"current\":{building.CurrentHealth},\"max\":{building.MaxHealth}}}");
+                }
+                // #endregion
+            }
+
+            if (instance.TryGetComponent(out RtsUtsNetworkBuildingSync buildingSync))
+            {
+                buildingSync.ServerPushFullState();
             }
 
             return true;

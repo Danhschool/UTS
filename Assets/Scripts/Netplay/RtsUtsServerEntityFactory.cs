@@ -134,7 +134,8 @@ namespace GameDevTV.RTS.Netplay
             Quaternion rotation,
             Owner owner,
             NetworkConnectionToClient connection,
-            out GameObject instance)
+            out GameObject instance,
+            System.Action<GameObject> configureBeforeSpawn = null)
         {
             instance = null;
             if (!RtsNetplaySession.ShouldRunAuthoritativeGameplay || prefab == null)
@@ -160,16 +161,19 @@ namespace GameDevTV.RTS.Netplay
                 return false;
             }
 
-            EnsureNetworkComponents(instance);
+            RtsUtsGameplayNetworkComponents.ApplyToSpawnedInstance(instance);
 
             if (!instance.TryGetComponent(out RtsUtsNetworkEntity networkEntity))
             {
                 networkEntity = instance.AddComponent<RtsUtsNetworkEntity>();
+                RtsNetplayNetworkIdentityUtility.RefreshBehaviours(instance);
             }
 
             networkEntity.ServerConfigure(connection != null ? connection.connectionId : -1, owner);
 
             RtsNetplaySimulationGate.ApplyToSpawnedEntity(instance);
+
+            configureBeforeSpawn?.Invoke(instance);
 
             if (connection != null)
             {
@@ -200,7 +204,7 @@ namespace GameDevTV.RTS.Netplay
 
         static void RegisterPrefabOnClient(GameObject prefab)
         {
-            if (prefab == null)
+            if (prefab == null || !NetworkClient.active)
             {
                 return;
             }
@@ -210,12 +214,41 @@ namespace GameDevTV.RTS.Netplay
                 return;
             }
 
-            if (NetworkClient.GetPrefab(identity.assetId, out _))
+            NetworkClient.UnregisterPrefab(prefab);
+            NetworkClient.RegisterPrefab(prefab, message => SpawnGameplayEntityOnClient(prefab, message), UnspawnGameplayEntityOnClient);
+        }
+
+        static GameObject SpawnGameplayEntityOnClient(GameObject prefab, SpawnMessage message)
+        {
+            if (prefab == null)
             {
-                return;
+                return null;
             }
 
-            NetworkClient.RegisterPrefab(prefab);
+            GameObject instance = Object.Instantiate(prefab, message.position, message.rotation);
+            RtsUtsGameplayNetworkComponents.ApplyToSpawnedInstance(instance);
+
+            // #region agent log
+            int behaviourCount = instance.TryGetComponent(out NetworkIdentity identity)
+                ? identity.NetworkBehaviours.Length
+                : 0;
+            bool hasCombatSync = instance.TryGetComponent(out RtsUtsNetworkCombatSync _);
+            MpDebugSessionLog.Write(
+                "H4",
+                "RtsUtsServerEntityFactory.SpawnGameplayEntityOnClient",
+                "client_spawn_network_components",
+                $"{{\"prefab\":\"{prefab.name}\",\"behaviourCount\":{behaviourCount},\"hasCombatSync\":{hasCombatSync.ToString().ToLowerInvariant()}}}");
+            // #endregion
+
+            return instance;
+        }
+
+        static void UnspawnGameplayEntityOnClient(GameObject instance)
+        {
+            if (instance != null)
+            {
+                Object.Destroy(instance);
+            }
         }
 
         static bool IsPrefabRegistered(GameObject prefab)
@@ -254,79 +287,5 @@ namespace GameDevTV.RTS.Netplay
             return false;
         }
 
-        static void EnsureNetworkComponents(GameObject instance)
-        {
-            if (instance.TryGetComponent(out AbstractUnit _))
-            {
-                EnsureUnitNetworkTransform(instance);
-            }
-            else if (instance.TryGetComponent(out BaseBuilding building))
-            {
-                StripBuildingNetworkTransform(instance);
-            }
-
-            if (!instance.TryGetComponent(out RtsUtsNetworkCombatSync _))
-            {
-                instance.AddComponent<RtsUtsNetworkCombatSync>();
-            }
-
-            if (instance.TryGetComponent(out BaseBuilding _)
-                && !instance.TryGetComponent(out RtsUtsNetworkBuildingSync _))
-            {
-                instance.AddComponent<RtsUtsNetworkBuildingSync>();
-            }
-        }
-
-        /// <summary>
-        /// Mục tiêu: Unit di chuyển cần NetworkTransform; chỉ gắn khi prefab là AbstractUnit.
-        /// Cách hoạt động: AddComponent nếu thiếu, tune syncInterval combat.
-        /// </summary>
-        static void EnsureUnitNetworkTransform(GameObject instance)
-        {
-            if (!instance.TryGetComponent(out NetworkTransformUnreliable networkTransform))
-            {
-                networkTransform = instance.AddComponent<NetworkTransformUnreliable>();
-            }
-
-            ConfigureNetworkTransform(networkTransform, instance);
-        }
-
-        /// <summary>
-        /// Mục tiêu: Nhà MP là tĩnh — không sync transform; tránh NullRef NetworkTransformUnreliable khi server/client lệch component.
-        /// Cách hoạt động: Xóa mọi NetworkTransform trên instance trước NetworkServer.Spawn; tiến độ xây qua RtsUtsNetworkBuildingSync.
-        /// </summary>
-        static void StripBuildingNetworkTransform(GameObject instance)
-        {
-            NetworkTransformUnreliable[] transforms = instance.GetComponents<NetworkTransformUnreliable>();
-            if (transforms.Length == 0)
-            {
-                return;
-            }
-
-            for (int i = 0; i < transforms.Length; i++)
-            {
-                if (transforms[i] != null)
-                {
-                    Object.Destroy(transforms[i]);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Mục tiêu: Giảm rubber-banding unit quân sự khi combat MP.
-        /// Cách hoạt động: Tăng tần gửi transform cho unit; giữ mặc định cho nhà.
-        /// </summary>
-        static void ConfigureNetworkTransform(NetworkTransformUnreliable networkTransform, GameObject instance)
-        {
-            if (networkTransform == null || instance == null)
-            {
-                return;
-            }
-
-            if (instance.TryGetComponent(out AbstractUnit _))
-            {
-                networkTransform.syncInterval = 0.05f;
-            }
-        }
     }
 }

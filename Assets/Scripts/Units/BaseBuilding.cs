@@ -177,6 +177,14 @@ namespace GameDevTV.RTS.Units
             RaiseBuildingSpawnEventIfNeeded();
             RefreshVisionFromSightConfig();
             NotifyNetworkBuildingStateIfServer();
+
+            // #region agent log
+            MpDebugSessionLog.Write(
+                "H1",
+                "BaseBuilding.EnsureCivilCentralMatchStartReady",
+                "cc_health_ready",
+                $"{{\"name\":\"{name}\",\"owner\":\"{Owner}\",\"current\":{CurrentHealth},\"max\":{MaxHealth}}}");
+            // #endregion
         }
 
         /// <summary>
