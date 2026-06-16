@@ -1,6 +1,7 @@
 using GameDevTV.RTS.AI;
 using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
+using GameDevTV.RTS.Game;
 using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
 using Mirror;
@@ -28,29 +29,37 @@ namespace GameDevTV.RTS.Behavior
         private Vector3 rootEndWorld;
         private float targetHealth;
         private bool animateRootFromBelow;
+        private bool clientPresentationMode;
 
         protected override Status OnStart()
         {
-            if (!HasValidInputs()) return Status.Failure;
+            if (!HasValidInputs())
+            {
+                return Status.Failure;
+            }
+
+            clientPresentationMode = RtsNetplaySession.IsNetworkMatch
+                && !RtsNetplaySession.ShouldRunAuthoritativeGameplay;
+
+            RtsUtsNetworkEntity workerEntity = null;
+            NetworkConnectionToClient connection = null;
+
+            if (clientPresentationMode)
+            {
+                return OnUpdateClientPresentation();
+            }
 
             if (BuildingUnderConstruction.Value == null)
             {
                 Worker worker = Self.Value != null ? Self.Value.GetComponent<Worker>() : null;
                 Owner owner = worker != null ? worker.Owner : Owner.Invalid;
-                NetworkConnectionToClient connection = null;
-                if (worker != null
-                    && worker.TryGetComponent(out RtsUtsNetworkEntity workerEntity))
+                if (worker != null && worker.TryGetComponent(out workerEntity))
                 {
                     connection = workerEntity.ResolveOwnerConnection();
                 }
 
                 if (RtsNetplaySession.IsNetworkMatch)
                 {
-                    if (!RtsNetplaySession.ShouldRunAuthoritativeGameplay)
-                    {
-                        return Status.Failure;
-                    }
-
                     if (!RtsUtsServerEntityFactory.TrySpawnBuilding(
                             BuildingSO.Value,
                             TargetLocation.Value,
@@ -100,6 +109,11 @@ namespace GameDevTV.RTS.Behavior
                 completedBuilding.Owner,
                 new BuildingConstructStartedEvent(completedBuilding.Owner));
 
+            if (RtsNetplaySession.IsNetworkMatch && NetworkServer.active)
+            {
+                GameMatchOverlayStateSync.BroadcastBuildingConstructStarted(completedBuilding.Owner);
+            }
+
             if (skipBuriedIntro)
             {
                 animateRootFromBelow = false;
@@ -114,11 +128,28 @@ namespace GameDevTV.RTS.Behavior
                 completedBuilding.transform.position = rootStartWorld;
             }
 
+            if (RtsNetplaySession.IsNetworkMatch
+                && NetworkServer.active
+                && workerEntity != null
+                && completedBuilding.TryGetComponent(out NetworkIdentity buildingIdentity))
+            {
+                workerEntity.RpcLinkClientPresentationBuilding(
+                    buildingIdentity.netId,
+                    rootEndWorld,
+                    completedBuilding.Progress.Completion,
+                    BuildingSO.Value.BuildTime);
+            }
+
             return OnUpdate();
         }
 
         protected override Status OnUpdate()
         {
+            if (clientPresentationMode)
+            {
+                return OnUpdateClientPresentation();
+            }
+
             if (completedBuilding == null)
             {
                 return Status.Failure;
@@ -145,6 +176,8 @@ namespace GameDevTV.RTS.Behavior
                 completedBuilding.transform.position = Vector3.Lerp(rootStartWorld, rootEndWorld, normalizedTime);
             }
 
+            completedBuilding.SetConstructionCompletion(normalizedTime);
+
             return normalizedTime >= 1 ? Status.Success : Status.Running;
         }
 
@@ -152,6 +185,16 @@ namespace GameDevTV.RTS.Behavior
         {
             if (CurrentStatus == Status.Success)
             {
+                if (clientPresentationMode)
+                {
+                    if (Self.Value != null && Self.Value.TryGetComponent(out Worker worker))
+                    {
+                        worker.ReleasePlannerControlAfterConstructionEnded();
+                    }
+
+                    return;
+                }
+
                 if (completedBuilding != null && animateRootFromBelow)
                 {
                     completedBuilding.transform.position = rootEndWorld;
@@ -161,8 +204,118 @@ namespace GameDevTV.RTS.Behavior
                 {
                     completedBuilding.CompleteConstruction();
                     completedBuilding.enabled = true;
+
+                    if (RtsNetplaySession.IsNetworkMatch && NetworkServer.active)
+                    {
+                        if (completedBuilding.TryGetComponent(out RtsUtsNetworkEntity buildingNetEntity))
+                        {
+                            buildingNetEntity.RpcNotifyBuildingConstructionCompleted();
+                        }
+
+                        if (Self.Value != null
+                            && Self.Value.TryGetComponent(out RtsUtsNetworkEntity workerNetEntity))
+                        {
+                            workerNetEntity.RpcNotifyWorkerBuildPresentationComplete();
+                        }
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Pure client — worker BT chờ nhà replicate từ server, không spawn local.
+        /// Cách hoạt động: Tìm BaseBuilding khớp SO gần TargetLocation; Running đến khi Completed.
+        /// </summary>
+        Status OnUpdateClientPresentation()
+        {
+            if (BuildingUnderConstruction.Value == null)
+            {
+                if (!TryResolveClientPresentationBuilding(out completedBuilding))
+                {
+                    return Status.Running;
+                }
+
+                BuildingUnderConstruction.Value = completedBuilding;
+            }
+            else
+            {
+                completedBuilding = BuildingUnderConstruction.Value;
+            }
+
+            if (completedBuilding == null)
+            {
+                return Status.Running;
+            }
+
+            if (completedBuilding.Progress.State == BuildingProgress.BuildingState.Completed)
+            {
+                return Status.Success;
+            }
+
+            if (completedBuilding.Progress.State == BuildingProgress.BuildingState.Building
+                || completedBuilding.Progress.State == BuildingProgress.BuildingState.Paused)
+            {
+                return Status.Running;
+            }
+
+            return Status.Running;
+        }
+
+        bool TryResolveClientPresentationBuilding(out BaseBuilding building)
+        {
+            building = null;
+            if (BuildingSO.Value == null)
+            {
+                return false;
+            }
+
+            Vector3 target = TargetLocation.Value;
+            const float horizontalRadius = 6f;
+            float horizontalRadiusSqr = horizontalRadius * horizontalRadius;
+            string targetBuildingName = BuildingSO.Value.Name;
+
+            BaseBuilding[] buildings = UnityEngine.Object.FindObjectsByType<BaseBuilding>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+
+            float bestDistSqr = float.MaxValue;
+            BaseBuilding best = null;
+
+            for (int i = 0; i < buildings.Length; i++)
+            {
+                BaseBuilding candidate = buildings[i];
+                if (candidate == null || candidate.BuildingSO == null)
+                {
+                    continue;
+                }
+
+                if (candidate.BuildingSO.Name != targetBuildingName)
+                {
+                    continue;
+                }
+
+                Vector3 delta = candidate.transform.position - target;
+                delta.y = 0f;
+                float distSqr = delta.sqrMagnitude;
+                if (distSqr > horizontalRadiusSqr)
+                {
+                    continue;
+                }
+
+                if (distSqr < bestDistSqr)
+                {
+                    bestDistSqr = distSqr;
+                    best = candidate;
+                }
+            }
+
+            if (best == null)
+            {
+                return false;
+            }
+
+            building = best;
+            return true;
         }
 
         private bool HasValidInputs()

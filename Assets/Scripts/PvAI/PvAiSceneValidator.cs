@@ -3,6 +3,7 @@ using System.Text;
 using GameDevTV.RTS.AI;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
+using GameDevTV.RTS.Utilities;
 using Mirror;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -187,6 +188,8 @@ namespace GameDevTV.RTS.PvAI
                 findings.Add(PvAiHealthFinding.Pass("pvai_cc_prefab", "Đã gán civilCentralPrefab."));
             }
 
+            ValidateStartingUnitPrefabs(setup, findings);
+
             bool spawnOk = setup.factionSpawnPoints != null
                            && setup.factionSpawnPoints.Length >= 2
                            && setup.factionSpawnPoints[0] != null
@@ -222,6 +225,51 @@ namespace GameDevTV.RTS.PvAI
                 findings.Add(PvAiHealthFinding.Pass(
                     "pvai_no_scene_cc",
                     "Không có civil_central cắm sẵn trong scene (đúng long-term)."));
+            }
+        }
+
+        static void ValidateStartingUnitPrefabs(PvAiGameSceneSetup setup, List<PvAiHealthFinding> findings)
+        {
+            if (!setup.spawnStartingUnits)
+            {
+                return;
+            }
+
+            if (setup.startingUnits == null || setup.startingUnits.Length == 0)
+            {
+                if (setup.startingWorkerPrefab != null
+                    && !PvAiStartingUnitPrefabValidator.TryValidate(
+                        setup.startingWorkerPrefab,
+                        out string legacyError))
+                {
+                    findings.Add(PvAiHealthFinding.Fail(
+                        "pvai_starting_worker_unitso",
+                        "H8",
+                        PvAiHealthSeverity.Error,
+                        legacyError));
+                }
+
+                return;
+            }
+
+            for (int i = 0; i < setup.startingUnits.Length; i++)
+            {
+                StartingUnitSpawnEntry entry = setup.startingUnits[i];
+                if (entry.unitPrefab == null || entry.count <= 0)
+                {
+                    continue;
+                }
+
+                if (PvAiStartingUnitPrefabValidator.TryValidate(entry.unitPrefab, out _))
+                {
+                    continue;
+                }
+
+                findings.Add(PvAiHealthFinding.Fail(
+                    "pvai_starting_units_unitso",
+                    "H8",
+                    PvAiHealthSeverity.Error,
+                    $"startingUnits[{i}] ({entry.unitPrefab.name}): thiếu UnitSO — dùng Worker 1.prefab hoặc chạy Prepare Game 1 Scene."));
             }
         }
 

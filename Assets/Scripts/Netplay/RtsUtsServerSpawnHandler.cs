@@ -41,7 +41,7 @@ namespace GameDevTV.RTS.Netplay
 
             if (setup.civilCentralPrefab != null)
             {
-                if (SpawnEntity(setup.civilCentralPrefab, spawn, connection, owner))
+                if (TrySpawnCivilCentral(setup.civilCentralPrefab, spawn, connection, owner))
                 {
                     spawned++;
                 }
@@ -102,6 +102,34 @@ namespace GameDevTV.RTS.Netplay
                 owner,
                 connection,
                 out _);
+        }
+
+        /// <summary>
+        /// Mục tiêu: CC đầu trận luôn Completed + sync trước frame đầu của client.
+        /// </summary>
+        static bool TrySpawnCivilCentral(
+            GameObject prefab,
+            Vector3 position,
+            NetworkConnectionToClient connection,
+            Owner owner)
+        {
+            if (!RtsUtsServerEntityFactory.TrySpawnGameplayEntity(
+                    prefab,
+                    position,
+                    Quaternion.identity,
+                    owner,
+                    connection,
+                    out GameObject instance))
+            {
+                return false;
+            }
+
+            if (instance.TryGetComponent(out BaseBuilding building))
+            {
+                building.EnsureCivilCentralMatchStartReady();
+            }
+
+            return true;
         }
 
         /// <summary>

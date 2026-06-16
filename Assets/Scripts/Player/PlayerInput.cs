@@ -1077,6 +1077,8 @@ namespace GameDevTV.RTS.Player
                     buffer.Add(commandable);
                 }
             }
+
+            SelectionCommandUiUtility.PruneBuildingsWhenWorkersPresent(buffer);
         }
 
         bool TryRelayActivateCommand(

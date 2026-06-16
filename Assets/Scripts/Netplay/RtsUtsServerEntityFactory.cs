@@ -12,6 +12,7 @@ namespace GameDevTV.RTS.Netplay
     public static class RtsUtsServerEntityFactory
     {
         static bool s_registeredForActiveMatch;
+        static bool s_clientPrefabsRegistered;
 
         /// <summary>
         /// Mục tiêu: Đăng ký mọi prefab gameplay vào NetworkManager trước khi spawn runtime.
@@ -24,20 +25,44 @@ namespace GameDevTV.RTS.Netplay
                 return;
             }
 
-            RtsUnlockableAssetCatalog.InitializeFromSetup(setup);
+            RegisterGameplayPrefabsFromSetup(setup);
+            s_registeredForActiveMatch = true;
+        }
 
-            NetworkManager manager = NetworkManager.singleton;
-            if (manager == null)
+        /// <summary>
+        /// Mục tiêu: Pure client P2 nhận spawn nhà/unit runtime từ server (build/train).
+        /// Cách hoạt động: Nạp catalog giống server, gọi NetworkClient.RegisterPrefab cho mọi prefab gameplay.
+        /// </summary>
+        public static void EnsureClientGameplayPrefabsRegistered(RtsUtsGameSceneSetup setup)
+        {
+            if (!NetworkClient.active || NetworkServer.active || s_clientPrefabsRegistered)
             {
                 return;
             }
 
+            if (setup == null)
+            {
+                return;
+            }
+
+            RegisterGameplayPrefabsFromSetup(setup);
+            s_clientPrefabsRegistered = true;
+        }
+
+        static void RegisterGameplayPrefabsFromSetup(RtsUtsGameSceneSetup setup)
+        {
+            if (setup == null)
+            {
+                return;
+            }
+
+            RtsUnlockableAssetCatalog.InitializeFromSetup(setup);
+
+            NetworkManager manager = NetworkManager.singleton;
             foreach (GameObject prefab in RtsUnlockableAssetCatalog.EnumerateRegisteredPrefabs())
             {
                 RegisterPrefabOnManager(manager, prefab);
             }
-
-            s_registeredForActiveMatch = true;
         }
 
         /// <summary>
@@ -47,6 +72,7 @@ namespace GameDevTV.RTS.Netplay
         public static void ResetMatchRegistration()
         {
             s_registeredForActiveMatch = false;
+            s_clientPrefabsRegistered = false;
             RtsUnlockableAssetCatalog.Clear();
         }
 
@@ -159,14 +185,24 @@ namespace GameDevTV.RTS.Netplay
 
         static void RegisterPrefabOnManager(NetworkManager manager, GameObject prefab)
         {
-            if (manager == null || prefab == null)
+            if (prefab == null)
             {
                 return;
             }
 
-            if (!manager.spawnPrefabs.Contains(prefab))
+            if (manager != null && !manager.spawnPrefabs.Contains(prefab))
             {
                 manager.spawnPrefabs.Add(prefab);
+            }
+
+            RegisterPrefabOnClient(prefab);
+        }
+
+        static void RegisterPrefabOnClient(GameObject prefab)
+        {
+            if (prefab == null)
+            {
+                return;
             }
 
             if (!prefab.TryGetComponent(out NetworkIdentity identity) || identity.assetId == 0)
@@ -220,12 +256,14 @@ namespace GameDevTV.RTS.Netplay
 
         static void EnsureNetworkComponents(GameObject instance)
         {
-            if (!instance.TryGetComponent(out NetworkTransformUnreliable networkTransform))
+            if (instance.TryGetComponent(out AbstractUnit _))
             {
-                networkTransform = instance.AddComponent<NetworkTransformUnreliable>();
+                EnsureUnitNetworkTransform(instance);
             }
-
-            ConfigureNetworkTransform(networkTransform, instance);
+            else if (instance.TryGetComponent(out BaseBuilding building))
+            {
+                StripBuildingNetworkTransform(instance);
+            }
 
             if (!instance.TryGetComponent(out RtsUtsNetworkCombatSync _))
             {
@@ -236,6 +274,41 @@ namespace GameDevTV.RTS.Netplay
                 && !instance.TryGetComponent(out RtsUtsNetworkBuildingSync _))
             {
                 instance.AddComponent<RtsUtsNetworkBuildingSync>();
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Unit di chuyển cần NetworkTransform; chỉ gắn khi prefab là AbstractUnit.
+        /// Cách hoạt động: AddComponent nếu thiếu, tune syncInterval combat.
+        /// </summary>
+        static void EnsureUnitNetworkTransform(GameObject instance)
+        {
+            if (!instance.TryGetComponent(out NetworkTransformUnreliable networkTransform))
+            {
+                networkTransform = instance.AddComponent<NetworkTransformUnreliable>();
+            }
+
+            ConfigureNetworkTransform(networkTransform, instance);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Nhà MP là tĩnh — không sync transform; tránh NullRef NetworkTransformUnreliable khi server/client lệch component.
+        /// Cách hoạt động: Xóa mọi NetworkTransform trên instance trước NetworkServer.Spawn; tiến độ xây qua RtsUtsNetworkBuildingSync.
+        /// </summary>
+        static void StripBuildingNetworkTransform(GameObject instance)
+        {
+            NetworkTransformUnreliable[] transforms = instance.GetComponents<NetworkTransformUnreliable>();
+            if (transforms.Length == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                if (transforms[i] != null)
+                {
+                    Object.Destroy(transforms[i]);
+                }
             }
         }
 

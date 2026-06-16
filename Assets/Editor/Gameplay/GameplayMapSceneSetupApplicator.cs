@@ -238,6 +238,8 @@ namespace GameDevTV.RTS.Editor.Gameplay
             pvSetup.destroyScenePlacedCivilCentrals = true;
             EditorUtility.SetDirty(pvSetup);
 
+            RepairLegacyWorkerPrefabUnitSoReference();
+
             PvAiGameSceneBootstrap pvBootstrap = coreRoot.GetComponent<PvAiGameSceneBootstrap>();
             if (pvBootstrap == null)
             {
@@ -480,6 +482,64 @@ namespace GameDevTV.RTS.Editor.Gameplay
             {
                 bootstrap.gameObject.AddComponent<PregameAiDifficultyApplicator>();
                 EditorUtility.SetDirty(bootstrap);
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Worker.prefab legacy trỏ UnitSO guid đã mất — gán lại Worker.asset.
+        /// Cách hoạt động: Mở prefab bằng PrefabUtility, sửa SerializedProperty UnitSO, lưu.
+        /// </summary>
+        static void RepairLegacyWorkerPrefabUnitSoReference()
+        {
+            const string legacyWorkerPrefabPath = "Assets/Prefab/Unit/Worker.prefab";
+            UnitSO workerSo = AssetDatabase.LoadAssetAtPath<UnitSO>(GameplayMapScenePaths.WorkerUnitSoPath);
+            if (workerSo == null)
+            {
+                Debug.LogWarning(
+                    $"[GameplayMapSceneSetupApplicator] Không tìm thấy {GameplayMapScenePaths.WorkerUnitSoPath}.");
+                return;
+            }
+
+            GameObject prefabRoot = PrefabUtility.LoadPrefabContents(legacyWorkerPrefabPath);
+            if (prefabRoot == null)
+            {
+                return;
+            }
+
+            try
+            {
+                AbstractCommandable[] commandables = prefabRoot.GetComponentsInChildren<AbstractCommandable>(true);
+                bool changed = false;
+                for (int i = 0; i < commandables.Length; i++)
+                {
+                    AbstractCommandable commandable = commandables[i];
+                    if (commandable == null || commandable.UnitSO != null)
+                    {
+                        continue;
+                    }
+
+                    SerializedObject so = new SerializedObject(commandable);
+                    SerializedProperty unitSoProp = so.FindProperty("<UnitSO>k__BackingField");
+                    if (unitSoProp == null)
+                    {
+                        continue;
+                    }
+
+                    unitSoProp.objectReferenceValue = workerSo;
+                    so.ApplyModifiedPropertiesWithoutUndo();
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    PrefabUtility.SaveAsPrefabAsset(prefabRoot, legacyWorkerPrefabPath);
+                    Debug.Log(
+                        "[GameplayMapSceneSetupApplicator] Đã gán lại UnitSO cho Assets/Prefab/Unit/Worker.prefab.");
+                }
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(prefabRoot);
             }
         }
     }

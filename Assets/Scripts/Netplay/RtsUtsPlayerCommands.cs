@@ -455,12 +455,26 @@ namespace GameDevTV.RTS.Netplay
         [Command]
         void CmdUtsBuildBuilding(uint workerNetId, string buildingAssetName, Vector3 worldPoint, uint resumeBuildingNetId)
         {
-            RtsUtsGameplayCommandServer.TryExecuteBuild(
+            bool executed = RtsUtsGameplayCommandServer.TryExecuteBuild(
                 workerNetId,
                 buildingAssetName,
                 worldPoint,
                 resumeBuildingNetId,
                 connectionToClient);
+
+            if (!NetworkServer.spawned.TryGetValue(workerNetId, out NetworkIdentity identity)
+                || !identity.TryGetComponent(out RtsUtsNetworkEntity networkEntity))
+            {
+                return;
+            }
+
+            if (!executed)
+            {
+                networkEntity.RpcNotifyBuildCommandRejected();
+                return;
+            }
+
+            networkEntity.RpcMirrorBuildPresentation(buildingAssetName, worldPoint);
         }
 
         [Command]

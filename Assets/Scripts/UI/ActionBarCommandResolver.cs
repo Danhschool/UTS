@@ -34,6 +34,12 @@ namespace GameDevTV.RTS.UI
                 return false;
             }
 
+            units = PrioritizeWorkersOverBuildings(units);
+            if (units.Count == 0)
+            {
+                return false;
+            }
+
             AbstractCommandable first = units[0];
             Owner busOwner = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
             IEnumerable<BaseCommand> availableCommands = (first.AvailableCommands ?? System.Array.Empty<BaseCommand>())
@@ -50,6 +56,39 @@ namespace GameDevTV.RTS.UI
 
             command = availableCommands.FirstOrDefault(action => action.Slot == slotIndex);
             return command != null;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Action bar build/gather dùng worker khi selection lẫn CC.
+        /// Cách hoạt động: Có Worker thì loại BaseBuilding khỏi danh sách intersect lệnh.
+        /// </summary>
+        static List<AbstractCommandable> PrioritizeWorkersOverBuildings(List<AbstractCommandable> units)
+        {
+            bool hasWorker = false;
+            for (int i = 0; i < units.Count; i++)
+            {
+                if (units[i] is Worker)
+                {
+                    hasWorker = true;
+                    break;
+                }
+            }
+
+            if (!hasWorker)
+            {
+                return units;
+            }
+
+            List<AbstractCommandable> filtered = new(units.Count);
+            for (int i = 0; i < units.Count; i++)
+            {
+                if (units[i] is not BaseBuilding)
+                {
+                    filtered.Add(units[i]);
+                }
+            }
+
+            return filtered;
         }
     }
 }

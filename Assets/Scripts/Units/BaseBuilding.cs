@@ -5,6 +5,7 @@ using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.TechTree;
+using GameDevTV.RTS.Utilities;
 using Mirror;
 using UnityEngine;
 using UnityEngine.AI;
@@ -36,6 +37,12 @@ namespace GameDevTV.RTS.Units
         private const int MAX_QUEUE_SIZE = 5;
         private IBuildingPassiveEffect[] passiveEffects;
         private bool buildingSpawnEventRaised;
+        private bool networkConstructionVisualActive;
+        private bool networkConstructionUsePredictedProgress;
+        private float networkConstructionPredictedStartTime;
+        private float networkConstructionBuildTimeSeconds;
+        private Vector3 networkConstructionStartWorld;
+        private Vector3 networkConstructionEndWorld;
 
         protected override void Awake()
         {
@@ -56,6 +63,29 @@ namespace GameDevTV.RTS.Units
         private void OnDisable()
         {
             SyncPassiveEffects(false);
+            networkConstructionVisualActive = false;
+            networkConstructionUsePredictedProgress = false;
+            networkConstructionBuildTimeSeconds = 0f;
+        }
+
+        void LateUpdate()
+        {
+            if (!RtsNetplaySession.IsPureClient || !networkConstructionVisualActive)
+            {
+                return;
+            }
+
+            float completion = Progress.Completion;
+            if (networkConstructionUsePredictedProgress
+                && Progress.State != BuildingProgress.BuildingState.Completed
+                && networkConstructionBuildTimeSeconds > 0f)
+            {
+                float predicted =
+                    (Time.time - networkConstructionPredictedStartTime) / networkConstructionBuildTimeSeconds;
+                completion = Mathf.Clamp01(Mathf.Max(completion, predicted));
+            }
+
+            ApplyNetworkConstructionVisualPosition(completion);
         }
 
         /// <summary>
@@ -78,6 +108,17 @@ namespace GameDevTV.RTS.Units
         protected override void Start()
         {
             base.Start();
+
+            bool underConstruction = Progress.State == BuildingProgress.BuildingState.Building
+                || Progress.State == BuildingProgress.BuildingState.Paused;
+            bool deferToNetworkSync = RtsNetplaySession.IsPureClient
+                && TryGetComponent<NetworkIdentity>(out _);
+
+            if (underConstruction || deferToNetworkSync)
+            {
+                return;
+            }
+
             Progress = new BuildingProgress(BuildingProgress.BuildingState.Completed, Progress.StartTime, 1);
             unitBuildingThis = null;
             Bus<UnitDeathEvent>.OnEvent[Owner] -= HandleUnitDeath;
@@ -95,14 +136,47 @@ namespace GameDevTV.RTS.Units
             }
 
             SyncRuntimeHealthFromUnitSo(healAddedMaxPortion: true);
-            // Giống AbstractUnit: nhà hoàn thành phải có máu đầy. SyncRuntimeHealthFromUnitSo không tăng máu khi max không đổi
-            // và CurrentHealth prefab = 0 → thanh máu / combat sai (CurrentHealth = 0).
             if (MaxHealth > 0 && CurrentHealth <= 0)
             {
                 Heal(MaxHealth);
             }
 
             RefreshVisionFromSightConfig();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Civil Central spawn đầu trận MP luôn Completed trước khi client nhận sync đầu tiên.
+        /// Cách hoạt động: Server gọi ngay sau spawn — set progress, heal, passive, push BuildingSpawnEvent + SyncVar.
+        /// </summary>
+        internal void EnsureCivilCentralMatchStartReady()
+        {
+            if (!CivilCentralUtility.IsCivilCentral(this))
+            {
+                return;
+            }
+
+            Progress = new BuildingProgress(BuildingProgress.BuildingState.Completed, Time.time, 1f);
+            unitBuildingThis = null;
+            Bus<UnitDeathEvent>.OnEvent[Owner] -= HandleUnitDeath;
+            SyncPassiveEffects(true);
+            SyncRuntimeHealthFromUnitSo(healAddedMaxPortion: true);
+
+            if (MaxHealth > 0 && CurrentHealth < MaxHealth)
+            {
+                Heal(MaxHealth - CurrentHealth);
+            }
+
+            foreach (UpgradeSO upgrade in BuildingSO.Upgrades)
+            {
+                if (BuildingSO.TechTree.IsResearched(Owner, upgrade))
+                {
+                    upgrade.Apply(BuildingSO);
+                }
+            }
+
+            RaiseBuildingSpawnEventIfNeeded();
+            RefreshVisionFromSightConfig();
+            NotifyNetworkBuildingStateIfServer();
         }
 
         /// <summary>
@@ -254,10 +328,188 @@ namespace GameDevTV.RTS.Units
             if (previous.State != BuildingProgress.BuildingState.Completed
                 && progress.State == BuildingProgress.BuildingState.Completed)
             {
-                SyncPassiveEffects(true);
+                ApplyConstructionCompletedPresentationFromNetwork();
+            }
+            else if (RtsNetplaySession.IsPureClient)
+            {
+                RefreshNetworkConstructionVisualState(progress);
             }
 
             OnQueueUpdated?.Invoke(buildingQueue.ToArray());
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP — nhà nổi từ dưới đất theo Completion giống PvE offline.
+        /// Cách hoạt động: Lần đầu thấy Building/Paused thì cache vị trí chôn/đích; LateUpdate lerp theo Completion.
+        /// </summary>
+        void RefreshNetworkConstructionVisualState(BuildingProgress progress)
+        {
+            bool underConstruction = progress.State == BuildingProgress.BuildingState.Building
+                || progress.State == BuildingProgress.BuildingState.Paused;
+
+            if (!underConstruction)
+            {
+                if (!networkConstructionUsePredictedProgress)
+                {
+                    networkConstructionVisualActive = false;
+                }
+
+                return;
+            }
+
+            if (!networkConstructionVisualActive)
+            {
+                InitializeNetworkConstructionVisualAnchors(progress.Completion);
+            }
+
+            ApplyNetworkConstructionVisualPosition(progress.Completion);
+        }
+
+        void InitializeNetworkConstructionVisualAnchors(float completion)
+        {
+            if (networkConstructionEndWorld != Vector3.zero
+                && networkConstructionStartWorld != Vector3.zero)
+            {
+                networkConstructionVisualActive = true;
+                ApplyNetworkConstructionVisualPosition(completion);
+                return;
+            }
+
+            float buryDepth = MainRenderer != null
+                ? Mathf.Max(MainRenderer.bounds.size.y, 0.5f)
+                : 0.5f;
+            float t = Mathf.Clamp01(completion);
+            Vector3 current = transform.position;
+            networkConstructionEndWorld = current + Vector3.up * buryDepth * (1f - t);
+            networkConstructionStartWorld = networkConstructionEndWorld - Vector3.up * buryDepth;
+            networkConstructionVisualActive = true;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP — anchor animation xây đúng vị trí đặt (server không sync transform nhà).
+        /// Cách hoạt động: RpcLink truyền targetLocation; đặt start chôn / end mặt đất rồi lerp theo Completion.
+        /// </summary>
+        internal void SeedClientConstructionPresentationAnchor(
+            Vector3 endWorld,
+            float syncedCompletion,
+            float buildTimeSeconds)
+        {
+            if (!RtsNetplaySession.IsPureClient)
+            {
+                return;
+            }
+
+            float buryDepth = MainRenderer != null
+                ? Mathf.Max(MainRenderer.bounds.size.y, 0.5f)
+                : 0.5f;
+            networkConstructionEndWorld = endWorld;
+            networkConstructionStartWorld = endWorld + Vector3.down * buryDepth;
+            networkConstructionVisualActive = true;
+
+            float clampedCompletion = Mathf.Clamp01(syncedCompletion);
+            networkConstructionPredictedStartTime = buildTimeSeconds > 0f
+                ? Time.time - clampedCompletion * buildTimeSeconds
+                : Time.time;
+            networkConstructionUsePredictedProgress = buildTimeSeconds > 0f;
+            networkConstructionBuildTimeSeconds = buildTimeSeconds > 0f ? buildTimeSeconds : 0f;
+
+            float initialCompletion = clampedCompletion;
+            if (networkConstructionUsePredictedProgress)
+            {
+                initialCompletion = Mathf.Clamp01((Time.time - networkConstructionPredictedStartTime) / buildTimeSeconds);
+            }
+
+            ApplyNetworkConstructionVisualPosition(initialCompletion);
+        }
+
+        void ApplyNetworkConstructionVisualPosition(float completion)
+        {
+            if (!networkConstructionVisualActive)
+            {
+                return;
+            }
+
+            float t = Mathf.Clamp01(completion);
+            transform.position = Vector3.Lerp(networkConstructionStartWorld, networkConstructionEndWorld, t);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP hoàn tất presentation khi SyncVar báo Completed (không gọi server notify).
+        /// Cách hoạt động: Gỡ builder, bật passive, heal đầy, raise BuildingSpawnEvent một lần.
+        /// </summary>
+        void ApplyConstructionCompletedPresentationFromNetwork()
+        {
+            unitBuildingThis = null;
+            Bus<UnitDeathEvent>.OnEvent[Owner] -= HandleUnitDeath;
+            SyncPassiveEffects(true);
+
+            networkConstructionUsePredictedProgress = false;
+
+            if (networkConstructionVisualActive)
+            {
+                transform.position = networkConstructionEndWorld;
+                networkConstructionVisualActive = false;
+            }
+            else if (networkConstructionEndWorld != Vector3.zero)
+            {
+                transform.position = networkConstructionEndWorld;
+            }
+
+            if (MaxHealth > 0 && CurrentHealth < MaxHealth)
+            {
+                Heal(MaxHealth - CurrentHealth);
+            }
+
+            RaiseBuildingSpawnEventIfNeeded();
+            RefreshVisionFromSightConfig();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP — xác nhận xây xong khi SyncVar trễ hoặc không hook (Rpc từ server).
+        /// </summary>
+        internal void ForceClientConstructionCompletedPresentation()
+        {
+            if (!RtsNetplaySession.IsPureClient)
+            {
+                return;
+            }
+
+            BuildingProgress previous = Progress;
+            Progress = new BuildingProgress(
+                BuildingProgress.BuildingState.Completed,
+                Progress.StartTime,
+                1f);
+
+            if (previous.State == BuildingProgress.BuildingState.Completed)
+            {
+                return;
+            }
+
+            ApplyConstructionCompletedPresentationFromNetwork();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Server đẩy tiến độ xây lên client trong lúc BuildBuildingAction chạy.
+        /// Cách hoạt động: Cập nhật Completion khi state vẫn là Building rồi notify sync.
+        /// </summary>
+        internal void SetConstructionCompletion(float completion)
+        {
+            if (Progress.State != BuildingProgress.BuildingState.Building)
+            {
+                return;
+            }
+
+            float clamped = Mathf.Clamp01(completion);
+            if (Mathf.Abs(Progress.Completion - clamped) < 0.02f)
+            {
+                return;
+            }
+
+            Progress = new BuildingProgress(
+                BuildingProgress.BuildingState.Building,
+                Progress.StartTime,
+                clamped);
+            NotifyNetworkBuildingStateIfServer();
         }
 
         void NotifyNetworkBuildingStateIfServer()
@@ -377,6 +629,11 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         public void NotifyNetworkSpawnPresentation()
         {
+            if (Progress.State != BuildingProgress.BuildingState.Completed)
+            {
+                return;
+            }
+
             RaiseBuildingSpawnEventIfNeeded();
         }
 

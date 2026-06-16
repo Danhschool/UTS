@@ -35,6 +35,26 @@ namespace GameDevTV.RTS.Netplay
             GameMatchOverlayStateSync.ResetMatchEndBroadcast();
             RtsLobbyUI.HideLobbyCanvasForGameplay();
             RtsMpSceneRuntimeEnsurer.EnsureGameplaySceneReady();
+            TryRegisterClientGameplayPrefabsEarly();
+        }
+
+        /// <summary>
+        /// Mục tiêu: P2 đăng ký spawn prefab trước frame server spawn nhà (build).
+        /// Cách hoạt động: Awake gameplay scene — gọi EnsureClientGameplayPrefabsRegistered nếu pure client.
+        /// </summary>
+        void TryRegisterClientGameplayPrefabsEarly()
+        {
+            if (!RtsNetplaySession.IsPureClient)
+            {
+                return;
+            }
+
+            RtsUtsGameSceneSetup setup = Object.FindFirstObjectByType<RtsUtsGameSceneSetup>(
+                FindObjectsInactive.Include);
+            if (setup != null)
+            {
+                RtsUtsServerEntityFactory.EnsureClientGameplayPrefabsRegistered(setup);
+            }
         }
 
         void Start()
@@ -63,23 +83,31 @@ namespace GameDevTV.RTS.Netplay
             if (!RtsNetplaySession.IsNetworkMatch)
             {
                 Debug.LogError(
-                    "[MP] Chưa có session Mirror. Mở scene "
-                    + "'Assets/3rdParty/RTS_Multiplayer/Scenes/RtsNet_Lobby.unity' "
-                    + "→ Play → Host (hoặc Client IP:7777) → Ready → Bắt đầu trận.");
+                    "[MP] Chưa có session Mirror. Play từ scene "
+                    + "'Assets/Scenes/MainMenu.unity' → PvP → SSScene → Tạo phòng / Join → Ready → Bắt đầu trận. "
+                    + "(Không Play thẳng Game 1/2.)");
             }
         }
 
         IEnumerator RefreshAfterNetworkReady()
         {
-            if (NetworkServer.active)
+            RtsUtsGameSceneSetup setup = Object.FindFirstObjectByType<RtsUtsGameSceneSetup>(
+                FindObjectsInactive.Include);
+
+            if (setup != null)
             {
-                RtsUtsGameSceneSetup setup = Object.FindFirstObjectByType<RtsUtsGameSceneSetup>(
-                    FindObjectsInactive.Include);
-                if (setup != null)
+                if (NetworkServer.active)
                 {
                     RtsUtsServerEntityFactory.EnsureAllGameplayPrefabsRegistered(setup);
                 }
+                else if (RtsNetplaySession.IsPureClient)
+                {
+                    RtsUtsServerEntityFactory.EnsureClientGameplayPrefabsRegistered(setup);
+                }
+            }
 
+            if (NetworkServer.active)
+            {
                 RtsMatchServerSpawnRunner.EnsureScheduled();
                 GameMatchOverlayStateSync.EnsureServerInstance();
                 RtsUtsSupplyStateSync.EnsureServerInstance();
@@ -88,6 +116,11 @@ namespace GameDevTV.RTS.Netplay
             }
 
             yield return null;
+
+            if (setup != null && RtsNetplaySession.IsPureClient)
+            {
+                RtsUtsServerEntityFactory.EnsureClientGameplayPrefabsRegistered(setup);
+            }
 
             MpLocalOwnerSceneSync.RefreshAfterGameSceneLoad();
             MpFogVisionSpawnRefresh.SchedulePresentationRetries();

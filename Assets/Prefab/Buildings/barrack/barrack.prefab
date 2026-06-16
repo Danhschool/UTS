@@ -112,6 +112,38 @@ MonoBehaviour:
   <BuildingSO>k__BackingField: {fileID: 0}
   navMeshObstacle: {fileID: 4559383418787321551}
   unitSpawnPoint: {fileID: 8899616035702748636}
+--- !u!114 &-4030202427281075768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1789053669275132042}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 897316190
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &-7339594678040087149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1789053669275132042}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33b57de20edc31046a3f95c630f5e6dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsNetworkEntity
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
 --- !u!1 &2375720172691480431
 GameObject:
   m_ObjectHideFlags: 0
@@ -137,7 +169,7 @@ Transform:
   m_GameObject: {fileID: 2375720172691480431}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 10}
+  m_LocalPosition: {x: 0, y: 0, z: 12.94}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -862,13 +894,41 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5669366482984599562}
     m_Modifications:
+    - target: {fileID: 196980549375657261, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 196980549375657261, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 196980549375657261, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 196980549375657261, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 275.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 196980549375657261, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 196980549375657261, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 881508950669932766, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 881508950669932766, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_SizeDelta.x
       value: -293.5
       objectReference: {fileID: 0}
     - target: {fileID: 881508950669932766, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -137.75
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 967910581917642554, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_PixelsPerUnitMultiplier
@@ -904,19 +964,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9414223
+      value: 0.95833373
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.056627855
+      value: 0.1134546
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.33184174
+      value: 0.26033562
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.019960739
+      value: -0.03082045
       objectReference: {fileID: 0}
     - target: {fileID: 6495039639725829807, guid: c2767524f69c11c4493cb2f722f25113, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1125,35 +1185,3 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2618936292559565899, guid: 2e70b3b9842809646980ebc22c5f8b36, type: 3}
   m_PrefabInstance: {fileID: 7384355965070664939}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &-4030202427281075768
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1789053669275132042}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
-  sceneId: 0
-  _assetId: 0
-  serverOnly: 0
-  visibility: 0
-  hasSpawned: 0
---- !u!114 &-7339594678040087149
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1789053669275132042}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 33b57de20edc31046a3f95c630f5e6dc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameDevTV.RTS.Netplay.RtsUtsNetworkEntity
-  syncDirection: 0
-  syncMode: 0
-  syncInterval: 0

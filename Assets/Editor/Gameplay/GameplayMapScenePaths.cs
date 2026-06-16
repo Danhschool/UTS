@@ -31,7 +31,10 @@ namespace GameDevTV.RTS.Editor.Gameplay
 
         public const string WorkerMpPrefabPath = "Assets/Prefab/Unit/Worker 1.prefab";
 
-        public const string WorkerPvAiPrefabPath = "Assets/Prefab/Unit/Worker.prefab";
+        /// <summary>PvE dùng cùng prefab MP; <see cref="PvAiOfflineEntityFactory"/> gỡ Mirror lúc spawn.</summary>
+        public const string WorkerPvAiPrefabPath = WorkerMpPrefabPath;
+
+        public const string WorkerUnitSoPath = "Assets/Data_Re/Unit/Worker/Worker.asset";
 
         public const string FogP2PrefabPath = "Assets/Prefab/Fog of War P2.prefab";
 

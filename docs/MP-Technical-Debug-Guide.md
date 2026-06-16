@@ -38,26 +38,77 @@ flowchart TB
 
 ## 2. Luồng scene (bắt buộc đúng thứ tự)
 
+### Flow chính (từ menu game — **khuyến nghị**)
+
+Lobby MP nằm **trên `SSScene`**, không cần mở scene `RtsNet_Lobby` riêng khi chơi bình thường.
+
 ```
-MainMenu / SSScene
-    → RtsNet_Lobby          (Host + Client Ready, chọn Game 1/2)
-    → Loading               (Phase A — chờ load)
-    → Game 1 hoặc Game 2    (spawn CC + worker, chơi)
-    → End                   (thắng/thua/đầu hàng/disconnect)
+MainMenu.unity
+    → Button PvP
+SSScene.unity (chế độ Multiplayer — MP Panel)
+    → Host: Tạo phòng (CreateHostRoom)  |  Client: chọn phòng / nhập IP → Join
+    → Chọn map (Game 1 / Game 2) — host đổi map, client đồng bộ qua SyncVar
+    → Cả hai Ready → Host: Bắt đầu trận (ServerTryStartMatch)
+Loading.unity
+    → Phase A — chờ load đồng bộ
+Game 1.unity hoặc Game 2.unity
+    → Spawn CC + worker 2 phe, chơi
+End.unity
+    → Thắng / thua / đầu hàng / disconnect forfeit
 ```
 
-### File điều phối
+```mermaid
+flowchart LR
+  MM[MainMenu] -->|Button PvP| SS[SSScene MP Panel]
+  SS -->|Host Tạo phòng| LOBBY[Mirror session trên SSScene]
+  SS -->|Client Join| LOBBY
+  LOBBY -->|Ready x2 + Start| LD[Loading]
+  LD --> G[Game 1 hoặc Game 2]
+  G --> END[End]
+```
+
+### Scene & component quan trọng
+
+| Scene | Vai trò | Component chính |
+|-------|---------|-----------------|
+| `Assets/Scenes/MainMenu.unity` | Menu gốc | `MainMenuUIController` — nút **PvE** / **PvP** |
+| `Assets/Scenes/SSScene.unity` | Setup + **lobby MP** | `PregameSetupUIController`, `PregameMpLobbyCoordinator`, `RtsLobbyUI`, `RtsNetworkManager` |
+| `Assets/Scenes/Loading.unity` | Chuyển cảnh MP | `GameplayLoadingSceneController` |
+| `Assets/Scenes/Game 1.unity` / `Game 2.unity` | Map thật | `RtsUtsGameSceneSetup`, `RtsNetGameSceneBootstrap` |
+| `Assets/Scenes/End.unity` | Kết quả trận | `EndSceneOutcomeController` |
+
+### `RtsNetworkManager` trên SSScene (Inspector)
+
+| Field | Giá trị hiện tại | Ý nghĩa |
+|-------|------------------|---------|
+| `offlineScene` | `SSScene` | Khi thoát host/client về setup |
+| `lobbyScene` | `SSScene` | Lobby = chính scene setup (không nhảy scene khác) |
+| `loadingScene` | `Loading` | Trung gian trước map |
+| `gameScene` | `Game 1` (mặc định) | Fallback; host đổi map trong UI → `RtsLobbyRoomMapSync` |
+| `maxConnections` | `2` | LAN 2 người |
+
+### File điều phối (pregame → gameplay)
 
 | Bước | File chính | Ghi chú |
 |------|------------|---------|
-| Start trận | `RtsNetworkManager.ServerTryStartMatch()` | Gọi `SetMatchGameplayScene` từ map host |
-| Chặn qua Loading | `RtsNetworkManager.ServerChangeScene` | `gameScene` đã chuẩn hóa tên ngắn |
+| MainMenu → SSScene | `PregameMenuSceneNavigator.LoadSetup(Multiplayer)` | `MainMenuUIController.OnMultiplayerClicked` |
+| Tạo phòng host | `RtsLobbyUI.CreateHostRoom()` | Nút **Tạo phòng** — `PregameSetupUIController.OnCreateRoomClicked` |
+| Đồng bộ map lobby | `PregameMpLobbyCoordinator` | Host chọn map; client chỉ xem + Ready |
+| Start trận | `RtsNetworkManager.ServerTryStartMatch()` | Nút **Bắt đầu trận** khi cả hai Ready |
+| Chặn qua Loading | `RtsNetworkManager.ServerChangeScene` | Tự chèn `Loading` trước `gameScene` |
 | Handoff Loading | `GameplayLoadingSceneController` + `GameplaySceneLoader` | Host: `ServerChangeSceneFromLoading` |
 | Vào map | `RtsNetworkManager.OnServerSceneChanged` | `RtsNetSceneUtility.IsActiveGameplayMapScene()` |
-| Bootstrap map | `RtsNetGameSceneBootstrap` | Owner, presentation, server sync instances |
+| Bootstrap map | `RtsNetGameSceneBootstrap` | Owner, presentation, **đăng ký prefab client P2** |
 | Spawn gameplay | `RtsMatchServerSpawnOrchestrator` | Cần **2 connection** + lobby identity |
 
-**Lỗi thường gặp:** Play trực tiếp scene `Game 1` → không có session Mirror → log `[MP] Chưa có session Mirror` sau ~2s.
+### `RtsNet_Lobby` (legacy / dự phòng)
+
+- Scene `Assets/3rdParty/RTS_Multiplayer/Scenes/RtsNet_Lobby.unity` vẫn trong Build Settings.
+- Chỉ dùng khi `PregameSetupUIController` **không** tìm thấy `RtsLobbyUI` trên MP Panel → `PregameMenuSceneNavigator.LoadLobby()`.
+- **Không** Play thẳng `Game 1` / `Game 2` để test MP.
+
+**Lỗi thường gặp:** Play trực tiếp scene `Game 1` → không có session Mirror → log `[MP] Chưa có session Mirror` sau ~2s.  
+**Cách đúng:** Play từ **`MainMenu`** → **PvP** → lobby trên **SSScene**.
 
 ---
 
@@ -264,7 +315,17 @@ LocalHumanOwnerService
 
 ### Build Settings (tối thiểu MP)
 
-- `RtsNet_Lobby`, `Loading`, `Game 1`, `Game 2`, `End`
+| Thứ tự gợi ý | Scene |
+|--------------|-------|
+| 0 | `MainMenu` |
+| 1 | `Loading` |
+| 2 | `SSScene` |
+| 3 | `Game 1` |
+| 4 | `Game 2` |
+| 5 | `End` |
+| (tùy chọn) | `RtsNet_Lobby`, `RtsNet_Game` — legacy / sandbox |
+
+**Play MP:** mở scene **`MainMenu`** (index 0), không Play thẳng `Game 1`.
 
 ### `GameplayMapCore` trên Game 1/2
 
@@ -279,10 +340,22 @@ LocalHumanOwnerService
 - `NetworkIdentity`
 - `RtsUtsNetworkEntity`
 - `RtsUtsNetworkCombatSync`
-- Nhà train: thêm `RtsUtsNetworkBuildingSync`
-- Đăng ký trong `NetworkManager.spawnPrefabs` (Auto-Wire)
+- **Unit** (worker, quân): `NetworkTransformUnreliable` trên prefab (hoặc factory thêm khi spawn)
+- **Building** (nhà): **không** cần `NetworkTransform` — nhà tĩnh; tiến độ xây qua `RtsUtsNetworkBuildingSync`. Factory **gỡ** NT runtime trước spawn (`StripBuildingNetworkTransform`)
+- Nhà train: thêm `RtsUtsNetworkBuildingSync` (factory tự thêm nếu thiếu)
+- Đăng ký spawn: host `EnsureAllGameplayPrefabsRegistered` + pure client `EnsureClientGameplayPrefabsRegistered` (catalog từ `RtsUtsGameSceneSetup`)
 
-### Lobby `RtsNetworkManager`
+### Lệnh build MP (P2)
+
+| Bước | Client P2 | Server |
+|------|-----------|--------|
+| Chọn worker + ghost | `RtsUtsClientCommandRelay.TryRelayActivate` | — |
+| Relay | `RequestUtsBuild` → `CmdUtsBuildBuilding` | `RtsUtsGameplayCommandServer.TryExecuteBuild` |
+| Validation | Ghost `AllRestrictionsPass` (UI) | `BuildPlacementValidation` (tech + placement) |
+| Presentation | `RpcMirrorBuildPresentation`, `RpcNotifyBuildingConstructStarted` (gỡ ghost) | `Worker.Build` + BT `BuildBuildingAction` spawn |
+| Spawn nhà client | Cần prefab trong `NetworkClient` registry | `NetworkServer.Spawn` |
+
+### Lobby `RtsNetworkManager` (trên SSScene)
 
 - `gameScene` mặc định: **Game 1** (host vẫn đổi map trong lobby)
 - `maxConnections = 2`
@@ -293,13 +366,14 @@ LocalHumanOwnerService
 
 | Menu | Tác dụng |
 |------|----------|
+| `ProjectRTS/Pregame/Wire SSScene MP Lobby UI` | Gắn `RtsLobbyUI` + Ready/Start trên **SSScene** MP Panel |
 | `ProjectRTS/Netplay/★ Auto-Wire MP Prefabs & Scene (one-click)` | Prefab network + catalog Game 1 & 2 + lobby spawn |
 | `ProjectRTS/Netplay/★ Prepare Game 1 Scene` | Wire presentation + core |
 | `ProjectRTS/Netplay/★ Prepare Game 2 Scene` | idem map 2 |
 | `ProjectRTS/Netplay/Setup MP Presentation` | Fog P1/P2, director, HUD |
 | `ProjectRTS/Netplay/Fix Duplicate NetworkIdentity on Prefabs` | Dọn NI trùng |
 
-Sau Auto-Wire: **Save All**, commit scene nếu cần.
+Sau Auto-Wire + Wire SSScene (nếu mới clone project): **Save All**, commit scene nếu cần.
 
 ---
 
@@ -309,7 +383,10 @@ Sau Auto-Wire: **Save All**, commit scene nếu cần.
 |-------------|------------------------|-------------------------|
 | P2 không chọn được unit | `Owner` prefab ≠ `UtsOwner`; LocalOwner sai | `LocalCommandableOwnership`, `MpLocalOwnerSceneSync` |
 | P2 click nhưng không di chuyển | Relay fail / Command null / không `IsCommandableByLocalHuman` | `RtsUtsClientCommandRelay`, `RtsUtsPlayerCommands` |
-| Host OK, client không build/train | Catalog thiếu / prefab chưa spawn list | `RtsUnlockableAssetCatalog`, `RtsUtsServerEntityFactory` |
+| Host OK, client không build/train | Catalog thiếu / P2 chưa `RegisterPrefab` | `EnsureClientGameplayPrefabsRegistered`, `RtsUnlockableAssetCatalog` |
+| `Failed to spawn assetId=...` trên P2 | Client thiếu prefab nhà trong Mirror registry | `RtsUtsServerEntityFactory.EnsureClientGameplayPrefabsRegistered` |
+| NullRef `NetworkTransformUnreliable` khi xây nhà | NT runtime trên building / lệch server-client | `StripBuildingNetworkTransform` — nhà không dùng NT |
+| P2 build: tiền trừ nhưng không thấy nhà | Server spawn OK, client không replicate | Kiểm tra spawn prefab + Console P2 |
 | Không spawn CC/worker | Chưa đủ 2 Ready / thiếu spawn points | `RtsMatchServerSpawnOrchestrator`, `RtsUtsGameSceneSetup` |
 | Spawn chỉ 1 phe | `MatchSpawnCompleted` sớm / 1 connection | Log `[RtsMatchServerSpawnOrchestrator]` |
 | Màn hình P2 đen / fog sai | `player2Rig` / RT P2 | `MpPlayerPresentationDirector` |
@@ -326,15 +403,21 @@ Sau Auto-Wire: **Save All**, commit scene nếu cần.
 
 ### Trước khi test
 
-- [ ] Build Settings đủ scene
+- [ ] Build Settings: `MainMenu`, `SSScene`, `Loading`, `Game 1`, `Game 2`, `End`
 - [ ] Đã chạy **Auto-Wire** trên Game 1 & 2
+- [ ] Đã chạy **Wire SSScene MP Lobby UI** (nếu nút Ready/Start lobby lỗi)
 - [ ] Firewall cho phép port Mirror (mặc định 7777)
 
-### Lobby
+### Vào lobby (từ MainMenu)
 
-- [ ] Host: chọn **Game 1** hoặc **Game 2**
+- [ ] **Play** scene `MainMenu` (host máy chính)
+- [ ] **PvP** → vào `SSScene`, panel **MP** hiện
+- [ ] Host: chọn map → **Tạo phòng**
+- [ ] Client (ParrelSync hoặc build): **MainMenu → PvP** → Join IP host (vd. `localhost` / LAN)
 - [ ] Cả hai **Ready**
 - [ ] Host: **Bắt đầu trận** → qua **Loading** → vào map đã chọn
+
+### Lobby (trên SSScene — không cần RtsNet_Lobby)
 
 ### Host (P1)
 
@@ -361,6 +444,17 @@ Sau Auto-Wire: **Save All**, commit scene nếu cần.
 
 ## 14. Catalog file MP (tra cứu nhanh)
 
+### Pregame (`Assets/Scripts`)
+
+| File | 1 dòng |
+|------|--------|
+| `MainMenuUIController.cs` | PvE / PvP → `LoadSetup` |
+| `PregameSetupUIController.cs` | SSScene: map, AI panel, MP panel, Tạo phòng |
+| `PregameMpLobbyCoordinator.cs` | Host/client quyền chọn map trong lobby |
+| `PregameMenuSceneNavigator.cs` | `LoadMainMenu`, `LoadSetup`, `StartGameplay` (PvE) |
+| `PregameMapSelectScrollBinder.cs` | Catalog map trên SSScene |
+| `PregameSessionState.cs` | PlayMode, map index, scene gameplay đã chọn |
+
 ### Netplay shell (`ProjectRTS.Netplay`)
 
 | File | 1 dòng |
@@ -384,7 +478,8 @@ Sau Auto-Wire: **Save All**, commit scene nếu cần.
 | `RtsUtsNetworkEntity.cs` | SyncVar owner + quyền lệnh |
 | `RtsUtsNetworkCombatSync.cs` | HP / chết authoritative |
 | `RtsUtsNetworkBuildingSync.cs` | Queue + tiến độ xây |
-| `RtsUtsServerEntityFactory.cs` | Spawn + đăng ký prefab |
+| `RtsUtsServerEntityFactory.cs` | Spawn + đăng ký prefab host/client; gỡ NT building |
+| `BuildPlacementValidation.cs` | Server validate tech + vị trí đặt nhà |
 | `RtsMatchServerSpawnOrchestrator.cs` | Spawn CC/worker 2 phe |
 | `RtsNetplaySession.cs` | Flag server/client/combat |
 | `RtsNetplaySimulationGate.cs` | Tắt BT/NavMesh client |
@@ -412,6 +507,7 @@ Sau Auto-Wire: **Save All**, commit scene nếu cần.
 
 | File | 1 dòng |
 |------|--------|
+| `SsSceneMpLobbySetupEditor.cs` | Wire SSScene MP Lobby UI |
 | `RtsMpNetworkAutoSetupEditor.cs` | One-click wire MP |
 | `RtsNetGameSceneSetupEditor.cs` | Prepare Game 1/2 |
 | `GameplayMapSceneSetupApplicator.cs` | Core map PvE+PvP |
@@ -437,4 +533,4 @@ Sau Auto-Wire: **Save All**, commit scene nếu cần.
 
 ---
 
-*Cập nhật theo codebase: Mirror LAN, map Game 1/2, server-authoritative UTS. Khi sửa bug MP, ưu tiên log tag `[RtsMatchServerSpawnOrchestrator]`, `[MpPlayerPresentationDirector]`, `[P2 Fog]`, `[RtsUtsServerEntityFactory]`.*
+*Cập nhật theo codebase: Mirror LAN, luồng **MainMenu → SSScene (lobby) → Loading → Game 1/2**, server-authoritative UTS. Khi sửa bug MP, ưu tiên log tag `[RtsMatchServerSpawnOrchestrator]`, `[MpPlayerPresentationDirector]`, `[P2 Fog]`, `[RtsUtsServerEntityFactory]`, `[RtsLobbyUI]`.*

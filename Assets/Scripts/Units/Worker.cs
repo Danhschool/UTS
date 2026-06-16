@@ -280,6 +280,50 @@ namespace GameDevTV.RTS.Units
         }
 
         /// <summary>
+        /// Mục tiêu: Client MP (P2) thấy worker di chuyển/xây sau server xử lý CmdUtsBuildBuilding.
+        /// Cách hoạt động: Bật graph tạm, gán blackboard BuildBuilding giống Worker.Build (không trừ supply).
+        /// </summary>
+        public void MirrorBuildPresentation(BuildingSO building, Vector3 targetLocation)
+        {
+            if (building == null || graphAgent == null)
+            {
+                return;
+            }
+
+            InterruptGatherWorkCycle();
+            DisposeMovementDestinationCursor();
+
+            if (!graphAgent.enabled)
+            {
+                graphAgent.enabled = true;
+            }
+
+            GameObject ghostMarker = new GameObject("BuildPlacementMarker");
+            ghostMarker.transform.SetPositionAndRotation(targetLocation, Quaternion.identity);
+
+            graphAgent.SetVariableValue("BuildingSO", building);
+            graphAgent.SetVariableValue("TargetLocation", targetLocation);
+            graphAgent.SetVariableValue("Ghost", ghostMarker);
+            graphAgent.SetVariableValue<BaseBuilding>("BuildingUnderConstruction", null);
+            graphAgent.SetVariableValue("Command", UnitCommands.BuildBuilding);
+            SetCommandOverrides(new BaseCommand[] { CancelBuildingCommand });
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP biết chính xác nhà nào đang xây (netId từ server).
+        /// Cách hoạt động: Gán blackboard BuildingUnderConstruction để BuildBuildingAction client theo dõi Completed.
+        /// </summary>
+        public void LinkPresentationBuildingUnderConstruction(BaseBuilding building)
+        {
+            if (building == null || graphAgent == null)
+            {
+                return;
+            }
+
+            graphAgent.SetVariableValue<BaseBuilding>("BuildingUnderConstruction", building);
+        }
+
+        /// <summary>
         /// Mục tiêu: Ngắt hẳn gather BT (blackboard + animation) trước Stop/Build — tránh vừa trừ tài nguyên vừa đào.
         /// Cách hoạt động: Xóa Supply/GatherableSupplies/Target; reset SupplyAmountHeld; tắt isEngaging.
         /// </summary>

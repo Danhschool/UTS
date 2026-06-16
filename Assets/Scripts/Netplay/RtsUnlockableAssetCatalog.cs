@@ -14,12 +14,14 @@ namespace GameDevTV.RTS.Netplay
         static readonly Dictionary<string, UnlockableSO> UnlockablesByName = new();
         static readonly Dictionary<string, BuildingSO> BuildingsByName = new();
         static readonly HashSet<GameObject> RegisteredSpawnPrefabs = new();
+        static bool s_clientPresentationCatalogLoaded;
 
         public static void Clear()
         {
             UnlockablesByName.Clear();
             BuildingsByName.Clear();
             RegisteredSpawnPrefabs.Clear();
+            s_clientPresentationCatalogLoaded = false;
         }
 
         /// <summary>
@@ -162,6 +164,26 @@ namespace GameDevTV.RTS.Netplay
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Pure client resolve BuildingSO cho Rpc mirror build (catalog server không nạp trên client).
+        /// Cách hoạt động: Lazy RegisterAllLoadedUnlockables một lần rồi tra BuildingsByName.
+        /// </summary>
+        public static bool TryResolveBuildingForPresentation(string assetName, out BuildingSO buildingSo)
+        {
+            if (TryResolveBuilding(assetName, out buildingSo))
+            {
+                return true;
+            }
+
+            if (!s_clientPresentationCatalogLoaded)
+            {
+                s_clientPresentationCatalogLoaded = true;
+                RegisterAllLoadedUnlockables();
+            }
+
+            return TryResolveBuilding(assetName, out buildingSo);
         }
 
         public static IEnumerable<GameObject> EnumerateRegisteredPrefabs() => RegisteredSpawnPrefabs;

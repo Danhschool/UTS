@@ -101,6 +101,12 @@ namespace GameDevTV.RTS.PvAI
                     continue;
                 }
 
+                if (!PvAiStartingUnitPrefabValidator.TryValidate(entry.unitPrefab, out string prefabError))
+                {
+                    Debug.LogError($"[PvAiOfflineSpawnService] {prefabError}");
+                    continue;
+                }
+
                 int count = StartingWorkerSpawnLayout.ClampCount(entry.count);
                 for (int i = 0; i < count; i++)
                 {

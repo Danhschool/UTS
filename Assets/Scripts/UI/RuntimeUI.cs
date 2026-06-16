@@ -102,7 +102,11 @@ namespace GameDevTV.RTS.UI
         /// <summary>Mục tiêu: Refresh panel lệnh khi tài nguyên đổi qua SyncVar (không có SupplyEvent client).</summary>
         public void RefreshSelectionPresentation()
         {
-            TryResyncSelectionFromPlayerInput();
+            if (selectedUnits.Count == 0)
+            {
+                TryResyncSelectionFromPlayerInput();
+            }
+
             RefreshUI();
         }
 
@@ -117,7 +121,7 @@ namespace GameDevTV.RTS.UI
                 return;
             }
 
-            PlayerInput input = Object.FindFirstObjectByType<PlayerInput>(FindObjectsInactive.Include);
+            PlayerInput input = ResolveLocalPlayerInput();
             if (input == null)
             {
                 return;
@@ -130,11 +134,28 @@ namespace GameDevTV.RTS.UI
                 return;
             }
 
+            SelectionCommandUiUtility.PruneBuildingsWhenWorkersPresent(ResyncSelectionBuffer);
+
             selectedUnits.Clear();
             for (int i = 0; i < ResyncSelectionBuffer.Count; i++)
             {
                 selectedUnits.Add(ResyncSelectionBuffer[i]);
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Lấy PlayerInput chung đã anchor qua MpPlayerPresentationDirector (tránh FindFirstObjectByType lệch).
+        /// </summary>
+        static PlayerInput ResolveLocalPlayerInput()
+        {
+            MpPlayerPresentationDirector director = Object.FindFirstObjectByType<MpPlayerPresentationDirector>(
+                FindObjectsInactive.Include);
+            if (director != null && director.SharedPlayerInput != null)
+            {
+                return director.SharedPlayerInput;
+            }
+
+            return Object.FindFirstObjectByType<PlayerInput>(FindObjectsInactive.Include);
         }
 
         /// <summary>
@@ -351,7 +372,7 @@ namespace GameDevTV.RTS.UI
         void ResolveSingleUnitSelectedUI()
         {
             multiUnitSelectionUI?.Disable();
-            AbstractCommandable commandable = selectedUnits.First();
+            AbstractCommandable commandable = ResolvePrimarySelectedCommandable();
             unitIconUI.EnableFor(commandable);
 
             if (commandable is BaseBuilding building)
@@ -377,6 +398,23 @@ namespace GameDevTV.RTS.UI
         void HandleSupplyChange(SupplyEvent evt)
         {
             actionsUI.EnableFor(selectedUnits);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Panel đơn vị ưu tiên worker thay vì CC khi HashSet có cả hai.
+        /// Cách hoạt động: Trả về Worker đầu tiên nếu có; không thì phần tử đầu.
+        /// </summary>
+        AbstractCommandable ResolvePrimarySelectedCommandable()
+        {
+            foreach (AbstractCommandable commandable in selectedUnits)
+            {
+                if (commandable is Worker)
+                {
+                    return commandable;
+                }
+            }
+
+            return selectedUnits.First();
         }
     }
 }

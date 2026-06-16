@@ -42,7 +42,17 @@ namespace GameDevTV.RTS.Netplay
                 return true;
             }
 
-            if (worker.IsBuilding || !SupplyAffordability.HasEnough(owner, buildingSo.Cost))
+            if (worker.IsBuilding)
+            {
+                return false;
+            }
+
+            if (!SupplyAffordability.HasEnough(owner, buildingSo.Cost))
+            {
+                return false;
+            }
+
+            if (!BuildPlacementValidation.TryValidateServerBuild(worker, buildingSo, owner, worldPoint, out _))
             {
                 return false;
             }

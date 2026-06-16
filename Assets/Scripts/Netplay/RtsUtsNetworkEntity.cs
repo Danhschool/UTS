@@ -1,6 +1,8 @@
 using System.Collections;
 
 using GameDevTV.RTS.Environment;
+using GameDevTV.RTS.EventBus;
+using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
 using Mirror;
@@ -249,6 +251,110 @@ namespace GameDevTV.RTS.Netplay
             {
                 worker.MirrorGatherPresentation(supply);
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client P2 mirror animation/di chuyển worker khi server nhận lệnh build.
+        /// Cách hoạt động: Resolve BuildingSO theo tên asset rồi gọi Worker.MirrorBuildPresentation.
+        /// </summary>
+        [ClientRpc]
+        public void RpcMirrorBuildPresentation(string buildingAssetName, Vector3 targetLocation)
+        {
+            if (isServer || !TryGetComponent(out Worker worker))
+            {
+                return;
+            }
+
+            if (!RtsUnlockableAssetCatalog.TryResolveBuildingForPresentation(buildingAssetName, out BuildingSO buildingSo))
+            {
+                return;
+            }
+
+            worker.MirrorBuildPresentation(buildingSo, targetLocation);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client P2 gắn đúng nhà replicate từ server (tránh lệch vị trí Y khi nhà đang chôn).
+        /// </summary>
+        [ClientRpc]
+        public void RpcLinkClientPresentationBuilding(
+            uint buildingNetId,
+            Vector3 targetLocation,
+            float constructionCompletion,
+            float buildTimeSeconds)
+        {
+            if (isServer || !TryGetComponent(out Worker worker))
+            {
+                return;
+            }
+
+            if (!NetworkClient.spawned.TryGetValue(buildingNetId, out NetworkIdentity identity)
+                || !identity.TryGetComponent(out BaseBuilding building))
+            {
+                return;
+            }
+
+            building.SeedClientConstructionPresentationAnchor(
+                targetLocation,
+                constructionCompletion,
+                buildTimeSeconds);
+            worker.LinkPresentationBuildingUnderConstruction(building);
+
+            if (identity.TryGetComponent(out RtsUtsNetworkBuildingSync buildingSync))
+            {
+                buildingSync.RefreshClientPresentationFromNetwork();
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Pure client nhận xác nhận nhà xây xong (backup khi SyncVar hook không kịp).
+        /// </summary>
+        [ClientRpc]
+        public void RpcNotifyBuildingConstructionCompleted()
+        {
+            if (isServer)
+            {
+                return;
+            }
+
+            if (TryGetComponent(out RtsUtsNetworkBuildingSync buildingSync))
+            {
+                buildingSync.RefreshClientPresentationFromNetwork();
+            }
+
+            if (TryGetComponent(out BaseBuilding building))
+            {
+                building.ForceClientConstructionCompletedPresentation();
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Pure client worker thoát trạng thái build sau server CompleteConstruction.
+        /// </summary>
+        [ClientRpc]
+        public void RpcNotifyWorkerBuildPresentationComplete()
+        {
+            if (isServer || !TryGetComponent(out Worker worker))
+            {
+                return;
+            }
+
+            worker.ReleasePlannerControlAfterConstructionEnded();
+        }
+
+        /// <summary>
+        /// Mục tiêu: Pure client gỡ ghost đặt nhà khi server từ chối lệnh build.
+        /// Cách hoạt động: Raise BuildingConstructStartedEvent — PlayerInput handler chỉ DisposePlacementGhost.
+        /// </summary>
+        [ClientRpc]
+        public void RpcNotifyBuildCommandRejected()
+        {
+            if (isServer || !IsCommandableByLocalHuman)
+            {
+                return;
+            }
+
+            Bus<BuildingConstructStartedEvent>.Raise(UtsOwner, new BuildingConstructStartedEvent(UtsOwner));
         }
 
         /// <summary>

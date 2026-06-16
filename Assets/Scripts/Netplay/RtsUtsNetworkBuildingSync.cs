@@ -177,6 +177,22 @@ namespace GameDevTV.RTS.Netplay
                 return;
             }
 
+            ApplyPresentationFromNetworkInternal();
+        }
+
+        /// <summary>Mục tiêu: Rpc / link client ép refresh sau khi nhà replicate.</summary>
+        public void RefreshClientPresentationFromNetwork()
+        {
+            if (NetworkServer.active || _building == null || !RtsNetplayNetworkBehaviourUtility.IsSpawned(this))
+            {
+                return;
+            }
+
+            ApplyPresentationFromNetworkInternal();
+        }
+
+        void ApplyPresentationFromNetworkInternal()
+        {
             var queue = new List<UnlockableSO>(syncQueue.Count);
             for (int i = 0; i < syncQueue.Count; i++)
             {

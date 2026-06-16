@@ -1,3 +1,5 @@
+using GameDevTV.RTS.EventBus;
+using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Gameplay;
 using GameDevTV.RTS.Player;
@@ -211,6 +213,44 @@ namespace GameDevTV.RTS.Game
             }
 
             Instance.ServerBroadcastSupplyGain(owner, kind, amount);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Pure client P2 gỡ ghost đặt nhà khi server bắt đầu construction.
+        /// Cách hoạt động: ClientRpc raise BuildingConstructStartedEvent trên bus localOwner.
+        /// </summary>
+        public static void BroadcastBuildingConstructStarted(Owner owner)
+        {
+            if (!NetworkServer.active || Instance == null)
+            {
+                return;
+            }
+
+            Instance.ServerBroadcastBuildingConstructStarted(owner);
+        }
+
+        [Server]
+        void ServerBroadcastBuildingConstructStarted(Owner owner)
+        {
+            RpcNotifyBuildingConstructStarted((byte)owner);
+        }
+
+        [ClientRpc]
+        void RpcNotifyBuildingConstructStarted(byte ownerByte)
+        {
+            if (isServer)
+            {
+                return;
+            }
+
+            Owner owner = (Owner)ownerByte;
+            Owner local = LocalHumanOwnerAccess.GetLocalOwnerOrDefault();
+            if (owner != local)
+            {
+                return;
+            }
+
+            Bus<BuildingConstructStartedEvent>.Raise(owner, new BuildingConstructStartedEvent(owner));
         }
 
         [Server]
