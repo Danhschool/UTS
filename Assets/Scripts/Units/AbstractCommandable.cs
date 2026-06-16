@@ -155,6 +155,30 @@ namespace GameDevTV.RTS.Units
         }
 
         /// <summary>
+        /// Mục tiêu: Tránh syncMarkedDead khi spawn MP (CurrentHealth mặc định 0 trước Start).
+        /// Cách hoạt động: Server gọi trước NetworkServer.Spawn — gán max/curr từ UnitSO nếu chưa trong death sequence.
+        /// </summary>
+        internal void EnsureNetworkSpawnCombatReady()
+        {
+            if (IsInDeathSequence || UnitSO == null)
+            {
+                return;
+            }
+
+            int targetMax = UnitSO.Health;
+            if (targetMax <= 0)
+            {
+                return;
+            }
+
+            MaxHealth = targetMax;
+            if (CurrentHealth < MaxHealth)
+            {
+                CurrentHealth = MaxHealth;
+            }
+        }
+
+        /// <summary>
         /// Đơn vị kế thừa ghi đè để cập nhật NavMeshAgent, sensor đánh, blackboard sau research.
         /// </summary>
         protected virtual void OnUpgradeAppliedToRuntime() { }

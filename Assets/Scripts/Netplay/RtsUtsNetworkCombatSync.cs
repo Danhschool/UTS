@@ -1,6 +1,5 @@
 using System.Collections;
 using GameDevTV.RTS.Units;
-using GameDevTV.RTS.Utilities;
 using Mirror;
 using UnityEngine;
 
@@ -34,17 +33,6 @@ namespace GameDevTV.RTS.Netplay
         {
             base.OnStartServer();
             PushFromCommandable();
-
-            // #region agent log
-            if (_commandable is BaseBuilding building && CivilCentralUtility.IsCivilCentral(building))
-            {
-                MpDebugSessionLog.Write(
-                    "H2",
-                    "RtsUtsNetworkCombatSync.OnStartServer",
-                    "cc_combat_push",
-                    $"{{\"name\":\"{building.name}\",\"owner\":\"{building.Owner}\",\"syncCurrent\":{syncCurrentHealth},\"syncMax\":{syncMaxHealth}}}");
-            }
-            // #endregion
         }
 
         public override void OnStartClient()
@@ -207,17 +195,6 @@ namespace GameDevTV.RTS.Netplay
                 int last = _commandable.CurrentHealth;
                 _commandable.ApplyNetworkHealthSnapshot(syncCurrentHealth, syncMaxHealth);
                 _commandable.InvokeHealthUpdated(last, syncCurrentHealth);
-
-                // #region agent log
-                if (_commandable is BaseBuilding building && CivilCentralUtility.IsCivilCentral(building))
-                {
-                    MpDebugSessionLog.Write(
-                        "H3",
-                        "RtsUtsNetworkCombatSync.ApplyHealthFromNetwork",
-                        "cc_client_health",
-                        $"{{\"name\":\"{building.name}\",\"owner\":\"{building.Owner}\",\"syncCurrent\":{syncCurrentHealth},\"syncMax\":{syncMaxHealth}}}");
-                }
-                // #endregion
             }
             finally
             {
@@ -228,6 +205,11 @@ namespace GameDevTV.RTS.Netplay
         void ApplyDeathFromNetwork()
         {
             if (NetworkServer.active || !syncMarkedDead || _commandable == null || _commandable.IsInDeathSequence)
+            {
+                return;
+            }
+
+            if (syncCurrentHealth > 0)
             {
                 return;
             }

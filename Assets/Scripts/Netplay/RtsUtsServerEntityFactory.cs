@@ -175,6 +175,11 @@ namespace GameDevTV.RTS.Netplay
 
             configureBeforeSpawn?.Invoke(instance);
 
+            if (instance.TryGetComponent(out AbstractCommandable commandable))
+            {
+                commandable.EnsureNetworkSpawnCombatReady();
+            }
+
             if (connection != null)
             {
                 NetworkServer.Spawn(instance, connection);
@@ -182,6 +187,16 @@ namespace GameDevTV.RTS.Netplay
             else
             {
                 NetworkServer.Spawn(instance);
+            }
+
+            if (instance.TryGetComponent(out RtsUtsNetworkCombatSync combatSync))
+            {
+                combatSync.PushFromCommandable();
+            }
+
+            if (instance.TryGetComponent(out RtsUtsNetworkBuildingSync buildingSync))
+            {
+                buildingSync.ServerPushFullState();
             }
 
             return true;
@@ -227,19 +242,6 @@ namespace GameDevTV.RTS.Netplay
 
             GameObject instance = Object.Instantiate(prefab, message.position, message.rotation);
             RtsUtsGameplayNetworkComponents.ApplyToSpawnedInstance(instance);
-
-            // #region agent log
-            int behaviourCount = instance.TryGetComponent(out NetworkIdentity identity)
-                ? identity.NetworkBehaviours.Length
-                : 0;
-            bool hasCombatSync = instance.TryGetComponent(out RtsUtsNetworkCombatSync _);
-            MpDebugSessionLog.Write(
-                "H4",
-                "RtsUtsServerEntityFactory.SpawnGameplayEntityOnClient",
-                "client_spawn_network_components",
-                $"{{\"prefab\":\"{prefab.name}\",\"behaviourCount\":{behaviourCount},\"hasCombatSync\":{hasCombatSync.ToString().ToLowerInvariant()}}}");
-            // #endregion
-
             return instance;
         }
 
