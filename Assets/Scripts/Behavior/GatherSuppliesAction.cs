@@ -121,20 +121,6 @@ namespace GameDevTV.RTS.Behavior
                         Amount.Value = supplyRef.EndGather(bonus);
                     }
 
-                    // #region agent log
-                    string ownerName = "unknown";
-                    if (Unit.Value != null
-                        && Unit.Value.TryGetComponent(out AbstractCommandable ownerCommandable))
-                    {
-                        ownerName = ownerCommandable.Owner.ToString();
-                    }
-
-                    DebugSessionLog013c46.Write(
-                        "G1",
-                        "GatherSuppliesAction.OnEnd",
-                        "gather complete",
-                        $"{{\"preview\":{previewGathered},\"final\":{Amount.Value},\"owner\":\"{ownerName}\",\"pureClient\":{RtsNetplaySession.IsPureClient.ToString().ToLowerInvariant()}}}");
-                    // #endregion
                     if (supplyRef == null)
                     {
                         GatherableSupplies.Value = null;

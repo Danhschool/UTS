@@ -373,13 +373,6 @@ namespace GameDevTV.RTS.Units
 
             if (!agent.isOnNavMesh)
             {
-                // #region agent log
-                DebugSessionLog013c46.Write(
-                    "P7",
-                    "Worker.PushServerReturnNavigation",
-                    "reject off navmesh",
-                    $"{{\"name\":\"{name}\",\"owner\":\"{ResolveSupplyCreditOwner()}\"}}");
-                // #endregion
                 return;
             }
 
@@ -425,13 +418,6 @@ namespace GameDevTV.RTS.Units
         {
             float elapsed = 0f;
             float navRepushTimer = 0f;
-            // #region agent log
-            DebugSessionLog013c46.Write(
-                "P8",
-                "Worker.MonitorServerReturnDeposit",
-                "watch started",
-                $"{{\"name\":\"{name}\",\"owner\":\"{ResolveSupplyCreditOwner()}\"}}");
-            // #endregion
 
             while (elapsed < ServerDepositWatchTimeoutSeconds)
             {
@@ -460,33 +446,12 @@ namespace GameDevTV.RTS.Units
                 if (IsWithinServerDepositRange(commandPost, approach))
                 {
                     TryCompleteDepositAfterArrival(commandPost);
-                    // #region agent log
-                    DebugSessionLog013c46.Write(
-                        "P8",
-                        "Worker.MonitorServerReturnDeposit",
-                        "deposit at arrival",
-                        $"{{\"name\":\"{name}\",\"owner\":\"{ResolveSupplyCreditOwner()}\",\"held\":{held}}}");
-                    // #endregion
                     yield break;
                 }
 
                 elapsed += Time.deltaTime;
                 yield return null;
             }
-
-            // #region agent log
-            float distApproach = HorizontalDistance(transform.position, approach);
-            float distBuilding = commandPost != null
-                ? HorizontalDistance(
-                    transform.position,
-                    CombatTargetGeometryUtility.GetClosestPointOnTarget(transform.position, commandPost))
-                : -1f;
-            DebugSessionLog013c46.Write(
-                "P8",
-                "Worker.MonitorServerReturnDeposit",
-                "watch timeout",
-                $"{{\"name\":\"{name}\",\"owner\":\"{ResolveSupplyCreditOwner()}\",\"distApproach\":{distApproach:F1},\"distBuilding\":{distBuilding:F1}}}");
-            // #endregion
         }
 
         /// <summary>
@@ -558,13 +523,6 @@ namespace GameDevTV.RTS.Units
             }
 
             ApplyReturnToDepositState(approach, commandPost);
-            // #region agent log
-            DebugSessionLog013c46.Write(
-                "G4",
-                "Worker.MirrorReturnPresentation",
-                "client return mirror",
-                $"{{\"name\":\"{name}\",\"owner\":\"{ResolveSupplyCreditOwner()}\",\"hasPost\":{(commandPost != null).ToString().ToLowerInvariant()}}}");
-            // #endregion
         }
 
         /// <summary>
@@ -924,27 +882,12 @@ namespace GameDevTV.RTS.Units
             if (!graphAgent.GetVariable("SupplyAmountHeld", out BlackboardVariable<int> heldVariable)
                 || heldVariable.Value <= 0)
             {
-                // #region agent log
-                int heldLog = heldVariable != null ? heldVariable.Value : -1;
-                DebugSessionLog013c46.Write(
-                    "P7",
-                    "Worker.TryCompleteDepositAfterArrival",
-                    "reject held empty",
-                    $"{{\"name\":\"{name}\",\"owner\":\"{ResolveSupplyCreditOwner()}\",\"held\":{heldLog}}}");
-                // #endregion
                 return;
             }
 
             if (!graphAgent.GetVariable("SupplySO", out BlackboardVariable<SupplySO> supplyVariable)
                 || supplyVariable.Value == null)
             {
-                // #region agent log
-                DebugSessionLog013c46.Write(
-                    "G6",
-                    "Worker.TryCompleteDepositAfterArrival",
-                    "reject missing SupplySO",
-                    $"{{\"name\":\"{name}\",\"held\":{heldVariable.Value}}}");
-                // #endregion
                 return;
             }
 
@@ -952,19 +895,6 @@ namespace GameDevTV.RTS.Units
                 || !SupplyDepositLocator.IsSupplyDeposit(building, null))
             {
                 return;
-            }
-
-            graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> commandVariable);
-            UnitCommands command = commandVariable != null ? commandVariable.Value : UnitCommands.Stop;
-            if (command != UnitCommands.ReturnSupplies)
-            {
-                // #region agent log
-                DebugSessionLog013c46.Write(
-                    "G6",
-                    "Worker.TryCompleteDepositAfterArrival",
-                    "deposit with held supplies at command post",
-                    $"{{\"name\":\"{name}\",\"command\":\"{command}\",\"held\":{heldVariable.Value}}}");
-                // #endregion
             }
 
             int amount = heldVariable.Value;
@@ -998,13 +928,6 @@ namespace GameDevTV.RTS.Units
             }
 
             Owner creditOwner = ResolveSupplyCreditOwner();
-            // #region agent log
-            DebugSessionLog013c46.Write(
-                "G2",
-                "Worker.CreditDepositedSupplies",
-                "SupplyEvent raised",
-                $"{{\"amount\":{amount},\"supply\":\"{supply.name}\",\"owner\":\"{creditOwner}\"}}");
-            // #endregion
             Bus<SupplyEvent>.Raise(creditOwner, new SupplyEvent(creditOwner, amount, supply));
         }
 

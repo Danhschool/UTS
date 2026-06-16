@@ -186,24 +186,12 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         internal void EnsureGameplayBehaviourActive()
         {
-            // #region agent log
-            var wasEnabled = enabled;
-            // #endregion
             if (!enabled)
             {
                 enabled = true;
             }
-            // #region agent log
-            if (!wasEnabled)
-            {
-                DebugSessionLog013c46.Write(
-                    "H1",
-                    "BaseBuilding.EnsureGameplayBehaviourActive",
-                    "enabled BaseBuilding component",
-                    $"{{\"name\":\"{name}\",\"wasEnabled\":false,\"nowEnabled\":{enabled.ToString().ToLowerInvariant()},\"progress\":\"{Progress.State}\"}}");
-            }
-            // #endregion
         }
+        /// <summary>
         /// Cách hoạt động: Đã researched (TechTree) hoặc đã có trong buildingQueue → false.
         /// </summary>
         public bool CanEnqueueUpgrade(UpgradeSO upgrade)
@@ -494,13 +482,6 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         void ApplyConstructionCompletedPresentationFromNetwork()
         {
-            // #region agent log
-            DebugSessionLog013c46.Write(
-                "H4",
-                "BaseBuilding.ApplyConstructionCompletedPresentationFromNetwork",
-                "client construction complete presentation",
-                $"{{\"name\":\"{name}\",\"enabledBefore\":{enabled.ToString().ToLowerInvariant()}}}");
-            // #endregion
             EnsureGameplayBehaviourActive();
             unitBuildingThis = null;
             Bus<UnitDeathEvent>.OnEvent[Owner] -= HandleUnitDeath;
@@ -547,13 +528,6 @@ namespace GameDevTV.RTS.Units
             {
                 if (!buildingSpawnEventRaised)
                 {
-                    // #region agent log
-                    DebugSessionLog013c46.Write(
-                        "H5",
-                        "BaseBuilding.ForceClientConstructionCompletedPresentation",
-                        "cc already completed — raise spawn event",
-                        $"{{\"name\":\"{name}\"}}");
-                    // #endregion
                     EnsureGameplayBehaviourActive();
                     RaiseBuildingSpawnEventIfNeeded();
                 }
@@ -692,13 +666,6 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         private void RaiseBuildingSpawnEventIfNeeded()
         {
-            // #region agent log
-            DebugSessionLog013c46.Write(
-                "H2",
-                "BaseBuilding.RaiseBuildingSpawnEventIfNeeded",
-                "attempt",
-                $"{{\"name\":\"{name}\",\"alreadyRaised\":{buildingSpawnEventRaised.ToString().ToLowerInvariant()},\"progress\":\"{Progress.State}\",\"ownerValid\":{(Owner != Owner.Invalid).ToString().ToLowerInvariant()},\"enabled\":{enabled.ToString().ToLowerInvariant()}}}");
-            // #endregion
             if (buildingSpawnEventRaised)
             {
                 return;
@@ -706,13 +673,6 @@ namespace GameDevTV.RTS.Units
 
             buildingSpawnEventRaised = true;
             Bus<BuildingSpawnEvent>.Raise(Owner, new BuildingSpawnEvent(Owner, this));
-            // #region agent log
-            DebugSessionLog013c46.Write(
-                "H2",
-                "BaseBuilding.RaiseBuildingSpawnEventIfNeeded",
-                "raised BuildingSpawnEvent",
-                $"{{\"name\":\"{name}\"}}");
-            // #endregion
         }
 
         /// <summary>
@@ -721,13 +681,6 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         public void NotifyNetworkSpawnPresentation()
         {
-            // #region agent log
-            DebugSessionLog013c46.Write(
-                "H3",
-                "BaseBuilding.NotifyNetworkSpawnPresentation",
-                "entry",
-                $"{{\"name\":\"{name}\",\"progress\":\"{Progress.State}\",\"enabled\":{enabled.ToString().ToLowerInvariant()}}}");
-            // #endregion
             if (Progress.State != BuildingProgress.BuildingState.Completed)
             {
                 return;

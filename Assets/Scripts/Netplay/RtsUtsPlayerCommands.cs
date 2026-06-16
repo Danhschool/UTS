@@ -66,35 +66,14 @@ namespace GameDevTV.RTS.Netplay
         {
             if (!TryResolveCommandable(netId, out RtsUtsNetworkEntity networkEntity, out AbstractUnit unit))
             {
-                // #region agent log
-                DebugSessionLog013c46.Write(
-                    "P7",
-                    "RtsUtsPlayerCommands.CmdUtsGather",
-                    "reject resolve commandable",
-                    $"{{\"netId\":{netId},\"conn\":{connectionToClient.connectionId}}}");
-                // #endregion
                 return;
             }
 
             if (!TryBuildGatherHit(hitPoint, out RaycastHit hit))
             {
-                // #region agent log
-                DebugSessionLog013c46.Write(
-                    "P7",
-                    "RtsUtsPlayerCommands.CmdUtsGather",
-                    "reject gather hit",
-                    $"{{\"netId\":{netId},\"owner\":\"{networkEntity.UtsOwner}\",\"conn\":{connectionToClient.connectionId}}}");
-                // #endregion
                 return;
             }
 
-            // #region agent log
-            DebugSessionLog013c46.Write(
-                "P7",
-                "RtsUtsPlayerCommands.CmdUtsGather",
-                "accepted",
-                $"{{\"netId\":{netId},\"owner\":\"{networkEntity.UtsOwner}\",\"conn\":{connectionToClient.connectionId}}}");
-            // #endregion
             TryExecuteGatherCommand(networkEntity, unit, hit, formationIndex);
         }
 
@@ -491,13 +470,6 @@ namespace GameDevTV.RTS.Netplay
 
             if (!executed)
             {
-                // #region agent log
-                DebugSessionLog013c46.Write(
-                    "B1",
-                    "RtsUtsPlayerCommands.CmdUtsBuildBuilding",
-                    "build rejected",
-                    $"{{\"workerNetId\":{workerNetId},\"building\":\"{buildingAssetName}\",\"conn\":{connectionToClient.connectionId}}}");
-                // #endregion
                 networkEntity.RpcNotifyBuildCommandRejected();
                 return;
             }

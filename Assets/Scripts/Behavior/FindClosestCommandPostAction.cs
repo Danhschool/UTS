@@ -88,13 +88,6 @@ namespace GameDevTV.RTS.Behavior
                 }
 
                 networkEntity.RpcMirrorReturnPresentation(approach, commandPostIdentity.netId);
-                // #region agent log
-                DebugSessionLog013c46.Write(
-                    "G4",
-                    "FindClosestCommandPostAction.OnStart",
-                    "server found deposit + rpc return",
-                    $"{{\"worker\":\"{workerUnit.name}\",\"owner\":\"{workerUnit.Owner}\",\"deposit\":\"{closest.name}\"}}");
-                // #endregion
             }
 
             return Status.Success;
