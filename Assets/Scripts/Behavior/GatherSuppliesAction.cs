@@ -1,4 +1,5 @@
 using GameDevTV.RTS.Environment;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
 using System;
 using Unity.Behavior;
@@ -6,6 +7,7 @@ using UnityEngine;
 using Action = Unity.Behavior.Action;
 using Unity.Properties;
 using GameDevTV.RTS.Utilities;
+using Mirror;
 
 namespace GameDevTV.RTS.Behavior
 {
@@ -99,7 +101,40 @@ namespace GameDevTV.RTS.Behavior
                     }
 
                     GatherableSupply supplyRef = GatherableSupplies.Value;
-                    Amount.Value = supplyRef.EndGather(bonus);
+                    int perTrip = Mathf.Max(0, supplyRef.Supply.AmountPerGather + bonus);
+                    int previewGathered = Mathf.Min(perTrip, supplyRef.Amount);
+                    Amount.Value = previewGathered;
+
+                    if (Unit.Value != null
+                        && Unit.Value.TryGetComponent(out BehaviorGraphAgent graphAgent))
+                    {
+                        graphAgent.SetVariableValue("SupplyAmountHeld", previewGathered);
+                        graphAgent.SetVariableValue("SupplySO", supplyRef.Supply);
+                    }
+
+                    if (RtsNetplaySession.IsPureClient)
+                    {
+                        Amount.Value = previewGathered;
+                    }
+                    else
+                    {
+                        Amount.Value = supplyRef.EndGather(bonus);
+                    }
+
+                    // #region agent log
+                    string ownerName = "unknown";
+                    if (Unit.Value != null
+                        && Unit.Value.TryGetComponent(out AbstractCommandable ownerCommandable))
+                    {
+                        ownerName = ownerCommandable.Owner.ToString();
+                    }
+
+                    DebugSessionLog013c46.Write(
+                        "G1",
+                        "GatherSuppliesAction.OnEnd",
+                        "gather complete",
+                        $"{{\"preview\":{previewGathered},\"final\":{Amount.Value},\"owner\":\"{ownerName}\",\"pureClient\":{RtsNetplaySession.IsPureClient.ToString().ToLowerInvariant()}}}");
+                    // #endregion
                     if (supplyRef == null)
                     {
                         GatherableSupplies.Value = null;

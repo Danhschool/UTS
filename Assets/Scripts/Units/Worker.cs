@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using GameDevTV.RTS.Behavior;
 using GameDevTV.RTS.Commands;
 using GameDevTV.RTS.Environment;
@@ -18,6 +19,11 @@ namespace GameDevTV.RTS.Units
         private readonly WorkerGatherAssignmentLock gatherAssignmentLock = new();
         const float GatherAudioCooldownSeconds = 0.55f;
         float lastGatherAudioTime = -999f;
+        bool gatherEventSubscribed;
+        Coroutine serverReturnDepositCoroutine;
+        const float ServerDepositArrivalSlack = 10f;
+        const float ServerDepositWatchTimeoutSeconds = 90f;
+        const float ServerDepositNavRepushIntervalSeconds = 1f;
 
         public bool IsBuilding => graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> command) && command.Value == UnitCommands.BuildBuilding;
 
@@ -170,10 +176,7 @@ namespace GameDevTV.RTS.Units
         protected override void Start()
         {
             base.Start();
-            if (graphAgent.GetVariable("GatherSuppliesEvent", out BlackboardVariable<GatherSuppliesEventChannel> eventChannelVariable))
-            {
-                eventChannelVariable.Value.Event += HandleGatherSupplies;
-            }
+            EnsureGatherEventChannel();
             if (graphAgent.GetVariable("BuildingEventChannel", out BlackboardVariable<BuildingEventChannel> buildingEventChannelVariable))
             {
                 buildingEventChannelVariable.Value.Event += HandleBuildingEvent;
@@ -184,8 +187,43 @@ namespace GameDevTV.RTS.Units
 
         protected override void OnDestroy()
         {
+            StopServerReturnDepositWatch();
+
+            if (graphAgent != null
+                && graphAgent.GetVariable("GatherSuppliesEvent", out BlackboardVariable<GatherSuppliesEventChannel> eventChannelVariable)
+                && eventChannelVariable.Value != null)
+            {
+                eventChannelVariable.Value.Event -= HandleGatherSupplies;
+            }
+
             Bus<SupplyDepletedEvent>.OnEvent[Owner] -= HandleSupplyDepleted;
             base.OnDestroy();
+        }
+
+        /// <summary>
+        /// Mục tiêu: BT TriggerEvent cần channel không null — graph asset để trống fileID.
+        /// Cách hoạt động: Tạo runtime channel nếu thiếu và đăng ký HandleGatherSupplies một lần.
+        /// </summary>
+        void EnsureGatherEventChannel()
+        {
+            if (gatherEventSubscribed || graphAgent == null)
+            {
+                return;
+            }
+
+            if (!graphAgent.GetVariable("GatherSuppliesEvent", out BlackboardVariable<GatherSuppliesEventChannel> eventChannelVariable))
+            {
+                return;
+            }
+
+            if (eventChannelVariable.Value == null)
+            {
+                eventChannelVariable.Value = ScriptableObject.CreateInstance<GatherSuppliesEventChannel>();
+            }
+
+            eventChannelVariable.Value.Event -= HandleGatherSupplies;
+            eventChannelVariable.Value.Event += HandleGatherSupplies;
+            gatherEventSubscribed = true;
         }
 
         /// <summary>
@@ -228,10 +266,12 @@ namespace GameDevTV.RTS.Units
                 return;
             }
 
+            StopServerReturnDepositWatch();
             PauseActiveConstructionIfNeeded();
             DisposeMovementDestinationCursor();
             gatherAssignmentLock.Assign(supply);
             SyncGatherBlackboard(supply);
+            EnsureGatherEventChannel();
             graphAgent.SetVariableValue("Command", UnitCommands.Gather);
         }
 
@@ -276,7 +316,255 @@ namespace GameDevTV.RTS.Units
             gatherAssignmentLock.Clear();
             gatherAssignmentLock.Assign(supply);
             SyncGatherBlackboard(supply);
+            EnsureGatherEventChannel();
+
+            if (!graphAgent.enabled)
+            {
+                graphAgent.enabled = true;
+            }
+
             graphAgent.SetVariableValue("Command", UnitCommands.Gather);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Đồng bộ blackboard về kho (server authoritative + client mirror).
+        /// Cách hoạt động: Gán CommandPost, TargetGameObject, TargetLocation, Command ReturnSupplies.
+        /// </summary>
+        public void ApplyReturnToDepositState(Vector3 approach, GameObject commandPost)
+        {
+            if (graphAgent == null)
+            {
+                return;
+            }
+
+            DisposeMovementDestinationCursor();
+            if (commandPost != null)
+            {
+                graphAgent.SetVariableValue("CommandPost", commandPost);
+                graphAgent.SetVariableValue("TargetGameObject", commandPost);
+            }
+
+            graphAgent.SetVariableValue("TargetLocation", approach);
+            graphAgent.SetVariableValue("Command", UnitCommands.ReturnSupplies);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Server MP — worker P2 đôi khi không tới CC qua BT MoveTo (agent lệch NavMesh).
+        /// Cách hoạt động: Warp lên NavMesh nếu cần, bật agent và SetDestination tới approach.
+        /// </summary>
+        public void PushServerReturnNavigation(Vector3 approach)
+        {
+            if (!RtsNetplaySession.ShouldRunAuthoritativeGameplay
+                || !IsInReturnSuppliesCommand()
+                || !TryGetComponent(out UnityEngine.AI.NavMeshAgent agent))
+            {
+                return;
+            }
+
+            if (!agent.isOnNavMesh
+                && UnityEngine.AI.NavMesh.SamplePosition(
+                    transform.position,
+                    out UnityEngine.AI.NavMeshHit hit,
+                    8f,
+                    UnityEngine.AI.NavMesh.AllAreas))
+            {
+                agent.Warp(hit.position);
+            }
+
+            if (!agent.isOnNavMesh)
+            {
+                // #region agent log
+                DebugSessionLog013c46.Write(
+                    "P7",
+                    "Worker.PushServerReturnNavigation",
+                    "reject off navmesh",
+                    $"{{\"name\":\"{name}\",\"owner\":\"{ResolveSupplyCreditOwner()}\"}}");
+                // #endregion
+                return;
+            }
+
+            agent.isStopped = false;
+            agent.SetDestination(approach);
+        }
+
+        /// <summary>
+        /// Mục tiêu: Dừng coroutine nộp tài nguyên — tránh ghi đè NavMesh khi Build/Gather/Stop.
+        /// Cách hoạt động: StopCoroutine và xóa reference serverReturnDepositCoroutine.
+        /// </summary>
+        void StopServerReturnDepositWatch()
+        {
+            if (serverReturnDepositCoroutine == null)
+            {
+                return;
+            }
+
+            StopCoroutine(serverReturnDepositCoroutine);
+            serverReturnDepositCoroutine = null;
+        }
+
+        /// <summary>
+        /// Mục tiêu: MP server — credit khi worker tới CC dù BT MoveTo không báo Success (P2).
+        /// Cách hoạt động: Coroutine theo khoảng cách tới approach; gọi TryCompleteDepositAfterArrival.
+        /// </summary>
+        public void BeginServerReturnDepositWatch(Vector3 approach, GameObject commandPost)
+        {
+            if (!RtsNetplaySession.ShouldRunAuthoritativeGameplay || commandPost == null)
+            {
+                return;
+            }
+
+            if (serverReturnDepositCoroutine != null)
+            {
+                StopCoroutine(serverReturnDepositCoroutine);
+            }
+
+            serverReturnDepositCoroutine = StartCoroutine(MonitorServerReturnDeposit(approach, commandPost));
+        }
+
+        IEnumerator MonitorServerReturnDeposit(Vector3 approach, GameObject commandPost)
+        {
+            float elapsed = 0f;
+            float navRepushTimer = 0f;
+            // #region agent log
+            DebugSessionLog013c46.Write(
+                "P8",
+                "Worker.MonitorServerReturnDeposit",
+                "watch started",
+                $"{{\"name\":\"{name}\",\"owner\":\"{ResolveSupplyCreditOwner()}\"}}");
+            // #endregion
+
+            while (elapsed < ServerDepositWatchTimeoutSeconds)
+            {
+                if (commandPost == null)
+                {
+                    yield break;
+                }
+
+                if (!TryGetHeldSupplyAmount(out int held) || held <= 0)
+                {
+                    yield break;
+                }
+
+                if (!IsInReturnSuppliesCommand())
+                {
+                    yield break;
+                }
+
+                navRepushTimer += Time.deltaTime;
+                if (navRepushTimer >= ServerDepositNavRepushIntervalSeconds)
+                {
+                    PushServerReturnNavigation(approach);
+                    navRepushTimer = 0f;
+                }
+
+                if (IsWithinServerDepositRange(commandPost, approach))
+                {
+                    TryCompleteDepositAfterArrival(commandPost);
+                    // #region agent log
+                    DebugSessionLog013c46.Write(
+                        "P8",
+                        "Worker.MonitorServerReturnDeposit",
+                        "deposit at arrival",
+                        $"{{\"name\":\"{name}\",\"owner\":\"{ResolveSupplyCreditOwner()}\",\"held\":{held}}}");
+                    // #endregion
+                    yield break;
+                }
+
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            // #region agent log
+            float distApproach = HorizontalDistance(transform.position, approach);
+            float distBuilding = commandPost != null
+                ? HorizontalDistance(
+                    transform.position,
+                    CombatTargetGeometryUtility.GetClosestPointOnTarget(transform.position, commandPost))
+                : -1f;
+            DebugSessionLog013c46.Write(
+                "P8",
+                "Worker.MonitorServerReturnDeposit",
+                "watch timeout",
+                $"{{\"name\":\"{name}\",\"owner\":\"{ResolveSupplyCreditOwner()}\",\"distApproach\":{distApproach:F1},\"distBuilding\":{distBuilding:F1}}}");
+            // #endregion
+        }
+
+        /// <summary>
+        /// Mục tiêu: Chỉ credit khi worker đang ReturnSupplies và trong vùng CC (XZ).
+        /// Cách hoạt động: Kiểm tra Command; so khoảng cách ngang tới building/approach.
+        /// </summary>
+        bool IsWithinServerDepositRange(GameObject commandPost, Vector3 approach)
+        {
+            if (!IsInReturnSuppliesCommand())
+            {
+                return false;
+            }
+
+            if (commandPost != null)
+            {
+                Vector3 closestOnBuilding = CombatTargetGeometryUtility.GetClosestPointOnTarget(
+                    transform.position,
+                    commandPost);
+                if (HorizontalDistance(transform.position, closestOnBuilding) <= ServerDepositArrivalSlack)
+                {
+                    return true;
+                }
+            }
+
+            return HorizontalDistance(transform.position, approach) <= ServerDepositArrivalSlack;
+        }
+
+        bool IsInReturnSuppliesCommand()
+        {
+            return graphAgent != null
+                && graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> commandVariable)
+                && commandVariable.Value == UnitCommands.ReturnSupplies;
+        }
+
+        static float HorizontalDistance(Vector3 a, Vector3 b)
+        {
+            float dx = a.x - b.x;
+            float dz = a.z - b.z;
+            return Mathf.Sqrt(dx * dx + dz * dz);
+        }
+
+        bool TryGetHeldSupplyAmount(out int held)
+        {
+            held = 0;
+            if (graphAgent == null
+                || !graphAgent.GetVariable("SupplyAmountHeld", out BlackboardVariable<int> heldVariable))
+            {
+                return false;
+            }
+
+            held = heldVariable.Value;
+            return true;
+        }
+
+        /// <summary>
+        /// Mục tiêu: Client MP thấy worker về CC/store sau server BT tìm deposit.
+        /// Cách hoạt động: Bật graph và gọi <see cref="ApplyReturnToDepositState"/>.
+        /// </summary>
+        public void MirrorReturnPresentation(Vector3 approach, GameObject commandPost)
+        {
+            if (graphAgent == null)
+            {
+                return;
+            }
+
+            if (!graphAgent.enabled)
+            {
+                graphAgent.enabled = true;
+            }
+
+            ApplyReturnToDepositState(approach, commandPost);
+            // #region agent log
+            DebugSessionLog013c46.Write(
+                "G4",
+                "Worker.MirrorReturnPresentation",
+                "client return mirror",
+                $"{{\"name\":\"{name}\",\"owner\":\"{ResolveSupplyCreditOwner()}\",\"hasPost\":{(commandPost != null).ToString().ToLowerInvariant()}}}");
+            // #endregion
         }
 
         /// <summary>
@@ -290,6 +578,7 @@ namespace GameDevTV.RTS.Units
                 return;
             }
 
+            StopServerReturnDepositWatch();
             InterruptGatherWorkCycle();
             DisposeMovementDestinationCursor();
 
@@ -329,6 +618,7 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         public void InterruptGatherWorkCycle()
         {
+            StopServerReturnDepositWatch();
             ClearGatherAssignmentLock();
 
             if (graphAgent == null)
@@ -428,6 +718,7 @@ namespace GameDevTV.RTS.Units
                 return null;
             }
 
+            StopServerReturnDepositWatch();
             DisposeMovementDestinationCursor();
             if (building.Prefab != null && !building.Prefab.TryGetComponent(out BaseBuilding _))
             {
@@ -460,6 +751,7 @@ namespace GameDevTV.RTS.Units
             }
 
             ClearGatherAssignmentLock();
+            StopServerReturnDepositWatch();
             PauseActiveConstructionIfNeeded();
 
             // Không StartBuilding ở đây — graph (BuildBuildingAction) sẽ gọi khi vào nhánh xây; tránh ArrivedAt/BuildingIsInProgress trên graph chặn resume.
@@ -545,6 +837,25 @@ namespace GameDevTV.RTS.Units
                 return;
             }
 
+            if (RtsNetplaySession.IsPureClient)
+            {
+                return;
+            }
+
+            if (graphAgent != null
+                && graphAgent.GetVariable("Amount", out BlackboardVariable<int> amountVariable)
+                && amountVariable.Value > 0)
+            {
+                return;
+            }
+
+            if (graphAgent != null
+                && graphAgent.GetVariable("SupplyAmountHeld", out BlackboardVariable<int> heldVariable)
+                && heldVariable.Value > 0)
+            {
+                return;
+            }
+
             RecoverFromStaleGatherStateIfNeeded();
         }
 
@@ -590,9 +901,111 @@ namespace GameDevTV.RTS.Units
             if (graphAgent != null)
             {
                 graphAgent.SetVariableValue("SupplySO", supply);
+                if (amount > 0)
+                {
+                    graphAgent.SetVariableValue("SupplyAmountHeld", amount);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Mục tiêu: MP server — credit tài nguyên khi worker tới CC/store (backup nếu TriggerEvent không chạy).
+        /// Cách hoạt động: Chỉ authoritative gameplay + ReturnSupplies + deposit hợp lệ + held &gt; 0.
+        /// </summary>
+        public void TryCompleteDepositAfterArrival(GameObject arrivalTarget)
+        {
+            if (!RtsNetplaySession.ShouldRunAuthoritativeGameplay
+                || graphAgent == null
+                || arrivalTarget == null)
+            {
+                return;
             }
 
-            Bus<SupplyEvent>.Raise(Owner, new SupplyEvent(Owner, amount, supply));
+            if (!graphAgent.GetVariable("SupplyAmountHeld", out BlackboardVariable<int> heldVariable)
+                || heldVariable.Value <= 0)
+            {
+                // #region agent log
+                int heldLog = heldVariable != null ? heldVariable.Value : -1;
+                DebugSessionLog013c46.Write(
+                    "P7",
+                    "Worker.TryCompleteDepositAfterArrival",
+                    "reject held empty",
+                    $"{{\"name\":\"{name}\",\"owner\":\"{ResolveSupplyCreditOwner()}\",\"held\":{heldLog}}}");
+                // #endregion
+                return;
+            }
+
+            if (!graphAgent.GetVariable("SupplySO", out BlackboardVariable<SupplySO> supplyVariable)
+                || supplyVariable.Value == null)
+            {
+                // #region agent log
+                DebugSessionLog013c46.Write(
+                    "G6",
+                    "Worker.TryCompleteDepositAfterArrival",
+                    "reject missing SupplySO",
+                    $"{{\"name\":\"{name}\",\"held\":{heldVariable.Value}}}");
+                // #endregion
+                return;
+            }
+
+            if (!arrivalTarget.TryGetComponent(out BaseBuilding building)
+                || !SupplyDepositLocator.IsSupplyDeposit(building, null))
+            {
+                return;
+            }
+
+            graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> commandVariable);
+            UnitCommands command = commandVariable != null ? commandVariable.Value : UnitCommands.Stop;
+            if (command != UnitCommands.ReturnSupplies)
+            {
+                // #region agent log
+                DebugSessionLog013c46.Write(
+                    "G6",
+                    "Worker.TryCompleteDepositAfterArrival",
+                    "deposit with held supplies at command post",
+                    $"{{\"name\":\"{name}\",\"command\":\"{command}\",\"held\":{heldVariable.Value}}}");
+                // #endregion
+            }
+
+            int amount = heldVariable.Value;
+            SupplySO supply = supplyVariable.Value;
+            CreditDepositedSupplies(amount, supply);
+            graphAgent.SetVariableValue("SupplyAmountHeld", 0);
+            StopServerReturnDepositWatch();
+        }
+
+        Owner ResolveSupplyCreditOwner()
+        {
+            if (TryGetComponent(out RtsUtsNetworkEntity networkEntity)
+                && networkEntity.UtsOwner != Owner.Invalid)
+            {
+                return networkEntity.UtsOwner;
+            }
+
+            return Owner;
+        }
+
+        void CreditDepositedSupplies(int amount, SupplySO supply)
+        {
+            if (amount <= 0 || supply == null)
+            {
+                return;
+            }
+
+            if (RtsNetplaySession.IsNetworkMatch && !NetworkServer.active)
+            {
+                return;
+            }
+
+            Owner creditOwner = ResolveSupplyCreditOwner();
+            // #region agent log
+            DebugSessionLog013c46.Write(
+                "G2",
+                "Worker.CreditDepositedSupplies",
+                "SupplyEvent raised",
+                $"{{\"amount\":{amount},\"supply\":\"{supply.name}\",\"owner\":\"{creditOwner}\"}}");
+            // #endregion
+            Bus<SupplyEvent>.Raise(creditOwner, new SupplyEvent(creditOwner, amount, supply));
         }
 
         void TryPlayGatherAudio(GameObject self, int amount, SupplySO supply)

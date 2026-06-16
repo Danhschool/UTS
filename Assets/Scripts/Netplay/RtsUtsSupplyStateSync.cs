@@ -179,6 +179,17 @@ namespace GameDevTV.RTS.Netplay
             Supplies.ServerAuthoritativeSupplyEvent(evt);
             PushServerSnapshotToSyncVars();
 
+            // #region agent log
+            if (evt.Amount > 0)
+            {
+                DebugSessionLog013c46.Write(
+                    "G5",
+                    "RtsUtsSupplyStateSync.HandleServerSupplyEvent",
+                    "server supply sync push",
+                    $"{{\"owner\":\"{evt.Owner}\",\"amount\":{evt.Amount}}}");
+            }
+            // #endregion
+
             if (evt.Amount > 0 && evt.Supply != null)
             {
                 SupplyGainKind kind = SupplyGainKindResolver.Resolve(evt.Supply);
@@ -265,11 +276,24 @@ namespace GameDevTV.RTS.Netplay
             }
 
             Supplies.EnsureReady();
+            int stone = owner == Owner.Player1 ? syncP1Stone : syncP2Stone;
+            int wood = owner == Owner.Player1 ? syncP1Wood : syncP2Wood;
+            int food = owner == Owner.Player1 ? syncP1Food : syncP2Food;
+            // #region agent log
+            if (owner == Owner.Player2 && RtsNetplaySession.IsPureClient)
+            {
+                DebugSessionLog013c46.Write(
+                    "P9",
+                    "RtsUtsSupplyStateSync.ApplyOwnerSnapshot",
+                    "client P2 snapshot",
+                    $"{{\"stone\":{stone},\"wood\":{wood},\"food\":{food}}}");
+            }
+            // #endregion
             Supplies.ApplyNetworkSnapshot(
                 owner,
-                owner == Owner.Player1 ? syncP1Stone : syncP2Stone,
-                owner == Owner.Player1 ? syncP1Wood : syncP2Wood,
-                owner == Owner.Player1 ? syncP1Food : syncP2Food,
+                stone,
+                wood,
+                food,
                 owner == Owner.Player1 ? syncP1Population : syncP2Population,
                 owner == Owner.Player1 ? syncP1PopulationLimit : syncP2PopulationLimit);
         }

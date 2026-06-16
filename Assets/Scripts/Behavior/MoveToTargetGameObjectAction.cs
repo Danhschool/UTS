@@ -4,7 +4,10 @@ using UnityEngine;
 using Action = Unity.Behavior.Action;
 using Unity.Properties;
 using UnityEngine.AI;
+using GameDevTV.RTS.Netplay;
+using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Utilities;
+using GameDevTV.RTS.Units;
 
 namespace GameDevTV.RTS.Behavior
 {
@@ -26,6 +29,13 @@ namespace GameDevTV.RTS.Behavior
         private bool IsWithinArrivalSlack(Vector3 goalWorld)
         {
             float slack = Mathf.Max(agent.stoppingDistance, MoveThreshold != null ? MoveThreshold.Value : 0.25f);
+            if (RtsNetplaySession.ShouldRunAuthoritativeGameplay)
+            {
+                float dx = agent.transform.position.x - goalWorld.x;
+                float dz = agent.transform.position.z - goalWorld.z;
+                return dx * dx + dz * dz <= slack * slack;
+            }
+
             return Vector3.Distance(agent.transform.position, goalWorld) <= slack;
         }
 
@@ -33,7 +43,17 @@ namespace GameDevTV.RTS.Behavior
         /// <remarks>Không chỉ dựa remainingDistance vì giá trị này có thể 0/sai trước khi path ổn định, gây Success sớm.</remarks>
         private bool HasArrivedAt(Vector3 goalWorld)
         {
-            if (agent == null || !agent.isOnNavMesh)
+            if (agent == null)
+            {
+                return false;
+            }
+
+            if (RtsNetplaySession.ShouldRunAuthoritativeGameplay && !agent.isOnNavMesh)
+            {
+                return IsWithinArrivalSlack(goalWorld);
+            }
+
+            if (!agent.isOnNavMesh)
             {
                 return false;
             }
@@ -130,6 +150,13 @@ namespace GameDevTV.RTS.Behavior
                 return Status.Failure;
             }
 
+            if (RtsNetplaySession.ShouldRunAuthoritativeGameplay
+                && !agent.isOnNavMesh
+                && NavMesh.SamplePosition(agent.transform.position, out NavMeshHit warpHit, 8f, NavMesh.AllAreas))
+            {
+                agent.Warp(warpHit.position);
+            }
+
             if (IsWithinArrivalSlack(lockedDestination))
             {
                 return Status.Success;
@@ -161,6 +188,41 @@ namespace GameDevTV.RTS.Behavior
 
         protected override void OnEnd()
         {
+            if (CurrentStatus == Status.Success
+                && Agent.Value != null
+                && Agent.Value.TryGetComponent(out Worker worker))
+            {
+                // #region agent log
+                int held = 0;
+                string commandName = "unknown";
+                if (Agent.Value.TryGetComponent(out BehaviorGraphAgent graphAgent))
+                {
+                    if (graphAgent.GetVariable("SupplyAmountHeld", out BlackboardVariable<int> heldVar))
+                    {
+                        held = heldVar.Value;
+                    }
+
+                    if (graphAgent.GetVariable("Command", out BlackboardVariable<UnitCommands> cmdVar))
+                    {
+                        commandName = cmdVar.Value.ToString();
+                    }
+                }
+
+                string ownerName = "unknown";
+                if (Agent.Value.TryGetComponent(out AbstractCommandable commandable))
+                {
+                    ownerName = commandable.Owner.ToString();
+                }
+
+                DebugSessionLog013c46.Write(
+                    "G6",
+                    "MoveToTargetGameObjectAction.OnEnd",
+                    "arrived at target",
+                    $"{{\"worker\":\"{Agent.Value.name}\",\"owner\":\"{ownerName}\",\"held\":{held},\"command\":\"{commandName}\",\"target\":\"{(TargetGameObject.Value != null ? TargetGameObject.Value.name : "null")}\",\"server\":{RtsNetplaySession.ShouldRunAuthoritativeGameplay.ToString().ToLowerInvariant()}}}");
+                // #endregion
+                worker.TryCompleteDepositAfterArrival(TargetGameObject.Value);
+            }
+
             hasLockedDestination = false;
 
             if (animator != null)

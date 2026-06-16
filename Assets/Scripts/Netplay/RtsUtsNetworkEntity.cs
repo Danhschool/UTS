@@ -5,6 +5,7 @@ using GameDevTV.RTS.EventBus;
 using GameDevTV.RTS.Events;
 using GameDevTV.RTS.Player;
 using GameDevTV.RTS.Units;
+using GameDevTV.RTS.Utilities;
 using Mirror;
 using UnityEngine;
 
@@ -187,6 +188,17 @@ namespace GameDevTV.RTS.Netplay
 
             if (_commandable is BaseBuilding building)
             {
+                if (building.TryGetComponent(out RtsUtsNetworkBuildingSync buildingSync))
+                {
+                    buildingSync.RefreshClientPresentationFromNetwork();
+                }
+
+                if (CivilCentralUtility.IsCivilCentral(building))
+                {
+                    building.ForceClientConstructionCompletedPresentation();
+                    return;
+                }
+
                 building.NotifyNetworkSpawnPresentation();
             }
         }
@@ -253,6 +265,24 @@ namespace GameDevTV.RTS.Netplay
             }
         }
 
+        [ClientRpc]
+        public void RpcMirrorReturnPresentation(Vector3 approach, uint commandPostNetId)
+        {
+            if (isServer || !TryGetComponent(out Worker worker))
+            {
+                return;
+            }
+
+            GameObject commandPost = null;
+            if (commandPostNetId != 0
+                && NetworkClient.spawned.TryGetValue(commandPostNetId, out NetworkIdentity identity))
+            {
+                commandPost = identity.gameObject;
+            }
+
+            worker.MirrorReturnPresentation(approach, commandPost);
+        }
+
         /// <summary>
         /// Mục tiêu: Client P2 mirror animation/di chuyển worker khi server nhận lệnh build.
         /// Cách hoạt động: Resolve BuildingSO theo tên asset rồi gọi Worker.MirrorBuildPresentation.
@@ -304,6 +334,30 @@ namespace GameDevTV.RTS.Netplay
             {
                 buildingSync.RefreshClientPresentationFromNetwork();
             }
+        }
+
+        /// <summary>
+        /// Mục tiêu: Pure client P2 nhận CC đầu trận Completed + BuildingSpawnEvent khi SyncVar spawn trễ.
+        /// </summary>
+        [ClientRpc]
+        public void RpcNotifyCivilCentralMatchStartPresentation()
+        {
+            if (isServer || !TryGetComponent(out BaseBuilding building))
+            {
+                return;
+            }
+
+            if (!CivilCentralUtility.IsCivilCentral(building))
+            {
+                return;
+            }
+
+            if (TryGetComponent(out RtsUtsNetworkBuildingSync buildingSync))
+            {
+                buildingSync.RefreshClientPresentationFromNetwork();
+            }
+
+            building.ForceClientConstructionCompletedPresentation();
         }
 
         /// <summary>

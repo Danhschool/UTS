@@ -174,13 +174,36 @@ namespace GameDevTV.RTS.Units
                 }
             }
 
+            EnsureGameplayBehaviourActive();
             RaiseBuildingSpawnEventIfNeeded();
             RefreshVisionFromSightConfig();
             NotifyNetworkBuildingStateIfServer();
         }
 
         /// <summary>
-        /// Mục tiêu: Upgrade một lần không được research/queue trùng.
+        /// Mục tiêu: Prefab nhà (trừ CC) để BaseBuilding tắt — MP/offline cần bật lại để queue, passive, UI hoạt động.
+        /// Cách hoạt động: Set enabled trên MonoBehaviour khi nhà vào gameplay thật (spawn CC / xây xong).
+        /// </summary>
+        internal void EnsureGameplayBehaviourActive()
+        {
+            // #region agent log
+            var wasEnabled = enabled;
+            // #endregion
+            if (!enabled)
+            {
+                enabled = true;
+            }
+            // #region agent log
+            if (!wasEnabled)
+            {
+                DebugSessionLog013c46.Write(
+                    "H1",
+                    "BaseBuilding.EnsureGameplayBehaviourActive",
+                    "enabled BaseBuilding component",
+                    $"{{\"name\":\"{name}\",\"wasEnabled\":false,\"nowEnabled\":{enabled.ToString().ToLowerInvariant()},\"progress\":\"{Progress.State}\"}}");
+            }
+            // #endregion
+        }
         /// Cách hoạt động: Đã researched (TechTree) hoặc đã có trong buildingQueue → false.
         /// </summary>
         public bool CanEnqueueUpgrade(UpgradeSO upgrade)
@@ -323,10 +346,17 @@ namespace GameDevTV.RTS.Units
             CurrentQueueStartTime = queueStartTime;
 
             BuildingProgress previous = Progress;
+            progress = SanitizeClientCivilCentralProgress(progress);
             Progress = progress;
 
             if (previous.State != BuildingProgress.BuildingState.Completed
                 && progress.State == BuildingProgress.BuildingState.Completed)
+            {
+                ApplyConstructionCompletedPresentationFromNetwork();
+            }
+            else if (RtsNetplaySession.IsPureClient
+                     && progress.State == BuildingProgress.BuildingState.Completed
+                     && !buildingSpawnEventRaised)
             {
                 ApplyConstructionCompletedPresentationFromNetwork();
             }
@@ -339,11 +369,36 @@ namespace GameDevTV.RTS.Units
         }
 
         /// <summary>
+        /// Mục tiêu: CC client không bị sync Destroyed mặc định ghi đè Completed từ server/prefab.
+        /// Cách hoạt động: Pure client + Civil Central + progress Destroyed → ép Completed.
+        /// </summary>
+        BuildingProgress SanitizeClientCivilCentralProgress(BuildingProgress progress)
+        {
+            if (!RtsNetplaySession.IsPureClient
+                || !CivilCentralUtility.IsCivilCentral(this)
+                || progress.State != BuildingProgress.BuildingState.Destroyed)
+            {
+                return progress;
+            }
+
+            return new BuildingProgress(
+                BuildingProgress.BuildingState.Completed,
+                progress.StartTime > 0f ? progress.StartTime : Time.time,
+                1f);
+        }
+
+        /// <summary>
         /// Mục tiêu: Client MP — nhà nổi từ dưới đất theo Completion giống PvE offline.
         /// Cách hoạt động: Lần đầu thấy Building/Paused thì cache vị trí chôn/đích; LateUpdate lerp theo Completion.
         /// </summary>
         void RefreshNetworkConstructionVisualState(BuildingProgress progress)
         {
+            if (CivilCentralUtility.IsCivilCentral(this))
+            {
+                networkConstructionVisualActive = false;
+                return;
+            }
+
             bool underConstruction = progress.State == BuildingProgress.BuildingState.Building
                 || progress.State == BuildingProgress.BuildingState.Paused;
 
@@ -439,6 +494,14 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         void ApplyConstructionCompletedPresentationFromNetwork()
         {
+            // #region agent log
+            DebugSessionLog013c46.Write(
+                "H4",
+                "BaseBuilding.ApplyConstructionCompletedPresentationFromNetwork",
+                "client construction complete presentation",
+                $"{{\"name\":\"{name}\",\"enabledBefore\":{enabled.ToString().ToLowerInvariant()}}}");
+            // #endregion
+            EnsureGameplayBehaviourActive();
             unitBuildingThis = null;
             Bus<UnitDeathEvent>.OnEvent[Owner] -= HandleUnitDeath;
             SyncPassiveEffects(true);
@@ -482,6 +545,19 @@ namespace GameDevTV.RTS.Units
 
             if (previous.State == BuildingProgress.BuildingState.Completed)
             {
+                if (!buildingSpawnEventRaised)
+                {
+                    // #region agent log
+                    DebugSessionLog013c46.Write(
+                        "H5",
+                        "BaseBuilding.ForceClientConstructionCompletedPresentation",
+                        "cc already completed — raise spawn event",
+                        $"{{\"name\":\"{name}\"}}");
+                    // #endregion
+                    EnsureGameplayBehaviourActive();
+                    RaiseBuildingSpawnEventIfNeeded();
+                }
+
                 return;
             }
 
@@ -527,6 +603,7 @@ namespace GameDevTV.RTS.Units
 
         public void StartBuilding(IBuildingBuilder buildingBuilder)
         {
+            EnsureGameplayBehaviourActive();
             Awake();
             unitBuildingThis = buildingBuilder;
             Owner = unitBuildingThis.Owner;
@@ -604,6 +681,7 @@ namespace GameDevTV.RTS.Units
                 Heal(MaxHealth - CurrentHealth);
             }
 
+            EnsureGameplayBehaviourActive();
             RaiseBuildingSpawnEventIfNeeded();
             NotifyNetworkBuildingStateIfServer();
         }
@@ -614,6 +692,13 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         private void RaiseBuildingSpawnEventIfNeeded()
         {
+            // #region agent log
+            DebugSessionLog013c46.Write(
+                "H2",
+                "BaseBuilding.RaiseBuildingSpawnEventIfNeeded",
+                "attempt",
+                $"{{\"name\":\"{name}\",\"alreadyRaised\":{buildingSpawnEventRaised.ToString().ToLowerInvariant()},\"progress\":\"{Progress.State}\",\"ownerValid\":{(Owner != Owner.Invalid).ToString().ToLowerInvariant()},\"enabled\":{enabled.ToString().ToLowerInvariant()}}}");
+            // #endregion
             if (buildingSpawnEventRaised)
             {
                 return;
@@ -621,6 +706,13 @@ namespace GameDevTV.RTS.Units
 
             buildingSpawnEventRaised = true;
             Bus<BuildingSpawnEvent>.Raise(Owner, new BuildingSpawnEvent(Owner, this));
+            // #region agent log
+            DebugSessionLog013c46.Write(
+                "H2",
+                "BaseBuilding.RaiseBuildingSpawnEventIfNeeded",
+                "raised BuildingSpawnEvent",
+                $"{{\"name\":\"{name}\"}}");
+            // #endregion
         }
 
         /// <summary>
@@ -629,11 +721,19 @@ namespace GameDevTV.RTS.Units
         /// </summary>
         public void NotifyNetworkSpawnPresentation()
         {
+            // #region agent log
+            DebugSessionLog013c46.Write(
+                "H3",
+                "BaseBuilding.NotifyNetworkSpawnPresentation",
+                "entry",
+                $"{{\"name\":\"{name}\",\"progress\":\"{Progress.State}\",\"enabled\":{enabled.ToString().ToLowerInvariant()}}}");
+            // #endregion
             if (Progress.State != BuildingProgress.BuildingState.Completed)
             {
                 return;
             }
 
+            EnsureGameplayBehaviourActive();
             RaiseBuildingSpawnEventIfNeeded();
         }
 

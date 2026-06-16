@@ -143,6 +143,11 @@ namespace GameDevTV.RTS.Netplay
                 return false;
             }
 
+            if (instance.TryGetComponent(out RtsUtsNetworkEntity networkEntity))
+            {
+                networkEntity.RpcNotifyCivilCentralMatchStartPresentation();
+            }
+
             return true;
         }
 

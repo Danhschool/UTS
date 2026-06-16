@@ -4,8 +4,10 @@ using UnityEngine;
 using Action = Unity.Behavior.Action;
 using Unity.Properties;
 using System.Collections.Generic;
+using GameDevTV.RTS.Netplay;
 using GameDevTV.RTS.Units;
 using GameDevTV.RTS.Utilities;
+using Mirror;
 
 namespace GameDevTV.RTS.Behavior
 {
@@ -51,6 +53,13 @@ namespace GameDevTV.RTS.Behavior
                     configuredDepositTypes,
                     out BaseBuilding closest))
             {
+                if (RtsNetplaySession.IsNetworkMatch && NetworkServer.active)
+                {
+                    Debug.LogWarning(
+                        $"[FindClosestCommandPost] Không tìm thấy deposit cho {workerUnit.name} "
+                        + $"(owner={workerUnit.Owner}, radius={SearchRadius.Value}).");
+                }
+
                 return Status.Failure;
             }
 
@@ -64,6 +73,28 @@ namespace GameDevTV.RTS.Behavior
             if (Unit.Value.TryGetComponent(out BehaviorGraphAgent graphAgent))
             {
                 graphAgent.SetVariableValue("TargetLocation", approach);
+            }
+
+            if (RtsNetplaySession.IsNetworkMatch
+                && NetworkServer.active
+                && Unit.Value.TryGetComponent(out RtsUtsNetworkEntity networkEntity)
+                && closest.TryGetComponent(out NetworkIdentity commandPostIdentity))
+            {
+                if (Unit.Value.TryGetComponent(out Worker worker))
+                {
+                    worker.ApplyReturnToDepositState(approach, closest.gameObject);
+                    worker.PushServerReturnNavigation(approach);
+                    worker.BeginServerReturnDepositWatch(approach, closest.gameObject);
+                }
+
+                networkEntity.RpcMirrorReturnPresentation(approach, commandPostIdentity.netId);
+                // #region agent log
+                DebugSessionLog013c46.Write(
+                    "G4",
+                    "FindClosestCommandPostAction.OnStart",
+                    "server found deposit + rpc return",
+                    $"{{\"worker\":\"{workerUnit.name}\",\"owner\":\"{workerUnit.Owner}\",\"deposit\":\"{closest.name}\"}}");
+                // #endregion
             }
 
             return Status.Success;
